@@ -35,7 +35,7 @@
 
 \begin{namelist}{xxxxxxxxxxxx}
 \item[{\bf Title:}]
-	Optional Static Type Checking for Dynamic Languages
+	Optional Static Type Checking for Clojure
 \item[{\bf Author:}]
 	Ambrose Bonnaire-Sergeant
 \item[{\bf Supervisor:}]
@@ -49,10 +49,10 @@
 % worthwhile solving? Who has already done some work in this area,
 % and what have they achieved?
 
-Dynamic languages are designed to be convenient for the programmer to
-write programs quickly and aspire to get out of the programmer's
+Dynamic languages are designed to be convenient for
+writing programs quickly, and aspire to get out of the programmer's
 way as much as possible. When programs grow large and stabilize,
-the features of static languages are missed, specifically static
+some features of static languages are missed, specifically static
 type checking. 
 
 Having a dynamic language that supports static properties 
@@ -64,41 +64,10 @@ He developed Typed Scheme
 to safely and incrementally port existing Scheme code, a dynamic language, to
 Typed Scheme, a static language.
 
-A recent example is Dart 
-\cite{Dart:2012:Online}, a dynamically typed language that allows optional
-static checks.
-
-Good type systems deeply integrate with the language they are written for.
-Statically typed languages usually include a type system in early releases,
-which is able to evolve with the language while it is malleable.
-
-The type system understands common idioms
-and becomes the programmer's ally.
-
-The tradeoffs of both styles has been subject to much debate, but some
-points have general agreement. Dynamically typed languages
-are generally more convenient for writing smaller 
-programs, whereas statically typed languages are usually preferred 
-when writing large programs.
-
-Typed Racket \cite{TypedScheme:2010}
-, which provides a statically typed variation of Racket 
-with the intention of safely porting untyped code to typed code. 
-Typed code can interact with untyped code while preserving some properties
-of typed code by, for example, delaying static type checks until runtime.
-Porting untyped Racket code to Typed Racket generally involves 
-adding type annotations to top level declarations with minimal (usually zero)
-modification to existing code structure.
-
-Type checking is often an operation complected with compilation. This is
-because languages that have type checkers generally enforce the rule that
-if a program does not satisfy the type checker, then the program should not be 
-allowed to compile. When considering an optional type checker, it makes sense
-to provide type checking as a simple operation, callable a la carte. 
-This relieves a common restriction associated with statically typed languages;
-programs can now compile regardless of the results of the 
-type checker.
-
+Clojure is a dynamic, functional language with implementations for the Java Virtual
+Machine and Common Language Runtime, and compiling to Javascript. Clojure
+is also a Lisp, which makes it a good candidate to test the ideas developed in
+Typed Scheme \cite{TypedScheme:2010}.
 
 \section*{Aim} 
 
@@ -110,15 +79,48 @@ type checker.
 % particular project.  Moreover, is it likely to have any other
 % applications?
 
-My goal is to develop an optional static type system for Clojure, 
-intended for practical use, to be provided as a library.
+My goal is to develop a prototype optional static type system for Clojure, 
+eventually intended for practical use, to be provided as a library.
 
 It will be based on the lessons learnt throught the development
 of Typed Scheme, and as a response to Tobin-Hochstadt's \cite{TypedScheme:2010}
-suggestion to add type systems to dynamic languages.
+suggestion to add type systems to existing dynamic languages.
 
-I expect this library to be an important asset to Clojure's feature set.
-I expect it will become a factor in language decision and justification for programming projects.
+There are several challenges to creating a satisfactory type system for Clojure.
+
+Multimethods play a significant role in Clojure, and a satisfactory
+type system for Clojure should understand them to some degree.
+There is some experience statically typing multimethods
+\cite{Millstein02modularstatically}
+, but this is a challenge and will probably not be completed in the
+timeframe proposed.
+
+Clojure's core library includes variable-arity functions which
+are not easily typed with current static type systems. 
+Providing satisfactory types for functions 
+like Clojure's 'map', 'filter', and 'reduce' require
+support for non-uniform variable arity polymorphism. 
+Strickland, Tobin-Hochstadt and Felleisen \cite{Strickland:2009:PVP:1532974.1532978}.
+describe their approach for non-uniform variable arity polymorphism, as used
+in Typed Racket. It is not clear if including a similar system is 
+achievable in the given timeframe, but would be a very useful feature. 
+
+Occurence typing is type checking technique developed for Typed Scheme 
+\cite{Tobin-Hochstadt:2008:DIT:1328897.1328486}
+and improved for Typed Racket
+\cite{Tobin-Hochstadt:2010:LTU:1932681.1863561}.
+It helps the type checker understand common programming idioms 
+with minimal type annotations.
+The general approach of occurence typing appears to fit Clojure well,
+but the implementation challenges are not clear. Occurence typing,
+or something similar, would be essential to a practical system.
+
+Ensuring vigorous type safety is an important aspect of Typed Scheme 
+\cite{TypedScheme:2010} ,
+especially when interacting between untyped and typed modules.
+I do not expect to concentrate on every combination of cross-module
+interaction. In particular, safely using typed code from untyped code
+is not important for my needs.
 
 \section*{Method}
 
