@@ -1,5 +1,9 @@
 
 \documentclass[12pt, a4paper]{article}
+
+\usepackage{biblatex}
+\bibliography{bibliography}
+
 \setlength{\oddsidemargin}{0.5cm}
 \setlength{\evensidemargin}{0.5cm}
 \setlength{\topmargin}{-1.6cm}
@@ -45,11 +49,31 @@
 % worthwhile solving? Who has already done some work in this area,
 % and what have they achieved?
 
-Programmers have long been divided between statically typed and 
-dynamically typed languages.
-Traditionally, languages have been defined as using one of these styles,
-but recently languages such as Racket/Typed Racket, Dart and Qi/Shen
-have borrowed from both.
+Dynamic languages are designed to be convenient for the programmer to
+write programs quickly and aspire to get out of the programmer's
+way as much as possible. When programs grow large and stabilize,
+the features of static languages are missed, specifically static
+type checking. 
+
+Having a dynamic language that supports static properties 
+has many potential practical benefits. 
+Module-by-module porting of existing untyped code to a typed language 
+is the largest benefit cited by Tobin-Hochstadt \cite{TypedScheme:2010}.
+He developed Typed Scheme
+\cite{TypedScheme:2010} 
+to safely and incrementally port existing Scheme code, a dynamic language, to
+Typed Scheme, a static language.
+
+A recent example is Dart 
+\cite{Dart:2012:Online}, a dynamically typed language that allows optional
+static checks.
+
+Good type systems deeply integrate with the language they are written for.
+Statically typed languages usually include a type system in early releases,
+which is able to evolve with the language while it is malleable.
+
+The type system understands common idioms
+and becomes the programmer's ally.
 
 The tradeoffs of both styles has been subject to much debate, but some
 points have general agreement. Dynamically typed languages
@@ -57,9 +81,8 @@ are generally more convenient for writing smaller
 programs, whereas statically typed languages are usually preferred 
 when writing large programs.
 
-There has been little practical experience writing programs in a single
-language that combine both styles.  One example is
-Typed Racket, which provides a statically typed variation of Racket 
+Typed Racket \cite{TypedScheme:2010}
+, which provides a statically typed variation of Racket 
 with the intention of safely porting untyped code to typed code. 
 Typed code can interact with untyped code while preserving some properties
 of typed code by, for example, delaying static type checks until runtime.
@@ -87,16 +110,15 @@ type checker.
 % particular project.  Moreover, is it likely to have any other
 % applications?
 
-I hypothesise that adding an optional static type system to a dynamically typed language
-will increase its utility, while avoiding some disadvantages of statically typed
-languages.
+My goal is to develop an optional static type system for Clojure, 
+intended for practical use, to be provided as a library.
 
-I expect to develop a library for Clojure which provides an optional static
-type system, intended for practical use. 
+It will be based on the lessons learnt throught the development
+of Typed Scheme, and as a response to Tobin-Hochstadt's \cite{TypedScheme:2010}
+suggestion to add type systems to dynamic languages.
 
-The rich type annotations that will be accumulated could also be
-useful elsewhere, such as a function search engine like
-(name of haskell search engine? TODO)
+I expect this library to be an important asset to Clojure's feature set.
+I expect it will become a factor in language decision and justification for programming projects.
 
 \section*{Method}
 
@@ -165,6 +187,7 @@ Linux environment with Java, git, and maven installed.
 % 1987, pp. 621-624.
 % \end{thebibliography}
 
+\printbibliography
 
 \end{document}
 
