@@ -1,0 +1,74 @@
+
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{biblatex}
+\bibliography{bibliography}
+
+\setlength{\oddsidemargin}{0.5cm}
+\setlength{\evensidemargin}{0.5cm}
+\setlength{\topmargin}{-1.6cm}
+\setlength{\leftmargin}{0.5cm}
+\setlength{\rightmargin}{0.5cm}
+\setlength{\textheight}{24.00cm} 
+\setlength{\textwidth}{15.00cm}
+\parindent 0pt
+\parskip 5pt
+\pagestyle{plain}
+
+\title{Research Summary}
+\author{}
+\date{}
+
+\newcommand{\namelistlabel}[1]{\mbox{#1}\hfil}
+\newenvironment{namelist}[1]{%1
+\begin{list}{}
+    {
+        \let\makelabel\namelistlabel
+        \settowidth{\labelwidth}{#1}
+        \setlength{\leftmargin}{1.1\labelwidth}
+    }
+  }{%1
+\end{list}}
+
+\begin{document}
+\maketitle
+
+\begin{namelist}{xxxxxxxxxxxx}
+\item[{\bf Title:}]
+	An Optional Static Type System for Clojure
+\item[{\bf Author:}]
+	Ambrose Bonnaire-Sergeant
+\item[{\bf Supervisor:}]
+	Rowan Davies
+\end{namelist}
+
+\section*{Summary} 
+
+Dynamically typed languages (also known as monotyped) are designed to be convenient for
+writing programs quickly, and aspire to get out of the programmer's
+way as much as possible. When programs grow large and stabilize,
+some features of static languages are missed, specifically static
+type checking. 
+
+Tobin-Hochstadt notes that ``untyped scripts are difficult to 
+maintain over the long run'' \cite{TypedScheme:2010} because types
+contain valuable design information.
+He developed Typed Scheme
+\cite{TypedScheme:2010} 
+to safely and incrementally port existing Scheme code, a dynamic language, to
+Typed Scheme, a static language.
+
+Clojure is a dynamically typed, functional language with implementations for the Java Virtual
+Machine and Common Language Runtime, and compiling to Javascript. Clojure
+is also a Lisp, which makes it a good candidate to test the generality of
+ideas developed for Typed Scheme \cite{TypedScheme:2010}.
+
+This project will explore designing and adding an optional type system to Clojure.
+It will be based on the lessons learnt throught the development
+of Typed Scheme, and as a response to Tobin-Hochstadt's \cite{TypedScheme:2010}
+suggestion to add type systems to other existing dynamic languages.
+
+\printbibliography
+
+\end{document}
+
