@@ -92,7 +92,7 @@ Multimethods play a significant role in Clojure, and a satisfactory
 type system for Clojure should understand them to some degree.
 There is some experience statically typing multimethods
 \cite{Millstein02modularstatically}
-, but this is a challenge and will probably not be completed in the
+, but this is a challenge and may not be addressed in the
 timeframe proposed.
 
 Clojure's core library includes variable-arity functions which
@@ -102,8 +102,8 @@ like Clojure's 'map', 'filter', and 'reduce' require
 support for non-uniform variable arity polymorphism. 
 Strickland, Tobin-Hochstadt and Felleisen \cite{Strickland:2009:PVP:1532974.1532978}.
 describe their approach for non-uniform variable arity polymorphism, as used
-in Typed Racket. It is not clear if including a similar system is 
-achievable in the given timeframe, but would be a very useful feature. 
+in Typed Racket. 
+This would be a very useful feature, but may be a challenge to implement.
 
 Occurence typing is type checking technique developed for Typed Scheme 
 \cite{Tobin-Hochstadt:2008:DIT:1328897.1328486}
@@ -120,7 +120,7 @@ Ensuring vigorous type safety is an important aspect of Typed Scheme
 especially when interacting between untyped and typed modules.
 I do not expect to concentrate on every combination of cross-module
 interaction. In particular, safely using typed code from untyped code
-is not important for my needs.
+is not a priority.
 
 \section*{Method}
 
@@ -131,37 +131,36 @@ is not important for my needs.
 % spend on each task, and draw up a timetable for each
 % sub-task.
 
+The milestones for this project are broken into release milestones
+for the prototype library.
+
+My goal is to finish all features listed in releases below
+and to begin work on the challenges, listed last.
+
 \begin{description}
 \item[0.1]
 	\begin{itemize}
 	\item Concrete types (no type variables)
 	\item Union types
 	\item Fixed arity function types
-	\item Typed deftype
+	\item Typed deftype (class definitions)
 	\item Uniform variable-arity function types
 	\item Type checking without refinements or occurance typing
+	\item Enough functions annotated from clojure.core for proof-of-concept
 	\end{itemize}
 \item[0.2]
 	\begin{itemize}
-	\item Occurance typing for type inference
+	\item Typed defrecord (record structures)
 	\item Type variables (polymorphic types)
+	\item Most functions annotated from clojure.core library
 	\end{itemize}
-\item[0.3]
+\item[Challenges]
 	\begin{itemize}
-	\item Typed defrecord
-	\item All Types annotated for clojure.core library
-	\end{itemize}
-\item[0.4]
-	\begin{itemize}
+	\item Devise strategy for type inference (eg. occurence typing)
 	\item Manage interactions between typed namespaces
-	\end{itemize}
-\item[0.5]
-	\begin{itemize}
-	\end{itemize}
-\item[0.6]
-	\begin{itemize}
 	\item Mutable reference types
 	\item Non-uniform variable arity polymorphism
+	\item Typing Multimethods
 	\end{itemize}
 
 \end{description}
