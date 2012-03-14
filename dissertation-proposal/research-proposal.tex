@@ -35,7 +35,7 @@
 
 \begin{namelist}{xxxxxxxxxxxx}
 \item[{\bf Title:}]
-	Optional Static Type Checking for Clojure
+	An Optional Static Type System for Clojure
 \item[{\bf Author:}]
 	Ambrose Bonnaire-Sergeant
 \item[{\bf Supervisor:}]
@@ -49,25 +49,24 @@
 % worthwhile solving? Who has already done some work in this area,
 % and what have they achieved?
 
-Dynamic languages are designed to be convenient for
+Dynamically typed languages (also known as monotyped) are designed to be convenient for
 writing programs quickly, and aspire to get out of the programmer's
 way as much as possible. When programs grow large and stabilize,
 some features of static languages are missed, specifically static
 type checking. 
 
-Having a dynamic language that supports static properties 
-has many potential practical benefits. 
-Module-by-module porting of existing untyped code to a typed language 
-is the largest benefit cited by Tobin-Hochstadt \cite{TypedScheme:2010}.
+Tobin-Hochstadt notes that ``untyped scripts are difficult to 
+maintain over the long run'' \cite{TypedScheme:2010} because types
+contain valuable design information.
 He developed Typed Scheme
 \cite{TypedScheme:2010} 
 to safely and incrementally port existing Scheme code, a dynamic language, to
 Typed Scheme, a static language.
 
-Clojure is a dynamic, functional language with implementations for the Java Virtual
+Clojure is a dynamically typed, functional language with implementations for the Java Virtual
 Machine and Common Language Runtime, and compiling to Javascript. Clojure
-is also a Lisp, which makes it a good candidate to test the ideas developed in
-Typed Scheme \cite{TypedScheme:2010}.
+is also a Lisp, which makes it a good candidate to test the generality of
+ideas developed for Typed Scheme \cite{TypedScheme:2010}.
 
 \section*{Aim} 
 
@@ -80,11 +79,11 @@ Typed Scheme \cite{TypedScheme:2010}.
 % applications?
 
 My goal is to develop a prototype optional static type system for Clojure, 
-eventually intended for practical use, to be provided as a library.
+eventually intended for practical use.
 
 It will be based on the lessons learnt throught the development
 of Typed Scheme, and as a response to Tobin-Hochstadt's \cite{TypedScheme:2010}
-suggestion to add type systems to existing dynamic languages.
+suggestion to add type systems to other existing dynamic languages.
 
 There are several challenges to creating a satisfactory type system for Clojure.
 
@@ -93,7 +92,8 @@ type system for Clojure should understand them to some degree.
 There is some experience statically typing multimethods
 \cite{Millstein02modularstatically}
 , but this is a challenge and may not be addressed in the
-timeframe proposed.
+timeframe proposed, beyond initial consideration of how it would
+fit with the rest of the system.
 
 Clojure's core library includes variable-arity functions which
 are not easily typed with current static type systems. 
@@ -103,7 +103,9 @@ support for non-uniform variable arity polymorphism.
 Strickland, Tobin-Hochstadt and Felleisen \cite{Strickland:2009:PVP:1532974.1532978}.
 describe their approach for non-uniform variable arity polymorphism, as used
 in Typed Racket. 
-This would be a very useful feature, but may be a challenge to implement.
+At a minimum, the proposed project will include broadly identifiying 
+what new issues arise when adapting this approach to Clojure, 
+with a prototype design if these issues are not too major.
 
 Occurence typing is type checking technique developed for Typed Scheme 
 \cite{Tobin-Hochstadt:2008:DIT:1328897.1328486}
@@ -111,16 +113,19 @@ and improved for Typed Racket
 \cite{Tobin-Hochstadt:2010:LTU:1932681.1863561}.
 It helps the type checker understand common programming idioms 
 with minimal type annotations.
-The general approach of occurence typing appears to fit Clojure well,
-but the implementation challenges are not clear. Occurence typing,
-or something similar, would be essential to a practical system.
+The proposed project will include a comparison of these approaches in
+the context of Clojure, and a prototype design if a satisfactory approach 
+is designed and no major issues are identifed.
 
 Ensuring vigorous type safety is an important aspect of Typed Scheme 
 \cite{TypedScheme:2010} ,
 especially when interacting between untyped and typed modules.
 I do not expect to concentrate on every combination of cross-module
 interaction. In particular, safely using typed code from untyped code
-is not a priority.
+will not be designed. Safe interaction between typed modules
+however is needed for a practical type checker. I
+will attempt to design a viable strategy or identify issues that
+require further consideration.
 
 \section*{Method}
 
@@ -137,6 +142,13 @@ for the prototype library.
 My goal is to finish all features listed in releases below
 and to begin work on the challenges, listed last.
 
+For each of these it's not yet fully clear what novel issues may 
+arise in adapting existing techniques to Clojure.  For each item 
+below the project will involve either implemention or identification 
+of the novel issues that make implementation difficult.  
+The classification below reflects the level of uncertainity 
+regarding such issues.
+
 \begin{description}
 \item[0.1]
 	\begin{itemize}
@@ -145,7 +157,7 @@ and to begin work on the challenges, listed last.
 	\item Fixed arity function types
 	\item Typed deftype (class definitions)
 	\item Uniform variable-arity function types
-	\item Type checking without refinements or occurance typing
+	\item Type checking without occurance typing
 	\item Enough functions annotated from clojure.core for proof-of-concept
 	\end{itemize}
 \item[0.2]
@@ -171,22 +183,11 @@ and to begin work on the challenges, listed last.
 % Department.
 
 Linux environment with Java, git, and maven installed.
+No issues are anticipated with regards to access to these.
 
 % Overall, you should aim to produce roughly a two page document
 % (and certainly no more than four pages)
 % outlining your plan for the year.
-
-% \begin{thebibliography}{9}
-% \bibitem{knuth} D. E. Knuth. {\em The \TeX~book.}\/ Addison-Wesley,
-% Reading, Massachusetts, 1984.
-% \bibitem{lamport} L. Lamport. {\em \LaTeX~: A Document Preparation
-% System}.\/ Addison-Wesley, Reading, Massachusetts, 1986.
-% \bibitem{ken} Ken Wessen, Preparing a thesis using \LaTeX~, private
-% communication, 1994.
-% \bibitem{lamport2} L. Lamport. Document Production: Visual
-% or Logical, {\em Notices of the Amer. Maths. Soc.},\/ Vol. 34,
-% 1987, pp. 621-624.
-% \end{thebibliography}
 
 \printbibliography
 
