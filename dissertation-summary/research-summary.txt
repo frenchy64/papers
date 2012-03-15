@@ -1,0 +1,28 @@
+An Optional Static Type System for Clojure
+
+Author: Ambrose Bonnaire-Sergeant
+Supervisor: Rowan Davies
+
+Dynamically typed languages (also known as monotyped) are designed to be convenient for
+writing programs quickly, and aspire to get out of the programmer's
+way as much as possible. When programs grow large and stabilize,
+some features of static languages are missed, specifically static
+type checking. 
+
+Tobin-Hochstadt notes that "untyped scripts are difficult to 
+maintain over the long run" because types
+contain valuable design information.
+He developed Typed Scheme to safely and incrementally port existing 
+Scheme code, a dynamic language, to
+Typed Scheme, a static language.
+
+Clojure is a dynamically typed, functional language with 
+implementations for the Java Virtual
+Machine and Common Language Runtime, and compiling to Javascript. Clojure
+is also a Lisp, which makes it a good candidate to test the generality of
+ideas developed for Typed Scheme 
+
+This project will explore designing and adding an optional type system to Clojure.
+It will be based on the lessons learnt throught the development
+of Typed Scheme, and as a response to Tobin-Hochstadt's
+suggestion to add type systems to other existing dynamic languages.
