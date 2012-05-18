@@ -1,0 +1,439 @@
+
+\documentclass[12pt,a4paper]{article}
+%\usepackage{graphicx}
+%\usepackage{cite}
+%\usepackage{latexsym}
+\usepackage{biblatex}
+
+\bibliography{bibliography}
+
+\usepackage{color}
+\usepackage{listings}
+\lstset{ %
+  language=Lisp,                % choose the language of the code
+  columns=fixed,basewidth=.5em,
+  basicstyle=\small\ttfamily,       % the size of the fonts that are used for the code
+  numbers=left,                   % where to put the line-numbers
+  %numberstyle=\small\ttfamily,      % the size of the fonts that are used for the line-numbers
+  %stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+  %numbersep=5pt,                  % how far the line-numbers are from the code
+  %backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  %showspaces=false,               % show spaces adding particular underscores
+  %showstringspaces=false,         % underline spaces within strings
+  %showtabs=false,                 % show tabs within strings adding particular underscores
+  frame=single,           % adds a frame around the code
+  %tabsize=2,          % sets default tabsize to 2 spaces
+  captionpos=b,           % sets the caption-position to bottom
+  breaklines=true,        % sets automatic line breaking
+  breakatwhitespace=true,    % sets if automatic breaks should only happen at whitespace
+  %escapeinside={\%*}{*)},          % if you want to add a comment within your code
+}
+
+
+\title{Type Inference for a Clojure Type System}
+\author{Ambrose Bonnaire-Sergeant}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  
+  Type inference empowers programmers to work faster and safer in a statically 
+  typed world. The popularity of language idioms is strongly linked
+  with type inference: programmers won't use hard-to-express idioms.
+  Designing a type system for a dynamic language should preserve existing idioms, 
+  and this crucially relies on the design of type inference.
+  I explore and evaluate the type inference strategies
+  used by Typed Racket and Scala, showing their relevance to a type system for Clojure
+  (an existing dynamically typed language).
+
+\end{abstract}
+
+{\bf Keywords:} occurrence typing, local type inference, Typed Racket, Scala, Clojure
+
+\section{Introduction}
+
+Statically typed languages know the types of their programs
+at compile time: but how? Explicitly typed languages
+put most responsibility on the programmer
+to provide type annotations; implicitly typed languages attempt to
+recover type information using various type inference strategies. 
+A good type inference algorithm can minimise and sometimes completely
+eliminate manual type annotations.
+
+Clojure is a dynamically typed language on the Java Virtual Machine.
+In designing a type system for Clojure, I explore two existing statically typed
+languages: Scala and Typed Racket.
+I conclude that several type inference techniques used by Typed Racket
+are applicable to a Clojure type system.
+
+At the core of Typed Racket's type inference strategy is Local Type Inference
+\cite{Pierce:2000:LTI:345099.345100}.
+Local Type Inference requires all top level bindings to be fully annotated,
+but promises to almost never require type annotations to local bindings.
+Hosoya and Pierce detail the limitations of Local Type Inference,
+and note little success in improving them\cite{Hosoya99howgood}.
+
+The Scala type inference strategy utilises Colored Local Type Inference
+\cite{Odersky:2001:CLT:373243.360207}, an extension of Pierce and 
+Turner's Local Type Inference
+\cite{Pierce:2000:LTI:345099.345100}.
+Colored Local Type Inference improves Pierce and Turner's algorithm
+by allowing partial type information to propagate downwards, where
+the original algorithm only allowed the propagation of complete type information.
+
+Typed Racket's type inference is helped by occurrence typing \cite{Tobin-Hochstadt:2010:LTU:1932681.1863561}
+, which reasons about predicates directing program flow. Its
+goal is to understand dynamic language idioms, such that they can
+be preserved and type checked. Occurrence typing is crucial to the
+usability of Typed Racket, and it could fit well into a Clojure
+type system.
+
+To test the applicability of Typed Racket's type inference strategies,
+I port a function provided by Clojure's standard library
+to Typed Racket. The function uses multiple type predicates
+combined in either disjunction and conjunction, and expects two very general
+parameters. This tests Typed Racket's occurrence typing implementation.
+The results are quite promising, with the basic structure of the code remaining unchanged.
+
+I also verify some known limitations of Local Type Inference 
+\cite{Pierce:2000:LTI:345099.345100}\cite{Hosoya99howgood}
+by type checking code known to fail type synthesis. I show the specified cases fail as expected
+and then I provide correct type annotations to type check the cases.
+
+From these experiments, I conclude that occurrence typing is
+a good candidate for a Clojure type system. It allows idiomatic code to be
+typed without structural modifications. I also conclude that Local Type Inference 
+\cite{Pierce:2000:LTI:345099.345100}
+is more appropriate than Colored Local Type Inference \cite{Odersky:2001:CLT:373243.360207}, since the benefits of the
+latter are limited outside Scala, but I note that Colored Local Type Inference
+would be a good starting point to improve Local Type Inference.
+
+\section{Previous and related work}
+
+One goal of Typed Racket \cite{Tobin-Hochstadt:2008:DIT:1328897.1328486} is 
+adding a satisfying type system to an existing, dynamic, 
+language. This is exactly the use-case I explore with a Clojure type system.
+The particular mix of type checking features used by Typed Racket harmonise to satisfy the 
+goal of type checking idiomatic Racket code.
+
+\subsection{Local Type Inference}
+
+Typed Racket uses Local Type Inference \cite{Pierce:2000:LTI:345099.345100}
+as an inference tool and checking tool. Pierce and Turner
+\cite{Pierce:2000:LTI:345099.345100} divide Local Type Inference into
+two complementary algorithms. \emph{Local type argument synthesis}
+synthesises type arguments to polymorphic applications, and \emph{bidirectional
+propagation} propagates type information to nodes in both directions of the source tree.
+
+Pierce and Turner split \emph{local type argument synthesis} into two further
+algorithms: bounded, and unbounded quantification \cite{Pierce:2000:LTI:345099.345100}. 
+Typed Racket 
+supports unbounded polymorphism \cite{SAMTH:dissertation}, implementing the latter algorithm by Piece et al. .
+Scala supports bounded quantification with F-bounded polymorphism \cite{Canning:1989:FPO:99370.99392},
+basing its type argument synthesis on the bounded quantification algorithm.
+
+Pierce and Turner explicitly forbid \cite{Pierce:2000:LTI:345099.345100}
+type variables with interdependent bounds, including
+F-bounds, having failed to devise an algorithm to infer these cases.
+Scala's type argument synthesis implementation deviates from Pierce and Turner to support these features.
+I am not aware of papers specifically describing Scala's modifications, but they are at least inspired by
+Scala's spiritual ancestors Generic Java \cite{Bracha98gj:extending} and Pizza \cite{Odersky97pizzainto}.
+
+Hosoya and Pierce \cite{Hosoya99howgood} reiterate two common problems with Local Type Inference:
+``hard-to-synthesise arguments'' and ``no best type argument''. The first problem occurs because
+both local type argument synthesis and bidirectional propagation cannot perform synthesis
+simultaneously. Cases where both algorithms can recover new type information are usually ``hard-to-synthesise''.
+``No best type argument'' describes the situation where the results of local
+type argument synthesis yield more than one type, and no type is better than the other. Sometimes we cannot recover and synthesis
+fails.
+
+\subsection{Colored Local Type Inference}
+
+Scala's type checking uses Colored Local Type Inference \cite{Odersky:2001:CLT:373243.360207},
+a variant of Local Type Inference \cite{Pierce:2000:LTI:345099.345100} specifically designed to
+improve inference with certain kinds of pattern matching expressions in Scala. It allows
+\emph{partial} type information to propagate down the syntax tree, instead of only full type information
+as required by Local Type Inference.
+
+\emph{Colored} types contain extra information than normal types, including the propagation direction
+and missing parts of the type (when representing a \emph{partial type}). They are generally useful
+for describing ``information flow in polymorphic type systems with propagation-based type inference''
+\cite{Odersky:2001:CLT:373243.360207}. If the scope of my research permits it, I plan to investigate
+using colored types to solve the polymorphic higher-order-function limitation of Local Type Inference.
+
+\subsection{Occurrence Typing}
+
+Occurrence typing was devised \cite{Tobin-Hochstadt:2008:DIT:1328897.1328486} and improved
+\cite{Tobin-Hochstadt:2010:LTU:1932681.1863561} for the Typed Racket project. It uses propositional 
+logic to combine type information gathered by a combination of type predicates and path selectors.
+It enables recovery of type information in an ad-hoc fashion, and gives the type checker some insight
+in the invariants at given points in the program.
+
+Crucially, occurrence typing allows us to continue writing code in a dynamic style, without restructuring
+our functions for the sake of type checking. 
+
+\subsection{A Clojure Type System}
+
+Clojure is similar to both Scala and Typed Racket in a few ways. Scala and Clojure
+both run on the JVM, and have extensive object-oriented standard libraries to utilise.
+As is common in statically typed object-oriented languages, bounded quantification is
+included, with the extension of F-bounded polymorphism.
+
+The parallels with Typed Racket are more fruitful in a type checking context.
+Occurrence typing is a good, lightweight solution to the problem faced by Typed Racket:
+type check idiomatic and existing Racket code. Clojure and Racket are both Lisps, so even
+visually there is a close relationship between them. It seems safe to assume occurrence
+typing will bring as many benefits to a Clojure type system as it did to Typed Racket.
+
+\section{Methodology}
+
+Evaluating a type inference implementation should involve several
+strategies. I wish to maximise the intersection of 
+the set of idiomatic Clojure forms and the set of forms whos type
+can be successfully inferred by the type inference algorithm.
+
+The Typed Racket type inference implementation is a combination
+of two strategies: Local Type Inference and occurrence typing. 
+Local Type Inference can be further described as an interaction between
+two further algorithms,
+\emph{local type argument synthesis} and \emph{bidirectional checking}\cite{Hosoya99howgood}.
+I identify cases that test some components individually.
+
+Some known limitations of Local Type Inference are explored by
+Hosoya and Turner \cite{Hosoya99howgood}. They describe the strengths
+of Local Type Inference, in particular they claim the limitations of
+Local Type Inference are well defined and easy to understand. This claim
+is also mirrored by Pierce and Turner \cite{Pierce:2000:LTI:345099.345100}.
+
+One limitation described by both sets of authors is summarised by
+Hosoya and Turner as ``hard to synthesise arguments'' \cite{Hosoya99howgood}.
+It refers to situations where both the \emph{local type argument synthesis} and
+\emph{bidirectional checking} algorithms could help synthesise the type. Because
+both algorithms cannot run together, type synthesis fails.
+
+Any example given by Hosoya et at. \cite{Hosoya99howgood} attempts to synthesises the type of an application of a polymorphic
+function that takes an unannotated function as an argument.
+For example \lstinline|(map (fn [x] x) [1 2 3])|,
+where the type of the polymorphic function \emph{map} is 
+\lstinline|(All [a b] [[a -> b] (List a) -> (List b)])|. Here, neither 
+local type argument synthesis or bidirectional checking have sufficient type information
+to infer types, so type inference fails. We should be able to help type inference
+by providing parameter types to the anonymous function argument \lstinline|(map (fn [x : Integer] x) [1 2 3])|
+or by instantiating \emph{map} with type arguments \lstinline|((inst map Integer Integer) (fn [x] x) [1 2 3])|.
+
+\section{Implementation}
+
+To test the type inference in Typed Racket,
+I use the version of Typed Racket packaged with DrRacket 5.2, running on Ubuntu Linux 11.10.
+
+I chose a function from the Clojure standard library to port to Typed Racket [Listing \ref{lst:isaCLJ}].
+\lstinline|clojure.core/isa?| was chosen to test the occurrence
+typing implementation of Typed Racket; there are several type predicates nested
+in conjunctions that guard function applications. For example, the conjunction
+of \lstinline|(class? parent)| and \lstinline|(class? child)| on line 5 ensure \lstinline|parent|
+and \lstinline|child| are instances of \lstinline|Class| before calling the \lstinline|Class| instance
+method \lstinline|isAssignableForm|
+on line 6,
+which expects a \lstinline|Class| argument. These ad-hoc type predicate applications must be recognised
+and utilised by occurrence typing for type inference to succeed.
+
+\begin{lstlisting}[caption=isa? Clojure Version, label=lst:isaCLJ]
+(defn isa?
+  ([child parent] (isa? global-hierarchy child parent))
+  ([h child parent]
+   (or (= child parent)
+       (and (class? parent) (class? child)
+            (. ^Class parent isAssignableFrom child))
+       (contains? ((:ancestors h) child) parent)
+       (and (class? child) 
+            (some #(contains? ((:ancestors h) %) parent)
+                  (supers child)))
+       (and (vector? parent) (vector? child)
+            (= (count parent) (count child))
+            (loop [ret true i 0]
+              (if (or (not ret) (= i (count parent)))
+                ret
+                (recur (isa? h (child i) (parent i)) (inc i))))))))
+\end{lstlisting}
+
+I also test the Local Type Inference implementation by reproducing
+a ``hard to synthesise case'' \cite{Hosoya99howgood}.
+I test the often cited common weakness, where type inference
+fails because of applying a polymorphic function to an unannotated anonymous function
+argument.
+
+%Describe how you went about testing the hypothesis that you have stated
+%in the introduction. What equipment did you use? Were there any parameter
+%values you used? Give enough detail so that others can replicate your work.
+
+\section{Results}
+
+\subsection{Testing Typed Racket's Occurrence Typing}
+
+I ported \lstinline|clojure.core/isa?| [Listing \ref{lst:isaCLJ}] to Typed Racket [Listing \ref{lst:isaTR}] by
+first converting Clojure functions to Racket. If there was no
+equivalent, such as the \lstinline|vector-of?| predicate, I define my own
+and use it.
+
+Note that \lstinline|isa?| takes two argument of type \lstinline|Any|
+and returns a \lstinline|Boolean|. At line 17 is the ported version of
+the example described in the previous section. Notice is it now statically
+type checked, which means type inference succeeded. We know Typed Racket
+recognised the predicate \lstinline|class?| because the call 
+\lstinline|class-assignable-from-class| takes two \lstinline|class|
+parameters.
+
+I ran some tests with dummy \lstinline|class|s, which reinforced
+the correctness of my code.
+
+
+\begin{lstlisting}[caption=isa? Typed Racket Port, label=lst:isaTR]
+(struct: class ...)
+(struct: hierarchy ([ancestors : (HashTable class (Setof class))]))
+
+(: class-assignable-from-class? (class class -> Boolean))
+(: some-super (hierarchy Any class -> Boolean))
+
+(define-predicate vector-of? (Vectorof Any))
+
+(: isa? (case-lambda
+          (Any Any -> Boolean)
+          (hierarchy Any Any -> Boolean)))
+(define isa?
+  (case-lambda
+    ((child parent) (isa? global-hierarchy child parent))
+    ((h child parent)
+     (or (equal? child parent)
+         (and (class? parent) (class? child)
+              (class-assignable-from-class? child parent))
+         (and (class? child)
+              (let ([hs (hierarchy-ancestors h)])
+                (and (hash-has-key? hs child)
+                     (let ([as (hash-ref hs child)])
+                       (set-member? as parent)))))
+         (and (class? child) (some-super h parent child))
+         (and (vector-of? child) (vector-of? parent)
+              (= (vector-length child) (vector-length parent))
+              (let: loop : Boolean
+                ([ret : Boolean #t] 
+                 [i : Integer 0])
+                (if (or (not ret) (= i (vector-length parent)))
+                    ret
+                    (loop (isa? h (vector-ref child i)
+                                  (vector-ref parent i)) 
+                          (+ 1 i)))))))))
+\end{lstlisting}
+
+\subsection{Testing Typed Racket's Local Type Inference}
+
+I performed some verification tests on Typed Racket's Local Type Inference 
+implementation. I chose a polymorphic function, \lstinline|map| [Listing \ref{lst:maptype}], and applied
+an anonymous function.
+
+\begin{lstlisting}[caption=Type of Typed Racket's map, label=lst:maptype]
+(:print-type map)
+;(All (c a b ...) 
+;  (case-> 
+;    ((a -> c) (Pairof a (Listof a)) 
+;     -> (Pairof c (Listof c)))
+;    ((a b ... b -> c) (Listof a) (Listof b) ... b 
+;     -> (Listof c))))
+\end{lstlisting}
+
+Here I omit type parameters and parameter annotations [Listing \ref{lst:hard1}]. As expected,
+type inference fails, so parameter \lstinline|a| is inferred to be
+of type \lstinline|Any|, which is too general to be passed to
+\lstinline|+|.
+
+\begin{lstlisting}[caption=Hard to Synthesise Polymorphic Application without Type Arguments and Annotations - Typed Racket, label=lst:hard1]
+(map (lambda (a) (+ 1 a 3)) (list 1 2 3))
+; Type Checker: Expected Number, but got Any in: a
+\end{lstlisting}
+
+Here I give sufficient type arguments to instantiate \lstinline|map| [Listing \ref{lst:hard2}], but
+this is, perhaps surprisingly, not enough information for Local Type Inference to
+infer the correct type for \lstinline|a|.
+
+\begin{lstlisting}[caption=Hard to Synthesise Polymorphic Application with Type Arguments without Annotations - Typed Racket, label=lst:hard2]
+((inst map Integer Integer) (lambda (a) (+ 1 a 3)) (list 1 2 3))
+; Type Checker: Expected Number, but got Any in: a
+\end{lstlisting}
+
+Finally, I show a version compatible with the type inferencer by
+providing  the parameter types of the anonymous function argument [Listing \ref{lst:welltyped}].
+
+\begin{lstlisting}[caption=Well Typed - Typed Racket, label=lst:welltyped]
+(map (lambda: ([a : Integer]) (+ 1 a 3)) (list 1 2 3))
+\end{lstlisting}
+
+
+%Carefully outline each experiment: what was its purpose, and what
+%precisely did you find? Sometimes it is easiest to display your
+%results in tabular form, nut note that tables are also floating
+%environments in \LaTeX\/, so they don't always end up where you want
+%them to be!
+%
+%\begin{table}[htbp]
+%  \caption{A very interesting table of tens.}
+%  \begin{center}
+%    \begin{tabular}{|l|c|l|} \hline
+%      item1 & 10 & integer \\
+%      item2 & 10.0 & float \\
+%      item3 & `ten' & char \\
+%      item4 & 1010 & binary \\
+%      item5 & $10 + i0$ & complex \\
+%      \hline
+%    \end{tabular}
+%  \end{center}
+%\end{table}
+
+\section{Conclusion}
+
+I have evaluated several type inference techniques for applicability
+to a Clojure type system. A type inference technique was considered
+applicable if it helped type-check existing Clojure idioms without
+adding redundant type annotations.
+
+The type inference strategy is an essential part of any type system
+design. When adding type inference to a language with
+existing idioms, the search for well fitting type inference techniques
+should be as exhaustive as possible, because the type inferencing must
+fit with the idioms. If the wrong type inferencing strategy is employed,
+it may force the idioms of the language to change. It is risky 
+changing time honoured idioms, and everything should be done to avoid
+that possibility.
+
+The evaluation of existing type inference techniques consisted of two activities: simulating Clojure idioms
+in other languages, and verify limitations to algorithms. I ported a
+standard Clojure function to Typed Racket and ensured it was well typed.
+The overall structure of the code did not change in the porting process.
+I also tested the limitations of Local Type Inference by testing
+small, contrived, forms in Typed Racket which I expected to fail. The first
+failed without surprise, and the second failed after some uncertainty.
+
+These results indicate that Typed Racket's type inference strategy \cite{SAMTH:dissertation} seems a good
+fit for a Clojure type system, and is well worth a prototype. The stress test,
+which required the porting effort, was testing occurrence typing and
+how it might behave when applied to Clojure code. The results
+were pleasing which implies occurrence typing could fit Clojure code as well as
+Racket code. The successful small tests of known edge cases for Local Type Inference tells us
+that a satisfying type system can be built in spite of the limitations of Local Type Inference\cite{Hosoya99howgood}.
+This reinforces my decision to utilise Local Type Inference \cite{Pierce:2000:LTI:345099.345100}
+over the more complicated Colored Type Inference \cite{Odersky:2001:CLT:373243.360207}.
+
+This evaluation of type inference techniques is part of a larger project to add a static
+type system to Clojure. Type inference is an incredibly important aspect of a type system in terms
+of actual day-to-day use. The programmer will have type inference at the tip of their fingers
+at every keystroke. How many keystrokes of frustrating redundancy would you tolerate 
+before throwing in the towel? The type inference strategy must fit the language like a glove; then
+you are in with a fighting chance.
+
+%\section*{Acknowledgements}
+%
+%Acknowledge any help you might have had, either technical of financial.
+
+\printbibliography
+
+\end{document}
