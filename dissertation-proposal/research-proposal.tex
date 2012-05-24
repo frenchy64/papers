@@ -90,8 +90,8 @@ There are several challenges to creating a satisfactory type system for Clojure.
 Multimethods play a significant role in Clojure, and a satisfactory
 type system for Clojure should understand them to some degree.
 There is some experience statically typing multimethods
-\cite{Millstein02modularstatically}
-, but this is a challenge and may not be addressed in the
+\cite{Millstein02modularstatically}, 
+but this is a challenge and may not be addressed in the
 timeframe proposed, beyond initial consideration of how it would
 fit with the rest of the system.
 
@@ -152,19 +152,13 @@ regarding such issues.
 \begin{description}
 \item[0.1]
 	\begin{itemize}
-	\item Concrete types (no type variables)
 	\item Union types
+  \item Basic Local Type Inference algorithm
 	\item Fixed arity function types
 	\item Typed deftype (class definitions)
 	\item Uniform variable-arity function types
-	\item Type checking without occurance typing
 	\item Enough functions annotated from clojure.core for proof-of-concept
-	\end{itemize}
-\item[0.2]
-	\begin{itemize}
-	\item Typed defrecord (record structures)
-	\item Type variables (polymorphic types)
-	\item Most functions annotated from clojure.core library
+	\item Bounded Type variables
 	\end{itemize}
 \item[Challenges]
 	\begin{itemize}
@@ -173,6 +167,7 @@ regarding such issues.
 	\item Mutable reference types
 	\item Non-uniform variable arity polymorphism
 	\item Typing Multimethods
+	\item Fine Grained Hash-Map Types
 	\end{itemize}
 
 \end{description}
