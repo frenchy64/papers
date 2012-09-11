@@ -1,0 +1,197 @@
+\chapter{Design Choices}
+
+Typed Clojure is designed to be of practical use to Clojure programmers.
+Many of the design goals are similar to Tobin-Hochstadt's \cite{SAMTH:dissertation}
+for Typed Racket.
+
+\section{Typed Racket}
+
+The majority of the design and implementation of Typed Clojure is based on Typed Racket.
+
+\subsection{Occurrence Typing}
+% interesting paths
+% - count path element
+% - class path element
+% - keyword path element
+
+\subsection{Variable-arity Polymorphism}
+% Problematic areas
+% - flattened paired arguments. assoc, hash-maps, array-map
+% - complex argument dependencies. comp, partial
+
+\section{Safer Host Interoperability}
+% Args non-nil, return nilable
+% Constructors and other special methods handled appropriately (eg. Constructor are non-nil return)
+% TODO refine language Clojure vs. Clojure JVM
+
+% what is this paragraph saying?
+Dialects of Clojure provide fast and unrestricted access to their host platform. 
+This is a intentional source of incompatibility between dialects.
+For example, Clojure is hosted on the Java Virtual Machine (JVM), ClojureCLR on the Common Language Runtime (CLR),
+and ClojureScript on Javascript VMs. These are very different platforms, and it is unlikely
+a Clojure dot call will be portable. There is no attempt at reconciling
+host interoperability differences, and it is up to the programmer to decide
+how to best abstract over different hosts.
+
+Typed Clojure targets the JVM hosted Clojure.
+Clojure embraces the JVM as a host by sharing its runtime type system and encouraging direct
+interaction with libraries written in other JVM languages. Most commonly, Clojure programmers
+reach to Java libraries. Java is statically typed language. It follows that any interaction with
+Java will already have an annotated Java type. Typed Clojure can use these annotations
+to statically type check these interactions.
+
+Typed Clojure attempts to improve some shortcomings of Java's type system.
+
+Java's static type system does not provide a type-safe construct for eliminating
+the \lstinline|null| pointer. Instead, Java programmers often rely on either testing
+for \lstinline|null| or prior domain knowledge.
+
+\begin{lstlisting}[caption=null elimination in Java]
+...
+Object a = nextObject();
+if (a != null)
+  parseNextObject(a);
+else
+  throw new Exception("null Pointer Found!);
+...
+\end{lstlisting}
+
+
+
+In Java, \lstinline|null| is a subtype to all reference
+types, but \lstinline|null| is not expressible as a static type. In other words,
+when a Java type claims a reference type, you should also assume it can also be of 
+type \lstinline|null|.
+
+
+
+Scala provides the Option type for safe \lstinline|null| elimination, forcing pattern matching
+where \lstinline|null| might occur.
+
+\begin{lstlisting}[caption=null elimination in Scala]
+TODO
+\end{lstlisting}
+
+Clojure 
+
+\subsection{Primitive Arrays}
+% Primitive arrays are covariant, which is well-known to be statically unsound.
+% We cannot trust the type signature of any Java method or field.
+% Separate read and write types into two parameters.
+
+\subsection{Interaction with null}
+% null is explicitly expressible in my type system
+% In Java, null is subtype of all reference types, any reference type must be tested to prevent NPE
+% 
+
+\subsection{Generic Java}
+% Existential types are needed to fully express Generic Java types in Typed Clojure
+% F-bounded polymorphism supported
+
+
+\section{Optional Type Checking}
+\section{Local Type Inference}
+
+Similar to Typed Racket, type inference is based on Local Type Inference
+by Pierce and Turner.
+
+\section{F-bounded Polymorphism}
+
+Typed Clojure includes support for F-bounds on type variables, as an extension
+to Local Type Inference. 
+
+An extra environment from type variables to bounds is kept until after inference,
+after which each unground bound is substituted with the inferred types and the
+subtyping relationships are checked.
+
+\section{Heterogeneous Maps}
+% keyword keys for now, generally encouraged, fast
+% Some heterogeneous maps have string args, eg. from web frameworks
+
+% Operational semantics
+
+\subsection{Operational Semantics}
+ 
+$$
+\begin{tdisplay}{Test1}
+\begin{altgrammar}
+  \s{},\t{} &::= & \int \alt \bool \alt {\proctype {\s{}} {\t{}}} 
+  &\mbox{Types}\\
+  \M{}, \N{}, \P{}, \dots &::=& \x{} \alt \abs{\x{}}{\M{}} \alt
+  \comb{\M1}{\M2}  &\mbox{Raw Terms} \\
+\end{altgrammar}
+\end{tdisplay} 
+$$
+
+ 
+$$
+\begin{tdisplay}{Syntax of Terms}
+\begin{altgrammar}
+  \exp{} &::=&  \x{} \alt \{ \overrightarrow{\exp{}\ \exp{}} \} 
+             \alt [ \overrightarrow{\exp{}} ] 
+             &\mbox{Expressions} \\ 
+  \v{} &::=& \alt \{ \overrightarrow{\v{}\ \v{}} \} 
+             \alt [ \overrightarrow{\v{}} ] 
+  &\mbox{Values} \\ 
+\end{altgrammar}
+\end{tdisplay}
+$$
+ 
+$$
+\begin{tdisplay}{Operational Semantics}
+\begin{array}{c}
+{\inferrule[E-Assoc]
+  { {\Gamma \vdash e_1 \hookrightarrow v_1} \\
+    {\Gamma \vdash e_2 \hookrightarrow v_2} \\
+    {\Gamma \vdash e_3 \hookrightarrow v_3} \\
+    {v_4 = v_1\ with\ entry\ v_2\ to\ v_3} }
+  { {\Gamma \vdash (assoc\ e_1\ e_2\ e_3) \hookrightarrow v_4} }} \\
+\\
+{\inferrule[E-Dissoc]
+  { {\Gamma \vdash e_1 \hookrightarrow v_1} \\
+    {\Gamma \vdash e_2 \hookrightarrow v_2} \\
+    {v_3 = v_1\ without\ entry\ with\ key\ v_2}}
+ {\Gamma \vdash (dissoc\ e_1\ e_2) \hookrightarrow v_3} } \\
+\\
+{\inferrule[E-Var]
+  {\Gamma(x) = v}
+  {\Gamma \vdash x \hookrightarrow v}}
+\end{array} 
+\end{tdisplay} 
+$$
+
+
+
+\subsection{Higher-order Variable-arity Polymorphism (SKETCH)}
+
+Practical Variable-arity Polymorphism introduces the concept of a dotted type parameter,
+representing a sequence of types, allowing non-uniform variable parameters.
+This enables \lstinline|map| and other function with complex arguments to be typed.
+Strickland, Tobin-Hochstadt, and Felleisen's approach is solves almost all variable-arity applications in
+Typed Racket, and is a key feature of Typed Racket's implementation.
+
+Idiomatic variable-arity functions in Clojure's are even more sophisticated than Typed Racket, requiring extensions
+to Typed Racket's approach to type check satisfactorily. The Clojure core library favours functions with
+variable parameters, especially in a higher-order context. For example, \lstinline|assoc|
+associates key-value pairs to a target map. It takes one or more key-value pairs and
+applies them left-to-right to the target map. The key problem from a typing perspective
+is \lstinline|assoc|'s arguments are flattened, resulting in \lstinline|assoc| only
+accepting an even number of rest arguments. \lstinline|assoc| is also commonly used as a
+higher-order function.
+\lstinline|assoc| cannot be expressed in Typed Racket. For instance,
+dotted parameters represent an unrestricted number of types, where we require an even number.
+
+The nature of Clojure's idiomatic variable-arity functions suggest we must introduce
+new kinds of dotted parameters. Three main issues must be considered in the context of Typed Clojure.
+Firstly, subtyping between different kinds of dotted and rest
+\footnote{A rest parameter consumes zero or more types, rather than being a sequence of types.}
+parameters can be tricky, only made trickier by adding new kinds of dotted parameters.
+Secondly, elimination rules for dotted parameters in many frequently used Clojure core functions
+difficult to express.
+Thirdly, higher-order functions taking functions with dotted arguments commonly 
+The first issue requires careful design and implementation.
+The second and third points require new constructs, in the form of \emph{projections}
+and abstractions over \emph{dotted} parameters, respectively.
+
+
+

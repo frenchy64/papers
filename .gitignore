@@ -8,5 +8,6 @@
 *.xml
 *.dvi
 *.pdf
+*.ps
 *.log
 *.out

@@ -1,0 +1,36 @@
+% macros for Clojure grammars
+\usepackage{mathpartir}
+
+%% metavariables
+
+% types
+\newmeta\s{\sigma}              % these are automatically wrapped in \ma
+\newmeta\t{\tau}
+
+% expressions
+\newmeta\M{M}
+\newmeta\N{N}
+\newmeta\P{P}
+\newmeta\exp{e}
+
+% we write a macro for every bit of abstract syntax.  That way they
+% will all look the same!
+
+% types
+\newbfop\int{int}
+\newbfop\bool{bool}
+\newcommand\proctype[2]{(#1 \to #2)}
+% \proctype is a little overkill.
+%% Reynolds' package can also abstract things like (\s1 \to \s2 \to \s3).
+
+% terms
+\newmeta\x{x}                   % not sure if \x is reserved...
+\newmeta\c{c}
+\newmeta\v{v}
+\newcommand\abs[2]{\ma{\l #1 . #2}}
+\newcommand\comb[2]{\ma{(#1\ #2)}}
+
+% typing judgements
+\newcommand\hastype[2]{\ma{#1 \mathbin{:} #2}}
+
+

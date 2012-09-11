@@ -1,0 +1,14 @@
+#! /bin/bash -f
+
+# original bash version
+# #! /bin/csh -f
+# while (1) 
+#   make -s preview
+#   sleep 2  # change from 2 to 5 or 10 to accomodate webdrive.
+# end
+
+
+while [ 1 ]; do
+  make -s preview
+  sleep 2;  # change from 2 to 5 or 10 to accomodate webdrive.
+done

@@ -1,0 +1,360 @@
+
+\chapter{Introduction}
+
+\section{Thesis}
+
+\emph{It is practical and useful to design and implement an optional typing system 
+for the Clojure programming language that allows Clojure programmers to continue 
+using idioms and style found in current Clojure code.}
+
+\section{Motivation}
+
+% Type Systems for lisp?
+% Why type systems?
+% Why Clojure?
+
+In the last decade it has become increasingly common to enhance
+dynamically typed languages with static type systems. This idea not new,
+but recent attempts are noteworthy for their successful use of bidirectional checking.
+Instead of inferring types the algorithm relies on programmer annotations.
+
+Clojure is a dynamically typed language running on the JVM. It emphasises
+functional programming with immutable data structures
+and provides direct interoperability with JVM languages.
+
+Recently languages have been created to or been modified to support aspects
+of static and dynamic typing.
+Dart is fundamentally dynamically typed but offers a form of optional
+static typing. Haskell recently supports the ability to delay static type errors 
+to runtime, removing the need for the program to type check before running.
+Scala can emulate some features of dynamic languages with Dynamic Scala.
+
+\subsection{What kind of type system does Typed Clojure provide?}
+
+% What are types? No real agreement .. but here is my definition..
+% Every programmer thinks they know what they are. More than one concept
+% in the literature.
+% Static vs. dynamic
+% intrinsic vs. extrinsic
+
+% is it even a type system?
+% type refinements vs ordinary types
+% extrinsic vs intrinsic type systems
+
+% refinements check invariants of programs
+% while ordinary static types check whether programs
+% are basically meaningful - Rowan + Frank P
+% Page 1 Rowan's PhD
+An ordinary static type system is used to check whether programs are basically
+meaningful. Such type systems are \emph{intrinsic}. A language with an intrinsic
+static type system relies on programs being well-typed for runtime semantics to be defined.
+This means such programs must pass the type checker before being run.
+
+A static type system is \emph{extrinsic} when runtime semantics
+are not defined by the type system. In other words, passing a static type checker
+is not essential to running programs. A dynamically typed language can be viewed
+as having a static type system that supports exact one type.
+
+A type checker ensures invariants hold complains if code
+does not conform to its documented type. Powerful type systems like
+Haskell's and Scala's are useful when reasoning about higher-order code.
+
+When a static type checker is not available, which describes the situation
+for most dynamic languages, other techniques are used for checking
+type invariants. Runtime contracts are a popular alternative.
+Clojure takes this approach, providing easy syntax for defining pre-
+and post-conditions \footnote{Inspired by Eiffel}.
+
+% clojure is dynamically typed
+% currently few tools to statically reason about complex higher-order code
+% conduit based on streams, uses continuations
+% core.logic based on monads
+% Static types are useful for reasoning for such things
+% Strong statically typed languages like Haskell use monads regularly
+
+% strength of Clojure is concision
+% typically, concise static languages are built concurrently with their type system
+% Eg. Haskell, ML flavoured languages
+% Counterpoint: Typed Racket preserves racket idioms, adds static typing
+
+\section{Typed Clojure through Examples}
+
+% Hello world
+This section introduces Typed Clojure with example code. An attempt is
+made to introduce some Clojure syntax and sematics to those unfamiliar or needing a refresher.
+A basic knowledge of Lisp syntax is assumed.
+
+We begin with the obligatory \emph{Hello world} example.
+
+\begin{lstlisting}[caption=Hello world]
+(ns typed.test.hello-world
+  (:require [typed.core :refer [check-ns]]]))
+
+(println "Hello world")
+\end{lstlisting}
+
+The \lstinline|clojure.core/ns|
+\footnote{All vars from the \lstinline|clojure.core| namespace are referred implicitly in new namespaces (equivalent to \lstinline|(:require [clojure.core :refer :all])|).}
+invocation declares the current namespace to be \lstinline|typed.test.hello-world|
+and requires the namespace \lstinline|typed.core| to be loaded as a dependency, referring the var
+\lstinline|typed.core/check-ns| to be referenced locally. Other than this
+dependency, this is identical to the untyped \emph{Hello world}.
+% footnote: check-ns used to initiate type checking usually at REPL
+
+More complex code require extra annotations to type check:
+
+\begin{lstlisting}
+(ns typed.test.collatz
+  (:require [typed.core :refer [check-ns ann]]))
+
+(ann collatz [Number -> Number])
+(defn collatz [n]
+  (cond
+    (= 1 n) 
+      1
+    (and (integer? n) 
+         (even? n)) 
+      (collatz (/ n 2))
+    :else 
+      (collatz (inc (* 3 n)))))
+\end{lstlisting}
+\footnote{Example adapted from Sam's dissertation TODO}
+
+In this example, we define a new var \lstinline|typed.test.collatz/collatz|. Typed Clojure requires all 
+used vars to be annotated. Here \lstinline|typed.core/ann| annotates \lstinline|typed.test.collatz/collatz|
+to be a function from \lstinline{java.lang.Number} to 
+\lstinline{java.lang.Number}
+\footnote{All Classes in the \lstinline|java.lang| package
+are automatically imported in every Clojure namespace (for those familiar with Java, the equivalent of \lstinline|import java.lang.*;|).}.
+
+\subsection{Datatypes and Protocols}
+
+We can annotate datatype and protocol definitions similarly.
+
+\begin{lstlisting}
+(ns typed.test.deftype
+  (:require [typed.core 
+             :refer [check-ns ann-datatype
+                     tc-ignore ann-protocol AnyInteger]]))
+
+(ann-protocol Age 
+  :methods
+  {age [Age -> AnyInteger]})
+(tc-ignore
+  (defprotocol Age
+    (age [this])))
+
+(ann-datatype Person 
+  [[name :- String]
+   [age :- AnyInteger]])
+(deftype Person [name age]
+  Age
+  (age [this] age))
+
+(age (Person. "Lucy" 34))
+\end{lstlisting}
+
+\lstinline|clojure.core/defprotocol| defines a new Clojure protocol\footnote{See http://clojure.org/protocols for a full description of protocols}
+with a set of methods. \lstinline|typed.core/ann-protocol| annotates a protocol with the types of its methods.
+In this example, we define a protocol \lstinline|typed.test.person/Age| with an \lstinline|age| method.
+The call to \lstinline|clojure.core/defprotocol| also defines a new var \lstinline|typed.test.person/age|, a first-class function
+wrapping the \lstinline|age| method, but taking the target Object as the first parameter. The
+type signature provided with \lstinline|typed.core/ann-protocol|, here \lstinline|[typed.test.person/Age -> typed.core/AnyInteger]|, 
+is for this function.
+
+Invocations of \lstinline|clojure.core/defprotocol| are currently not able to be type checked
+and are ignored by Typed Clojure by passing them to \lstinline|typed.core/tc-ignore|.
+
+\lstinline|clojure.core/deftype|
+defines a new Clojure datatype\footnote{See http://clojure.org/datatypes for a full description of datatypes}
+in the current namespace with a number of fields and methods. 
+\lstinline|typed.core/ann-datatype| annotates a datatype with its field types.
+In this example, we create a datatype \lstinline|typed.test.person.Person|
+with fields \lstinline|name| and \lstinline|age| and implement the \lstinline|age|
+method from protocol \lstinline|typed.test.person/Age|.
+
+Java constructors are invoked in Clojure by suffixing the Class we want to instantiate with a dot.
+Datatypes are implemented as Java Classes with immutable fields (by default) and a single constructor, taking as arguments its fields 
+in the order they are passed to \lstinline|deftype|
+\footnote{When unambiguous, I omit the qualifying namespace/package for the remainder of the chapter.}.
+\lstinline|(Person. "Lucy" 34)| constructs a new \lstinline|Person|
+instance, setting the fields to their corresponding positional arguments.
+Typed Clojure checks the datatype constructor to be the equivalent of 
+\lstinline|[String AnyInteger -> Person]|.
+
+Finally, Typed Clojure checks invocations of Protocol methods. It infers \lstinline|Person|
+is an instance of \lstinline|Age| from the datatype definition, therefore \lstinline|(age (Person. "Lucy" 34))| is type-safe.
+
+\subsection{Polymorphism}
+
+Typed Clojure supports F-bounded polymorphism. All type variables may have
+upper and lower bounds.
+
+Typed Clojure parameterises some of Clojure's data structures. For example,
+the interface behind Clojure's \emph{seq} abstraction \lstinline|clojure.lang.Seqable| has one 
+covariant parameter\footnote{\lstinline|(Seqable Integer)| being a subtype of \lstinline|(Seqable Number)|
+because Integer is a subtype of Number.}.
+
+\begin{lstlisting}
+...
+(ann to-set 
+     (All [x]
+       [(U nil (Seqable x)) -> (clojure.lang.PersistentHashSet x)]))
+(defn to-set [a]
+  (set a))
+...
+\end{lstlisting}
+
+In this example\footnote{When convenient, namespace declarations are omitted for the remainder of the chapter.}
+, we define \lstinline|to-set|, aliasing \lstinline|clojure.core/set|.
+\lstinline|All| introduces a set of type variables to the body of a type,
+here \lstinline|x| is used to define a relationship between the input type and return type.
+
+\lstinline|(U nil (Seqable x))| is a common type in Typed Clojure, read as the union
+of the type \lstinline|nil| and the type \lstinline|(Seqable x)|.
+The vast majority of types for collection processing functions in the Clojure core library feature
+it as an input type, where passing \lstinline|nil| either has some special behaviour 
+or is synonymous with passing an empty \lstinline|Seqable|.
+
+\subsection{Heterogeneous Maps}
+
+Where particularly object-oriented languages reach for objects, Clojure
+utilises maps. Clojure provides a map literal using curly braces. For example,
+\lstinline|{:a 1, :b 2}| is a map with two key-value entries: from Keyword key \lstinline|:a|
+to value \lstinline|1|, and Keyword key \lstinline|:b| to value \lstinline|2|. Note that commas are always
+whitespace in Clojure and are included for readability.
+
+Typed Clojure provides a heterogeneous map type, restricted to 
+maps with singleton Keyword keys. This restriction is reflected
+in the syntax for defining heterogeneous map types.
+
+\begin{lstlisting}
+...
+(ann config
+     (HMap {:file String,
+            :ns Symbol}))
+(def config
+  {:file "clojure/core.clj",
+   :ns 'clojure.core})
+...
+\end{lstlisting}
+
+This example checks \lstinline|config| to be a heterogeneous map
+with \lstinline|:file| and \lstinline|:ns| keys, with values of
+type \lstinline|String| and \lstinline|Symbol| respectively.
+
+Heterogeneous vector and seq types are also provided.
+
+\subsection{Multi-Arity Functions}
+
+Clojure function objects support multiple arities, allowing dispatch
+on the number of supplied arguments.
+
+\begin{lstlisting}
+(ns typed.test.poly
+  (:require [typed.core :refer [ann AnyInteger check-ns cf]])
+  (:import [clojure.lang Seqable]))
+
+(ann repeatedly'
+     (All [x]
+       (Fn [[-> x] -> (Seqable x)]
+           [AnyInteger [-> x] -> (Seqable x)])))
+(defn repeatedly'
+  "Takes a function of no args, presumably with side effects, and
+  returns an infinite (or length n if supplied) lazy sequence of calls
+  to it"
+  ([f] (lazy-seq (cons (f) (repeatedly' f))))
+  ([n f] (take n (repeatedly' f))))
+\end{lstlisting}
+
+This example defines \lstinline|repeatedly'|\footnote{Identical to \lstinline|clojure.core/repeatedly|},
+a multi-arity function taking either a zero-argument function, or an integer and a zero-argument function as arguments.
+The type variable \lstinline|x| links the return type of the generator function to
+the resulting \lstinline|Seqable| instance.
+
+When checking the definition of multi-arity functions, Typed Clojure
+finds the matching function types for a particular arity by number of arguments
+and requires each relevant type to check successfully.
+
+\subsection{Variable-Arity Functions}
+
+Clojure functions can take an optional \emph{rest} argument.
+
+\subsubsection{Uniform Variable-Arity}
+
+\subsubsection{Non-uniform Variable-Arity}
+
+\subsection{Occurrence Typing}
+
+Typed Clojure uses occurrence typing to improve inference\footnote{TODO occurrence typing reference}.
+Occurrence typing is used to refine types for immutable local bindings 
+as programs follow conditional branches.
+
+\begin{lstlisting}
+(ann num-vec2 
+     [(U nil Number) (U nil Number) -> (Vector* Number Number)])
+(defn num-vec2 [a b]
+  [(if a a 0) 
+   (if b b 0)])
+\end{lstlisting}
+
+To check this example, occurrence typing infers type information based on the result of each test.
+In Clojure, \lstinline|nil| and \lstinline|false| are false values and all other values are true.
+The test \lstinline|(if a a 0)| follows the \emph{then} branch is \lstinline|a| is not \lstinline|nil|
+or \lstinline|false|. When checking this branch, we can safely refine the type of \lstinline|a| to \lstinline|Number| from
+\lstinline|(U nil Number)|. Similarly, following the \emph{else} branch refines the type of \lstinline|a|
+to \lstinline|nil| from \lstinline|(U nil Number)|.
+
+\subsection{Java Interoperability}
+
+Typed Clojure currently provides safe interop\footnote{Interop is short for interoperability} with (non-Generic) Java
+\footnote{Compatibility with Generic Java is planned future work}.
+
+The key to safe Java interop is the treatment of Java's \emph{null}.
+\emph{null} is a subtype to all reference types
+represented in Clojure by \lstinline|nil|. Unlike Java's type system
+Clojure explicitly separates \emph{null} and reference types, allowing
+Typed Clojure to express
+\emph{nullable}
+\footnote{A type is \emph{nullable} if it may also be an instance of \emph{null},
+which is expressed in Typed Clojure by creating a union of the reference type and \lstinline|nil|.}
+positions.
+
+\begin{lstlisting}
+(ns typed.test.interop
+  (:import (java.io File))
+  (:require [typed.core :refer [ann non-nil-return check-ns]]))
+
+(ann f File)
+(def f (File. "a"))
+
+(ann prt (U nil String))
+(def prt (.getParent ^File f))
+
+(non-nil-return java.io.File/getName :all)
+(ann nme String)
+(def nme (.getName ^File f))
+
+\end{lstlisting}
+
+This example shows how Typed Clojure handles \emph{null} while creating and
+using an instance of \emph{java.io.File}\footnote{See Javadoc: http://docs.oracle.com/javase/1.4.2/docs/api/java/io/File.html}.
+
+Typed Clojure checks calls to Java constructors by requiring the provided
+arguments be acceptable input to at least one constructor for that Class.
+In this case, \emph{java.io.File} has a constructor accepting a \emph{java.lang.String}
+argument, so \lstinline|(File. "a")| is type safe. Java constructors never
+return \emph{null}, so Typed Clojure assigns the return type to be \lstinline|File|.
+This constructor is equivalent to \lstinline|[String -> File]| in Typed Clojure.
+
+Next, we see how Typed Clojure's default behaviour treats method return positions as nullable.
+The \emph{java.io.File} instance method \emph{getParent}
+is equivalent to \lstinline|[-> (U nil String]| in Typed Clojure. This happens to be
+a valid approximation of the method as \emph{getParent} returns \emph{null} 
+``if the pathname does not name a parent directory''\footnote{See Javadoc: http://docs.oracle.com/javase/1.4.2/docs/api/java/io/File.html}.
+On the other hand, the instance method \emph{getName} always returns an
+instance of \emph{java.lang.String}, so we set the return position of
+\emph{getName} to non-nil with \lstinline|typed.core/non-nil-return|
+\footnote{The second parameter to \lstinline|non-nil-return| specifies which arities to assume non-nil 
+returns, accepting either a set of parameter counts of the relevant arities, or \lstinline|:all|
+to override all arities of that method.}.

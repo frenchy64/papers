@@ -1,0 +1,13 @@
+\chapter{Implementation}
+
+\section{Composite Propositions}
+
+\section{Non-hygienic Macro Expansion and Filters}
+% need to remove bindings as they fall out of scope
+% Need hygiene to ensure correct propagation of filters
+%(fn [a]
+%  (if (= a 1)
+%    (let [a 'foo] ; here this shadows the argument, impossible to recover filters
+%      a)          ; in fact any new filters about a will be incorrectly assumed to be the argument
+%      false))
+
