@@ -6,6 +6,7 @@
 % types
 \newmeta\s{\sigma}              % these are automatically wrapped in \ma
 \newmeta\t{\tau}
+\newmeta\T{T}
 
 % expressions
 \newmeta\M{M}
@@ -20,6 +21,10 @@
 \newbfop\int{int}
 \newbfop\bool{bool}
 \newcommand\proctype[2]{(#1 \to #2)}
+
+\newbfop\Top{Any}
+\newbfop\Keyword{Keyword}
+\newbfop\Nil{nil}
 % \proctype is a little overkill.
 %% Reynolds' package can also abstract things like (\s1 \to \s2 \to \s3).
 
@@ -27,6 +32,8 @@
 \newmeta\x{x}                   % not sure if \x is reserved...
 \newmeta\c{c}
 \newmeta\v{v}
+\newmeta\k{k}
+\newmeta\nil{nil}
 \newcommand\abs[2]{\ma{\l #1 . #2}}
 \newcommand\comb[2]{\ma{(#1\ #2)}}
 
@@ -34,3 +41,5 @@
 \newcommand\hastype[2]{\ma{#1 \mathbin{:} #2}}
 
 
+% evaluation contexts
+\newmeta\E{E}

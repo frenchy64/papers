@@ -112,55 +112,81 @@ subtyping relationships are checked.
 
 \subsection{Operational Semantics}
  
-$$
-\begin{tdisplay}{Test1}
-\begin{altgrammar}
-  \s{},\t{} &::= & \int \alt \bool \alt {\proctype {\s{}} {\t{}}} 
-  &\mbox{Types}\\
-  \M{}, \N{}, \P{}, \dots &::=& \x{} \alt \abs{\x{}}{\M{}} \alt
-  \comb{\M1}{\M2}  &\mbox{Raw Terms} \\
-\end{altgrammar}
-\end{tdisplay} 
-$$
+%$$
+%\begin{tdisplay}{Test1}
+%\begin{altgrammar}
+%  \s{},\t{} &::= & \int \alt \bool \alt {\proctype {\s{}} {\t{}}} 
+%  &\mbox{Types}\\
+%  \M{}, \N{}, \P{}, \dots &::=& \x{} \alt \abs{\x{}}{\M{}} \alt
+%  \comb{\M1}{\M2}  &\mbox{Raw Terms} \\
+%\end{altgrammar}
+%\end{tdisplay} 
+%$$
 
  
 $$
 \begin{tdisplay}{Syntax of Terms}
 \begin{altgrammar}
-  \exp{} &::=&  \x{} \alt \{ \overrightarrow{\exp{}\ \exp{}} \} 
-             \alt [ \overrightarrow{\exp{}} ] 
+  \exp{} &::=& (\exp{} \overrightarrow{\exp{}})         % function application, multiple arguments
+             \alt \{ \overrightarrow{\exp{}\ \exp{}} \} % map literal
              &\mbox{Expressions} \\ 
-  \v{} &::=& \alt \{ \overrightarrow{\v{}\ \v{}} \} 
-             \alt [ \overrightarrow{\v{}} ] 
-  &\mbox{Values} \\ 
+   \v{} &::=& \k{} \alt \nil{}
+               \alt \{ \overrightarrow{\v{}\ \v{}} \}   % map literal
+              &\mbox{Values}
 \end{altgrammar}
 \end{tdisplay}
 $$
+
+$$
+\begin{tdisplay}{Evaluation Contexts}
+  \begin{altgrammar}
+    \E{} &::=& % application rules
+              (\E{}\ \overrightarrow{\exp{}})  % target first
+              \alt (\v{}\ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}}) % arguments next
+              % map rules
+              \alt \{\overrightarrow{\v{}\ \v{}}\ \E{}\ \exp{}\ \overrightarrow{\exp{}\ \exp{}} \} % key first
+              \alt \{\overrightarrow{\v{}\ \v{}}\ \v{}\ \E{}\ \overrightarrow{\exp{}\ \exp{}} \}   % value next
+              % vector rule
+              \alt [ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}} ] &\mbox{Evaluation Contexts}
+  \end{altgrammar}
+\end{tdisplay}
+$$ 
  
 $$
 \begin{tdisplay}{Operational Semantics}
 \begin{array}{c}
 {\inferrule[E-Assoc]
-  { {\Gamma \vdash e_1 \hookrightarrow v_1} \\
-    {\Gamma \vdash e_2 \hookrightarrow v_2} \\
-    {\Gamma \vdash e_3 \hookrightarrow v_3} \\
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
     {v_4 = v_1\ with\ entry\ v_2\ to\ v_3} }
-  { {\Gamma \vdash (assoc\ e_1\ e_2\ e_3) \hookrightarrow v_4} }} \\
+  { {\Gamma \vdash (assoc\ v_1\ v_2\ v_3) \hookrightarrow v_4} }} \\
 \\
 {\inferrule[E-Dissoc]
-  { {\Gamma \vdash e_1 \hookrightarrow v_1} \\
-    {\Gamma \vdash e_2 \hookrightarrow v_2} \\
-    {v_3 = v_1\ without\ entry\ with\ key\ v_2}}
- {\Gamma \vdash (dissoc\ e_1\ e_2) \hookrightarrow v_3} } \\
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
+    {v_3 = v_1\ without\ entry\ indexed\ by\ v_2} }
+  {\Gamma \vdash (dissoc\ v_1\ v_2) \hookrightarrow v_3} } \\
 \\
-{\inferrule[E-Var]
-  {\Gamma(x) = v}
-  {\Gamma \vdash x \hookrightarrow v}}
+{\inferrule[E-GetMapExist]
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
+    {v_1\ has\ entry\ with\ key\ v_2} \\
+    {v_3 = corresponding\ value\ in\ entry\ with\ key\ v_2\ in\ v_1} }
+  { {\Gamma \vdash (get\ v_1\ v_2) \hookrightarrow v_3} }} \\
+\\
+{\inferrule[E-GetMapNotExist]
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
+    {v_1\ has\ no\ entry\ with\ key\ v_2} \\
+    {v_3 = \nil{}} }
+  { {\Gamma \vdash (get\ v_1\ v_2) \hookrightarrow v_3} }}
 \end{array} 
 \end{tdisplay} 
 $$
 
-
+$$
+\begin{tdisplay}{Type Syntax}
+\begin{altgrammar}
+  \T{} &::=& \Top \alt \Nil \alt \k{}
+\end{altgrammar}
+\end{tdisplay}{Type Syntax}
+$$
 
 \subsection{Higher-order Variable-arity Polymorphism (SKETCH)}
 
