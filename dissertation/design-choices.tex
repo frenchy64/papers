@@ -127,12 +127,14 @@ subtyping relationships are checked.
 $$
 \begin{tdisplay}{Syntax of Terms}
 \begin{altgrammar}
-  \exp{} &::=& (\exp{} \overrightarrow{\exp{}})         % function application, multiple arguments
+  \exp{} &::=& (\c{} \overrightarrow{\exp{}})         % function application, multiple arguments
              \alt \{ \overrightarrow{\exp{}\ \exp{}} \} % map literal
              &\mbox{Expressions} \\ 
-   \v{} &::=& \k{} \alt \nil{}
-               \alt \{ \overrightarrow{\v{}\ \v{}} \}   % map literal
-              &\mbox{Values}
+  \v{} &::=& \k{} \alt \nil{}
+              \alt \{ \overrightarrow{\v{}\ \v{}} \}   % map literal
+              &\mbox{Values} \\
+  \c{} &::=& \assoc{} \alt \dissoc{} \alt \get{}
+              &\mbox{Constants}
 \end{altgrammar}
 \end{tdisplay}
 $$
@@ -141,13 +143,11 @@ $$
 \begin{tdisplay}{Evaluation Contexts}
   \begin{altgrammar}
     \E{} &::=& % application rules
-              (\E{}\ \overrightarrow{\exp{}})  % target first
-              \alt (\v{}\ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}}) % arguments next
+              \alt (\c{}\ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}}) % eval arguments left-to-right
               % map rules
               \alt \{\overrightarrow{\v{}\ \v{}}\ \E{}\ \exp{}\ \overrightarrow{\exp{}\ \exp{}} \} % key first
               \alt \{\overrightarrow{\v{}\ \v{}}\ \v{}\ \E{}\ \overrightarrow{\exp{}\ \exp{}} \}   % value next
-              % vector rule
-              \alt [ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}} ] &\mbox{Evaluation Contexts}
+              &\mbox{Evaluation Contexts}
   \end{altgrammar}
 \end{tdisplay}
 $$ 
@@ -158,24 +158,24 @@ $$
 {\inferrule[E-Assoc]
   { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
     {v_4 = v_1\ with\ entry\ v_2\ to\ v_3} }
-  { {\Gamma \vdash (assoc\ v_1\ v_2\ v_3) \hookrightarrow v_4} }} \\
+    {{(\assoc{}\ v_1\ v_2\ v_3) \hookrightarrow v_4} }} \\
 \\
 {\inferrule[E-Dissoc]
   { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
     {v_3 = v_1\ without\ entry\ indexed\ by\ v_2} }
-  {\Gamma \vdash (dissoc\ v_1\ v_2) \hookrightarrow v_3} } \\
+  {(dissoc\ v_1\ v_2) \hookrightarrow v_3} } \\
 \\
 {\inferrule[E-GetMapExist]
   { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
     {v_1\ has\ entry\ with\ key\ v_2} \\
     {v_3 = corresponding\ value\ in\ entry\ with\ key\ v_2\ in\ v_1} }
-  { {\Gamma \vdash (get\ v_1\ v_2) \hookrightarrow v_3} }} \\
+  { {(get\ v_1\ v_2) \hookrightarrow v_3} }} \\
 \\
 {\inferrule[E-GetMapNotExist]
   { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
     {v_1\ has\ no\ entry\ with\ key\ v_2} \\
     {v_3 = \nil{}} }
-  { {\Gamma \vdash (get\ v_1\ v_2) \hookrightarrow v_3} }}
+  { {(get\ v_1\ v_2) \hookrightarrow v_3} }}
 \end{array} 
 \end{tdisplay} 
 $$
@@ -183,9 +183,62 @@ $$
 $$
 \begin{tdisplay}{Type Syntax}
 \begin{altgrammar}
-  \T{} &::=& \Top \alt \Nil \alt \k{}
+  \T{} &::=& \Top \alt \Bottom \alt \Nil \alt \k{} \alt \{ \overrightarrow{\k{}\ \T{}} \}
+             \alt {\IPersistentMap {\T{}} {\T{}}} \alt ( \cup\ \overrightarrow{\T{}} )
+             \alt ( \cap\ \overrightarrow{\T{}} )
 \end{altgrammar}
-\end{tdisplay}{Type Syntax}
+\end{tdisplay}
+$$
+
+$$
+\begin{tdisplay}{Core Type Rules}
+\begin{array}{c}
+{\inferrule[T-AssocHMap]
+  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\k{}}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
+    {\vdash {\issubtype {{\T{}}_{m}} {{ \{ \} }} }} \\
+    {\T{} = (update\_hmap\ {{\T{}}_{m}}\ {{\k{}}}\ {{\T{}}_{v}})} }
+  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {\T{}}}}}} \\
+\\
+{\inferrule[T-AssocHMapPromote]
+  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\T{}}_{k}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
+    {\vdash {\issubtype {{\T{}}_{m}} { \{ \}}}} \\
+    {\T{} = (promote\_hmap\ {\T{}}_{m}\ {\T{}}_{k}\ {\T{}}_{v})} }
+  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {\T{}}}}}} \\
+\\
+{\inferrule[T-AssocIPersistentMap]
+  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}} }} \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\T{}}_{k}} }} \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}} }} }
+  { {\Gamma \vdash {\hastype {(\assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {T}}}}}
+\end{array}
+\end{tdisplay}
+$$
+
+$$
+\begin{tdisplay}{Type Metafunctions}
+\begingroup
+\fontsize{10pt}{12pt}
+\begin{altgrammar}
+  (update\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\k{}}_1\ {\T{}}_1) = 
+                 \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}}\ {\k{}}_1\ {\T{}}_1 \}\ \\
+  (update\_hmap\ (\cap\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v} = 
+                               (\cap\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})} \\
+  (update\_hmap\ (\cup\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v} = 
+                               (\cup\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})})
+  \\ \\
+  (promote\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\T{}}_{kn}\ {\T{}}_{vn})
+                                    = {\IPersistentMap {(\cup\ \overrightarrow{{\T{}}_{k}}\ {\T{}}_{kn})}
+                                                       {(\cup\ \overrightarrow{{\T{}}_{v}}\ {\T{}}_{vn})}} \\
+  (promote\_hmap\ {\IPersistentMap {{\T{}}_{k}} {{\T{}}_{v}}} \ {\T{}}_{kn}\ {\T{}}_{vn})
+                                    = {\IPersistentMap {(\cup\ {\T{}}_{k}\ {\T{}}_{kn})}
+                                                       {(\cup\ {\T{}}_{v}\ {\T{}}_{vn})}}
+\end{altgrammar}
+\endgroup
+\end{tdisplay}
 $$
 
 \subsection{Higher-order Variable-arity Polymorphism (SKETCH)}

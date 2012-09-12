@@ -3,6 +3,9 @@
 
 %% metavariables
 
+% constants
+\newmeta\c{c}
+
 % types
 \newmeta\s{\sigma}              % these are automatically wrapped in \ma
 \newmeta\t{\tau}
@@ -20,25 +23,35 @@
 % types
 \newbfop\int{int}
 \newbfop\bool{bool}
+\newbfop\IPersistentMapLiteral{IPersistentMap}
+\newbfop\ULiteral{{\cup}}
+\newbfop\ILiteral{I}
 \newcommand\proctype[2]{(#1 \to #2)}
-
-\newbfop\Top{Any}
-\newbfop\Keyword{Keyword}
-\newbfop\Nil{nil}
 % \proctype is a little overkill.
 %% Reynolds' package can also abstract things like (\s1 \to \s2 \to \s3).
 
+\newbfop\Top{Any}
+\newbfop\Bottom{Nothing}
+\newbfop\Keyword{Keyword}
+\newbfop\Nil{nil}
+\newcommand\IPersistentMap[2]{(\IPersistentMapLiteral\ #1\ #2)}
+
 % terms
 \newmeta\x{x}                   % not sure if \x is reserved...
-\newmeta\c{c}
 \newmeta\v{v}
 \newmeta\k{k}
 \newmeta\nil{nil}
+\newmeta\assoc{assoc}
+\newmeta\dissoc{dissoc}
+\newmeta\get{get}
 \newcommand\abs[2]{\ma{\l #1 . #2}}
 \newcommand\comb[2]{\ma{(#1\ #2)}}
 
+% constant calls
+
 % typing judgements
 \newcommand\hastype[2]{\ma{#1 \mathbin{:} #2}}
+\newcommand\issubtype[2]{\ma{#1 \mathbin{<:} #2}}
 
 
 % evaluation contexts
