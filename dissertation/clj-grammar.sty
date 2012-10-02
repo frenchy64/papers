@@ -24,8 +24,8 @@
 \newbfop\int{int}
 \newbfop\bool{bool}
 \newbfop\IPersistentMapLiteral{IPersistentMap}
-\newbfop\ULiteral{{\cup}}
-\newbfop\ILiteral{I}
+\newbfop\ULiteral{\vee}
+\newbfop\ILiteral{\wedge}
 \newcommand\proctype[2]{(#1 \to #2)}
 % \proctype is a little overkill.
 %% Reynolds' package can also abstract things like (\s1 \to \s2 \to \s3).
@@ -35,6 +35,8 @@
 \newbfop\Keyword{Keyword}
 \newbfop\Nil{nil}
 \newcommand\IPersistentMap[2]{(\IPersistentMapLiteral\ #1\ #2)}
+\newbfop\TopIPersistentMap{{\IPersistentMap {\Top} {\Top}}}
+\newbfop\TopHMap{\{ \}}
 
 % terms
 \newmeta\x{x}                   % not sure if \x is reserved...

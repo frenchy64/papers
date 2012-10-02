@@ -1,7 +1,7 @@
 \chapter{Design Choices}
 
 Typed Clojure is designed to be of practical use to Clojure programmers.
-Many of the design goals are similar to Tobin-Hochstadt's \cite{SAMTH:dissertation}
+Many of the design goals are similar to Tobin-Hochstadt's \cite{Tob10}
 for Typed Racket.
 
 \section{Typed Racket}
@@ -88,7 +88,40 @@ Clojure
 % Existential types are needed to fully express Generic Java types in Typed Clojure
 % F-bounded polymorphism supported
 
+\section{Multimethods}
 
+% INTRODUCTION TO CLOJURE MULTIMETHODS
+
+%A multimethod in Clojure differs from most other
+%abstractions of the same name. Clojure multimethods
+%dispatch on the result of an arbitrary function
+%rather than the types or structure of its arguments.
+%
+%\begin{lstlisting}[caption=Clojure Multimethods, label=lst:mm1]
+%(defmulti ToString class)
+%
+%(defmethod ToString java.lang.Integer
+%  [a]
+%  (str "Integer: " a))
+%
+%(defmethod ToString java.lang.Number
+%  [a]
+%  (str "Number: " a))
+%\end{lstlisting}
+%
+%Even with this extra flexibility, multimethods are often used to dispatch on the type of its arguments.
+%Listing \ref{lst:mm1} illustrates a common usage of multimethods: dispatching on the class of the first argument.
+%We use \lstinline|defmulti| to define a new multimethod.
+%The function \lstinline|class| is used as the dispatch function, a one-argument function returning the class of its argument
+%as an instance of \lstinline|java.lang.Class|.
+%
+%A multimethod invocation redirects control flow to exactly one of its \emph{methods} with unresolved ambiguities resulting in
+%a runtime error. The method is selected by first comparing the result of the dispatch function to
+%the dispatch values defined by each method. If one or more methods match, multimethods provide
+%the ability to prefer one method over another.
+
+\section{Clojure Class Hierarchy}
+\section{Protocols and Datatypes}
 \section{Optional Type Checking}
 \section{Local Type Inference}
 
@@ -142,7 +175,7 @@ $$
 $$
 \begin{tdisplay}{Evaluation Contexts}
   \begin{altgrammar}
-    \E{} &::=& % application rules
+    \E{} &::=& [ ] % application rules
               \alt (\c{}\ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}}) % eval arguments left-to-right
               % map rules
               \alt \{\overrightarrow{\v{}\ \v{}}\ \E{}\ \exp{}\ \overrightarrow{\exp{}\ \exp{}} \} % key first
@@ -152,6 +185,7 @@ $$
 \end{tdisplay}
 $$ 
  
+% \mapsto for updating maps
 $$
 \begin{tdisplay}{Operational Semantics}
 \begin{array}{c}
@@ -167,8 +201,9 @@ $$
 \\
 {\inferrule[E-GetMapExist]
   { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
-    {v_1\ has\ entry\ with\ key\ v_2} \\
-    {v_3 = corresponding\ value\ in\ entry\ with\ key\ v_2\ in\ v_1} }
+    {v_2\ v_3\ in\ v_1} }
+%    {v_1\ has\ entry\ with\ key\ v_2} \\
+%    {v_3 = corresponding\ value\ in\ entry\ with\ key\ v_2\ in\ v_1}
   { {(get\ v_1\ v_2) \hookrightarrow v_3} }} \\
 \\
 {\inferrule[E-GetMapNotExist]
@@ -184,8 +219,8 @@ $$
 \begin{tdisplay}{Type Syntax}
 \begin{altgrammar}
   \T{} &::=& \Top \alt \Bottom \alt \Nil \alt \k{} \alt \{ \overrightarrow{\k{}\ \T{}} \}
-             \alt {\IPersistentMap {\T{}} {\T{}}} \alt ( \cup\ \overrightarrow{\T{}} )
-             \alt ( \cap\ \overrightarrow{\T{}} )
+             \alt {\IPersistentMap {\T{}} {\T{}}} \alt ( \vee\ \overrightarrow{\T{}} )
+             \alt ( \wedge\ \overrightarrow{\T{}} )
 \end{altgrammar}
 \end{tdisplay}
 $$
@@ -197,23 +232,17 @@ $$
   { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
     {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\k{}}}} } \\
     {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
-    {\vdash {\issubtype {{\T{}}_{m}} {{ \{ \} }} }} \\
-    {\T{} = (update\_hmap\ {{\T{}}_{m}}\ {{\k{}}}\ {{\T{}}_{v}})} }
-  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {\T{}}}}}} \\
+    {\vdash {\issubtype {{\T{}}_{m}} {\TopHMap} }} }
+  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} 
+        {(update\_hmap\ {{\T{}}_{m}}\ {{\k{}}}\ {{\T{}}_{v}})}}}}} \\
 \\
-{\inferrule[T-AssocHMapPromote]
+{\inferrule[T-AssocPromote]
   { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
     {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\T{}}_{k}}} } \\
     {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
-    {\vdash {\issubtype {{\T{}}_{m}} { \{ \}}}} \\
+    {\vdash {\issubtype {{\T{}}_{m}} {\TopIPersistentMap}}} \\
     {\T{} = (promote\_hmap\ {\T{}}_{m}\ {\T{}}_{k}\ {\T{}}_{v})} }
   { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {\T{}}}}}} \\
-\\
-{\inferrule[T-AssocIPersistentMap]
-  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}} }} \\
-    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\T{}}_{k}} }} \\
-    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}} }} }
-  { {\Gamma \vdash {\hastype {(\assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {T}}}}}
 \end{array}
 \end{tdisplay}
 $$
@@ -225,52 +254,64 @@ $$
 \begin{altgrammar}
   (update\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\k{}}_1\ {\T{}}_1) = 
                  \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}}\ {\k{}}_1\ {\T{}}_1 \}\ \\
-  (update\_hmap\ (\cap\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v} = 
-                               (\cap\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})} \\
-  (update\_hmap\ (\cup\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v} = 
-                               (\cup\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})})
+  (update\_hmap\ (\wedge\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v}) = 
+                               (\wedge\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})}) \\
+  (update\_hmap\ (\vee\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v}) = 
+                               (\vee\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})})
   \\ \\
   (promote\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\T{}}_{kn}\ {\T{}}_{vn})
-                                    = {\IPersistentMap {(\cup\ \overrightarrow{{\T{}}_{k}}\ {\T{}}_{kn})}
-                                                       {(\cup\ \overrightarrow{{\T{}}_{v}}\ {\T{}}_{vn})}} \\
+                                    = {\IPersistentMap {(\vee\ \overrightarrow{{\T{}}_{k}}\ {\T{}}_{kn})}
+                                                       {(\vee\ \overrightarrow{{\T{}}_{v}}\ {\T{}}_{vn})}} \\
   (promote\_hmap\ {\IPersistentMap {{\T{}}_{k}} {{\T{}}_{v}}} \ {\T{}}_{kn}\ {\T{}}_{vn})
-                                    = {\IPersistentMap {(\cup\ {\T{}}_{k}\ {\T{}}_{kn})}
-                                                       {(\cup\ {\T{}}_{v}\ {\T{}}_{vn})}}
+                                    = {\IPersistentMap {(\vee\ {\T{}}_{k}\ {\T{}}_{kn})}
+                                                       {(\vee\ {\T{}}_{v}\ {\T{}}_{vn})}}
 \end{altgrammar}
 \endgroup
 \end{tdisplay}
 $$
 
-\subsection{Higher-order Variable-arity Polymorphism (SKETCH)}
+$$
+\begin{tdisplay}{Subtyping}
+\begin{array}{c}
+\inferrule[S-Refl] { } {\vdash {\issubtype {\T{}} {\T{}}}} \\
+\inferrule[S-Any] { } {\vdash {\issubtype {\T{}} {\Top}}}
+\inferrule[S-UnionSuper] 
+  {\ } 
+  {\vdash {\issubtype {\T{}} {\Top}}}
+\end{array}
+\end{tdisplay}
+$$
 
-Practical Variable-arity Polymorphism introduces the concept of a dotted type parameter,
-representing a sequence of types, allowing non-uniform variable parameters.
-This enables \lstinline|map| and other function with complex arguments to be typed.
-Strickland, Tobin-Hochstadt, and Felleisen's approach is solves almost all variable-arity applications in
-Typed Racket, and is a key feature of Typed Racket's implementation.
-
-Idiomatic variable-arity functions in Clojure's are even more sophisticated than Typed Racket, requiring extensions
-to Typed Racket's approach to type check satisfactorily. The Clojure core library favours functions with
-variable parameters, especially in a higher-order context. For example, \lstinline|assoc|
-associates key-value pairs to a target map. It takes one or more key-value pairs and
-applies them left-to-right to the target map. The key problem from a typing perspective
-is \lstinline|assoc|'s arguments are flattened, resulting in \lstinline|assoc| only
-accepting an even number of rest arguments. \lstinline|assoc| is also commonly used as a
-higher-order function.
-\lstinline|assoc| cannot be expressed in Typed Racket. For instance,
-dotted parameters represent an unrestricted number of types, where we require an even number.
-
-The nature of Clojure's idiomatic variable-arity functions suggest we must introduce
-new kinds of dotted parameters. Three main issues must be considered in the context of Typed Clojure.
-Firstly, subtyping between different kinds of dotted and rest
-\footnote{A rest parameter consumes zero or more types, rather than being a sequence of types.}
-parameters can be tricky, only made trickier by adding new kinds of dotted parameters.
-Secondly, elimination rules for dotted parameters in many frequently used Clojure core functions
-difficult to express.
-Thirdly, higher-order functions taking functions with dotted arguments commonly 
-The first issue requires careful design and implementation.
-The second and third points require new constructs, in the form of \emph{projections}
-and abstractions over \emph{dotted} parameters, respectively.
+%\subsection{Higher-order Variable-arity Polymorphism (SKETCH)}
+%
+%Practical Variable-arity Polymorphism introduces the concept of a dotted type parameter,
+%representing a sequence of types, allowing non-uniform variable parameters.
+%This enables \lstinline|map| and other function with complex arguments to be typed.
+%Strickland, Tobin-Hochstadt, and Felleisen's approach is solves almost all variable-arity applications in
+%Typed Racket, and is a key feature of Typed Racket's implementation.
+%
+%Idiomatic variable-arity functions in Clojure's are even more sophisticated than Typed Racket, requiring extensions
+%to Typed Racket's approach to type check satisfactorily. The Clojure core library favours functions with
+%variable parameters, especially in a higher-order context. For example, \lstinline|assoc|
+%associates key-value pairs to a target map. It takes one or more key-value pairs and
+%applies them left-to-right to the target map. The key problem from a typing perspective
+%is \lstinline|assoc|'s arguments are flattened, resulting in \lstinline|assoc| only
+%accepting an even number of rest arguments. \lstinline|assoc| is also commonly used as a
+%higher-order function.
+%\lstinline|assoc| cannot be expressed in Typed Racket. For instance,
+%dotted parameters represent an unrestricted number of types, where we require an even number.
+%
+%The nature of Clojure's idiomatic variable-arity functions suggest we must introduce
+%new kinds of dotted parameters. Three main issues must be considered in the context of Typed Clojure.
+%Firstly, subtyping between different kinds of dotted and rest
+%\footnote{A rest parameter consumes zero or more types, rather than being a sequence of types.}
+%parameters can be tricky, only made trickier by adding new kinds of dotted parameters.
+%Secondly, elimination rules for dotted parameters in many frequently used Clojure core functions
+%difficult to express.
+%Thirdly, higher-order functions taking functions with dotted arguments commonly 
+%The first issue requires careful design and implementation.
+%The second and third points require new constructs, in the form of \emph{projections}
+%and abstractions over \emph{dotted} parameters, respectively.
 
 
 

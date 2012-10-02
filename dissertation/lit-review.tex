@@ -2,6 +2,7 @@
 % What does this Lit review cover?
 % Why things are included/not included?
 % Background
+% Heterogeneous Maps/record types
 % Soft typing
 % See Sam's dissertation
 % Lisp type system background (197x)
@@ -10,56 +11,143 @@
 
 \chapter{Literature Review}
 
-%\begin{abstract}
-%Clojure is a practical, dynamically typed language running on the Java Virtual Machine.
-%I intend to design and implement a prototype optional static type 
-%system for Clojure, with practical use being a priority. Devising a static type system 
-%requires a combination of components that each adds some utility
-%without significantly complicating the overall implementation.
-%I look at several novel inventions created as a result 
-%of the Typed Racket project including
-%non-uniform variable-arity polymorphism and occurrence typing.
-%Typed Racket and Scala both use flavours of local type inference
-%which I compare and judge for applicability to this project.
-%Other relevant features of Scala are considered, such as its approach to bounded polymorphism,
-%the Scala class hierarchy, and the similarities of its methods of composition to Clojure's.
-%\end{abstract}
+Typed Clojure is related to several existing systems for both typed and untyped languages.
+The first section of this chapter gives an overview of type systems designed for untyped languages.
+The second section explores how existing type systems statically type check multimethods
+and their relevance to Clojure's multimethods.
 
-\section{Introduction}
+\section{Static Type Systems}
+
+% Haskell
+% OCaml
+% Forsythe
+% Java C#
+% Scala
+
+\section{Static Types for Untyped Languages}
+
+There is a history of designing static type systems for untyped languages. 
+
+\subsection{Soft Typing}
+
+Soft typing\cite{CF91}
+is an approach for ensuring type safety in untyped languages.
+A soft type system infers types for programs, distinguishing between degrees
+of potential type safety.
+A soft type checker uses this information to 
+preserve type safety by inserting appropriate checks 
+and informs the programmer of potential inconsistencies.
+For example, if the soft type system detects a portion of code is sometimes not type safe,
+the soft type checker inserts a check that throws a runtime error upon unsafe usages.
+Thus, soft type systems differ from traditional type systems in that type inference 
+never fails and an inconsistency always results in a runtime check.
+
+Wright and Cartwright\cite{WC97} developed Soft Scheme, a practical
+soft type system for Scheme. 
+It extended earlier work by Cartwright and Fagan\cite{CF91}
+and Fagan \cite{Fag92}, adding support for practical features such as
+first-class continuations and variable-arity functions.
+Soft Scheme does not require any extra type annotations.
+
+% what challenges did soft typing face?
+
+\subsection{Gradual Typing}
+
+Gradual typing combines static and runtime type checking so programmers
+can the most appropriate one for the situtation.
+
+Typed Racket was developed as a path for module-by-module
+porting of existing untyped Racket modules to a typed sister language\cite{Tob10}.
+Once a module is ported and type checked, it is protected from untyped modules
+by inserting runtime checks.
+
+\section{Interlanguage Interoperability}
+
+This section compares several existing languages that feature interlanguage interoperability.
+
+Clojure is a dynamic functional language hosted on the Java Virtual Machine. It provides 
+interoperability with Java libraries. As Clojure is a dynamically typed language, it does
+not give strong type type guarantees at compile time whether interactions with Java
+are type safe.
+
+Scala is a statically typed language on the Java Virtual Machine offering integrated interoperability with Java, a typed language.
+Scala objects and classes can ``inherit from Java classes and implement Java interfaces''\cite{OCD+}
+with the usual static type guarantees normal Scala code enjoys.
+Scala offers an Option type to safely eliminate null pointers.
+Java Generics are also fully supported by Scala, accounting for Scala support existential types
+
+Typed Racket includes safe interoperability between any combination of typed and untyped 
+Racket modules\cite{Tob10}\cite{TF08}. 
+Interactions with untyped modules are protected by adding runtime checks based on expected types.
+Typed Racket implements a sophisticated blame calculus. It ensures 
+error messages correctly \emph{blame} the source of type errors,
+which can be difficult to determine in the presence of higher-order functions. %TODO reference
+
+\section{Record Types}
+
+This section summarises research in typing OCaml-style records
+which relate to Clojure records and heterogeneous hash maps.
+
+\section{Intersection Types}
+
+Intersection types are an interesting type construct relevant to capturing the complicated
+types manipulated by dynamic languages.
+
+Forsyth\cite{Rey96} was the first language to use intersection types.
+Uses of intersections in Forsyth include representing extensible record types
+and function overloading.
+
+% CIDRE
+% TODO
+CIDRE\cite{Dav05} adds \emph{refinement type checking} to SML.
+
+% PADL '12 paper, Typing the Numeric Tower
+Typed Racket uses \emph{ordered intersection types} to offer a kind of function overloading.
+
+Java allows intersection types only in type parameter bounds. Instead of supporting intersection
+types in the rest of the language, Java support type inheritance by extending Classes and Interfaces.
+
+\section{Statically Typed Multimethods}
+
+
+
+
+
+
 
 Designing a static type system for any dynamically typed language requires
 careful consideration. Idiomatic style in dynamically typed languages is usually
 designed to be powerful yet non-intrusive. An effective type system
 for such languages should preserve existing idioms and syntactic abstractions
-until time tested idioms are devised for the new typed language \cite{SAMTH:dissertation}.
+until time tested idioms are devised for the new typed language \cite{Tob10}.
 
-Typed Racket \cite{SAMTH:dissertation} integrates a selection of ideas to
+Typed Racket \cite{Tob10} integrates a selection of ideas to
 create a typed sister language to Racket.
-Both Clojure and Racket are dynamically typed Lisps and unsurprisingly have similar idioms. 
-Consequently, a number of novel Typed Racket features are relevant to designing and implementing 
-a type system for Clojure.
-The inventions of occurrence typing \cite{Tobin-Hochstadt:2010:LTU:1932681.1863561}
+Clojure and Racket share a key similarity: they are dynamically typed Lisps.
+Consequently, a number of novel Typed Racket features are relevant to the design and implementation
+of a type system for Clojure.
+The inventions of occurrence typing \cite{TF10}
 and a systematic approach to variable-arity polymorphism
-\cite{Strickland:2009:PVP:1532974.1532978}
+\cite{STF09}
 are both applicable to this project.
 
 Clojure provides two dispatching mechanisms: multimethods, a mechanism to dispatch on the
 results of an arbitrary function; and protocols, a mechanism for single dispatch.
-Millstien and Chambers explore statically typing multiple dispatched multimethods in Dubious \cite{Millstein02modularstatically}.
+Millstien and Chambers explore statically typing multiple dispatched multimethods in Dubious \cite{MS02}.
 Dubious' multimethods are less powerful than Clojure's multimethods but more powerful than protocols,
 and Clojure's dispatch functions can be extended at runtime, unlike Dubious' multimethods.
 
-Clojure and the statically typed language Scala \cite{Odersky06anoverview} 
-have some interesting similarities. The recently redesigned 
-Scala collection hierarchy
-\cite{Odersky06anoverview} \cite{Scala:Collections}
+Clojure and the statically typed language Scala \cite{OCD+} 
+have some interesting similarities. The redesigned 
+of the Scala collection hierarchy
+\cite{OS10}
 bears similarity to Clojure's encompassing ``seq''
 model, revealing an opportunity to test potential typed extensions to the Clojure 
 class hierarchy. 
 
 Scala and Clojure are both languages with a focus on host interoperability, specifically
 to the Java Virtual Machine. Their differing treatment of the Java Virtual Machine's \lstinline|null| is
-relevant, particularly considering the potential of using occurrence typing \cite{Tobin-Hochstadt:2010:LTU:1932681.1863561}
+relevant, particularly considering the potential of using occurrence typing \cite{TF10}
 to prevent erroneous usage of \lstinline|null|.
 
 \section{Variable-Arity Polymorphism}
@@ -68,10 +156,10 @@ Functions with variable-arity are abundant in dynamically typed languages;
 it is common to have a large standard library of functions that utilize
 variable-arity, and Clojure is no different. 
 Support for complex variable-arity functions is sparse in typed languages,
-Strickland claims \cite{Strickland:2009:PVP:1532974.1532978}
+Strickland, Tobin-Hochstadt, and Felleisen claim \cite{STF09}
 ``no typed language supports them in a systematic and principled manner''.
 
-Strickland et al. invented \cite{Strickland:2009:PVP:1532974.1532978} 
+Strickland et al. invented \cite{STF09} 
 a calculus capable of typing non-uniform variable-arity functions, a version of which
 is implemented in Typed Racket. A non-uniform variable-arity function is a function that
 takes a heterogeneous variable parameter list, which usually has a complex relationship 
@@ -106,18 +194,13 @@ which associate and dissociate entries to (immutable) hash-maps, both take a var
 ;=> {}
 \end{lstlisting}
 
-One approach to typing \lstinline|dissoc| could be to include in every hash-map type how to dissociate exactly one
-key from itself, and then treat subsequent entries passed to \lstinline|dissoc| individually in a similar manner.
-This is a complex polymorphic relationship between the parameter and result types useful for typing
-several core Clojure functions.
-
 \section{Type Inference}
 
 \subsection{Local Type Inference}
 
-Typed Racket uses Local Type Inference \cite{Pierce:2000:LTI:345099.345100}
+Typed Racket uses Local Type Inference \cite{PT00}
 as an inference and checking tool. Pierce and Turner
-\cite{Pierce:2000:LTI:345099.345100} divide Local Type Inference into
+\cite{PT00} divide Local Type Inference into
 two complementary algorithms. \emph{Local type argument synthesis}
 synthesises type arguments to polymorphic applications, and \emph{bidirectional
 propagation} propagates type information both down and up the source tree,
@@ -141,20 +224,20 @@ of \lstinline|[1 2]| is a subtype of \lstinline|a|, and each element of \lstinli
 synthesise the type of listing \ref{lst:bidir} to be \lstinline|(List Float)|.
 
 Pierce and Turner split \emph{local type argument synthesis} into two further
-algorithms: bounded, and unbounded quantification \cite{Pierce:2000:LTI:345099.345100}. 
+algorithms: bounded, and unbounded quantification \cite{PT00}. 
 Typed Racket 
-supports unbounded polymorphism \cite{SAMTH:dissertation}, implementing the latter algorithm by Piece et al.
-Scala supports bounded quantification with F-bounded polymorphism \cite{Canning:1989:FPO:99370.99392},
+supports unbounded polymorphism \cite{Tob10}, implementing the latter algorithm by Piece et al.
+Scala supports bounded quantification with F-bounded polymorphism \cite{CCHOM89},
 basing its type argument synthesis on the bounded quantification algorithm.
 
-Pierce and Turner explicitly forbid \cite{Pierce:2000:LTI:345099.345100}
+Pierce and Turner explicitly forbid \cite{PT00}
 attempting to synthesise type variables with interdependent bounds, including
 F-bounds, having failed to devise an algorithm to infer these cases.
 Scala's type argument synthesis implementation deviates from Pierce and Turner and supports these features.
 I am not aware of papers specifically describing Scala's modifications, but they are at least inspired by
-Scala's spiritual ancestors Generic Java \cite{Bracha98gj:extending} and Pizza \cite{Odersky97pizzainto}.
+Scala's spiritual ancestors Generic Java \cite{BOSW98} and Pizza \cite{OW97}.
 
-Hosoya and Pierce \cite{Hosoya99howgood} reiterate two common problems with Local Type Inference:
+Hosoya and Pierce \cite{HP99} reiterate two common problems with Local Type Inference:
 ``hard-to-synthesise arguments'' and ``no best type argument''. The first problem occurs because
 both local type argument synthesis and bidirectional propagation cannot perform synthesis
 simultaneously. 
@@ -175,8 +258,8 @@ fails.
 
 \subsection{Colored Local Type Inference}
 
-Scala's type checking uses Colored Local Type Inference \cite{Odersky:2001:CLT:373243.360207},
-a variant of Local Type Inference \cite{Pierce:2000:LTI:345099.345100} specifically designed to
+Scala's type checking uses Colored Local Type Inference \cite{OZZ01},
+a variant of Local Type Inference \cite{PT00} specifically designed to
 improve inference with certain kinds of Scala pattern matching expressions. It allows
 \emph{partial} type information to propagate down the syntax tree, instead of only full type information
 as required by Local Type Inference.
@@ -184,13 +267,13 @@ as required by Local Type Inference.
 \emph{Colored} types contain extra contextual information, including the propagation direction
 and missing parts of the type. They are generally useful
 for describing ``information flow in polymorphic type systems with propagation-based type inference''
-\cite{Odersky:2001:CLT:373243.360207}. If the scope of my research permits it, I plan to investigate
+\cite{OZZ01}. If the scope of my research permits it, I plan to investigate
 using colored types to solve the polymorphic higher-order-function limitation of Local Type Inference
 (see listing \ref{lst:hts}).
 
 \section{Bounded and Unbounded Polymorphism}
 
-The Local Type Inference paper \cite{Pierce:2000:LTI:345099.345100}
+The Local Type Inference paper \cite{PT00}
 describes two implementations of type variables, for bounded
 and unbounded type variables. The bounded implementation is presented
 as an optional extension  to the unbounded implementation, which preserves all
@@ -198,7 +281,7 @@ properties described in the Local Type Inference algorithm.
 
 An unbounded type variable does not have subtype constraints.
 Bounded type variables can have subtype constraints, and 
-subsume unbounded type variables \cite{Pierce:2000:LTI:345099.345100}, 
+subsume unbounded type variables \cite{PT00}, 
 as a unbounded variable can be represented as a variable bounded
 by the Top type.
 
@@ -206,16 +289,16 @@ Still, unbounded type variables have an advantage: their implementations are
 are simpler in the presence of a \emph{Bottom} type. 
 The constraint resolution algorithm for bounded variables
 is more subtle, due to ``some surprising interactions between bounded quantifiers
-and the \emph{Bot} type'' \cite{Pierce:2000:LTI:345099.345100}, described fully
-by Pierce \cite{Pierce97boundedquantification}.
+and the \emph{Bot} type'' \cite{PT00}, described fully
+by Pierce \cite{Pie97}.
 
-Typed Racket \cite{Tobin-Hochstadt:2008:DIT:1328897.1328486}
-supports unbounded polymorphism, while Scala \cite{Odersky06anoverview}
+Typed Racket \cite{TF08}
+supports unbounded polymorphism, while Scala \cite{OCD+}
 supports an extended form of bounded polymorphism called
-F-bounded polymorphism \cite{Canning:1989:FPO:99370.99392}, which allows the
+F-bounded polymorphism \cite{CCHOM89}, which allows the
 bound variable to occur in its own bound.
 F-bounded polymorphism is useful in the context of object-oriented abstractions,
-as demonstrated by Odersky \cite{Odersky06anoverview}.
+as demonstrated by Odersky \cite{OCD+}.
 This is one possible explanation why Typed Racket, which is not built on abstractions like Scala,
 does not support bounded quantification. Unfortunately, no Typed Racket paper mentions 
 bounded quantification, so the rationale is not clear.
@@ -228,22 +311,22 @@ for bounds in bounded or F-bounded polymorphism.
 
 Typed Racket is a statically typed sister language of Racket. It
 attempts to preserve existing Racket idioms and aims type check
-existing Racket code by simply adding top level type annotations \cite{SAMTH:dissertation}.
+existing Racket code by simply adding top level type annotations \cite{Tob10}.
 
-Typed Racket fully expands all macro calls before type checking \cite{SAMTH:dissertation} to
+Typed Racket fully expands all macro calls before type checking \cite{Tob10} to
 avoid the complex semantics of type checking macro definitions, an ongoing research area summarised
- by Herman \cite{Herman10:Theory}.
+ by Herman \cite{Her10}.
 The design of my Clojure type system will follow a similar strategy; only the fully macro-expanded form
 will be type checked. Type checking macro definitions are outside the scope of this project, and would
 be exceptionally hard.
 
 Along with a full static type system, Typed Racket 
-also uses runtime contracts to enforce type invariants at runtime \cite{Tobin-Hochstadt:2008:DIT:1328897.1328486}.
+also uses runtime contracts to enforce type invariants at runtime \cite{TF08}.
 Utilising runtime contracts to aid type checking is outside the scope of this project, but would be 
 considered desirable and accessible future work.
 
 Two other Typed Racket features that will be explored are recursive types and refinement types  
-\cite{SAMTH:dissertation}. Recursive types allow a type definition to refer to itself, enabling structurally
+\cite{Tob10}. Recursive types allow a type definition to refer to itself, enabling structurally
 recursive types like binary trees. Refinement types let the programmer define
 new types that are subsets of existing types, such as the type for even integers, a subset of all integers.
 Both these features would fit well in a future implementation of this project.
@@ -268,15 +351,15 @@ a \lstinline|String|, since we have ruled out the case of being a \lstinline|Num
     :else               (str (first x))))
 \end{lstlisting}
 
-Occurrence typing \cite{Tobin-Hochstadt:2008:DIT:1328897.1328486}
-\cite{Tobin-Hochstadt:2010:LTU:1932681.1863561} extends the type 
+Occurrence typing \cite{TF08}
+\cite{TF10} extends the type 
 system with a \emph{proposition environment} that represents 
 the type refinements inferred down a particular path.
-The 2010 paper \cite{Tobin-Hochstadt:2010:LTU:1932681.1863561}
+The 2010 paper \cite{TF10}
 reformulated occurrence typing, improving the original 2008 paper
-\cite{Tobin-Hochstadt:2008:DIT:1328897.1328486}
+\cite{TF08}
 after revealing that ``three years of practical experience has revealed
-serious shortcoming of our type system.''\cite{Tobin-Hochstadt:2010:LTU:1932681.1863561}
+serious shortcoming of our type system.''\cite{TF10}
 The new implementation utilizes a simple proof system to solve
 propositional logic statements, in terms of type predicates and selectors.
 
@@ -297,8 +380,8 @@ we can begin to statically disallow potential inconsistent usages of \lstinline|
 \end{lstlisting}
 
 Listing \ref{lst:nil} infers from the Java signature \lstinline|Object getObject()| that
-that \lstinline|a| is of type \lstinline|(Union nil Object)|. This is equivalent to Java's
-\lstinline|Object| class, as \lstinline|null| is a subtype of all reference types. By surrounding
+that \lstinline|a| is of type \lstinline|(U nil Object)|. This is equivalent to Java's
+\lstinline|Object| static type, as \lstinline|null| is a subtype of all reference types. By surrounding
 the call \lstinline|(expects-non-nil a)| with \lstinline|(when a ...)|, we guarantee that
 \lstinline|a| is non-nil when passed to \lstinline|expects-non-nil|. Occurrence typing infers
 this by observing \lstinline|nil| is a false value in Clojure, therefore \lstinline|a| cannot
@@ -311,31 +394,14 @@ without issues, and has good potential to enable null-safe Java interop.
 
 \section{Statically Typed Multimethods}
 
-A Clojure multimethod is slightly different to most other
-abstractions of the same name. Here, a multimethod 
-dispatches on the result of an \emph{arbitrary function},
-rather that more traditional multimethods that dispatch on
-the types or structure of its arguments.
+Clojure provides mulimethods as a core language feature. This section discusses systems that statically
+verify type safety for multimethods.
 
-Millstein and Chambers \cite{Millstein02modularstatically}
+Millstein and Chambers\cite{MS02}
 describe Dubious, a simple statically typed core language including multimethods that
 dispatch on the type of its arguments. They tackle a key challenge for statically typing
 multimethods: ``it is possible for two modules containing arbitrary multimethods to typecheck
-successfully in isolation but generate type errors when linked together.'' \cite{Millstein02modularstatically}
-
-This challenge holds when statically typing Clojure multimethods.
-One additional challenge would be multimethods being imported from 
-untyped modules. This would have to be handled carefully.
-
-If we consider a multimethod as a spread out conditional, a
-novel use of occurrence typing becomes apparent. We can use
-occurrence typing to refine the argument types in the method bodies
-by utilizing the results of the dispatch function. This is simple
-when dispatching by type, but a common idiom in Clojure is to dispatch
-on the value associated with a key in a hash-map. 
-
-To satisfy this idiom, we require occurrence typing with more
-finely grained hash-map types (see section~\ref{sec:OccurrenceTyping} for discussion).
+successfully in isolation but generate type errors when linked together.''\cite{MS02}
 
 \section{Conclusion}
 
@@ -344,14 +410,3 @@ static type system. Typed Racket achieves a satisfying balance of
 occurrence typing, local type inference and variable-arity polymorphism.
 Similarly, Scala features F-bounded polymorphism, a class hierarchy
 that is compatible with Java, and colored local type inference.
-
-I intend to design a static type system for Clojure
-that features a satisfying combination of features, individually taken from other
-languages, when combined produce novel and interesting problems.
-I have looked at the limitations of Local Type Inference and identified Colored Local
-Type Inference as potentially improving them.
-I have proposed a novel use of occurrence typing to prevent erroneous use of Java's
-null pointer, and identified a novel problem typing certain Clojure functions with variable
-arguments.
-There are some interesting problems and novel solutions to be discovered while undertaking this
-project, many of which will reveal themselves during development.

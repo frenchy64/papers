@@ -1,0 +1,76 @@
+\chapter{Experiments}
+
+% 
+In this chapter we look at several example of using Typed Clojure and
+how well the current prototype handles them.
+
+\section{Java Interoperability}
+
+As Typed Clojure is intended to be useful for practical purposes, it was important
+to port existing code that utilized Java interoperability.
+My porting effort attempted to follow how a real programmer might port code to Typed Clojure
+and I describe my approach for each situation.
+
+I ported a function from clojure.contrib.reflect\footnote{https://github.com/cemerick/pomegranate}, 
+a Clojure library relying heavily on Java interoperability.
+I chose \lstinline|call-method| for several reasons: it chains several Java calls together,
+it uses primitive arrays, it exposes a wart of Clojure with \emph{Named} things,
+and \lstinline|null| is a valid value in one place.
+
+Before showing the implementation, there is a brief explanation of the relevant syntax.
+Java methods are called using the \emph{dot} operator. If \lstinline|o| is an object \lstinline|(. o m a*)|
+calls its method named \lstinline|m| passing \lstinline|a*| arguments. The method can be named first
+using the equivalent sugar \lstinline|(.m o a*)|. Also, \lstinline|doto| is convenient 
+notation for muliple method calls on the same object, presumably for side effects, and returns the original
+object. For example, \lstinline|(doto o (.m1 a*) (m2 a*))| calls methods \lstinline|m1| and \lstinline|m2|
+on \lstinline|o| and returns \lstinline|o|.
+
+\begin{lstlisting}[caption=call-method, label=lst:callmethod]
+(defn call-method
+  "Calls a private or protected method.
+
+  params is a vector of classes which correspond to the arguments to
+  the method e
+
+  obj is nil for static methods, the instance object otherwise.
+
+  The method-name is given a symbol or a keyword (something Named)."
+  [^Class klass method-name params obj & args]
+  (let [method (doto (.getDeclaredMethod klass 
+                                         (name method-name)
+                                         (into-array Class params))
+                 (.setAccessible true))]
+    (.invoke method obj (into-array Object args))))
+\end{lstlisting}
+
+The original function is modified slightly for readability and is presented in listing \ref{lst:callmethod}.
+
+\begin{lstlisting}[caption=call-method Type Annotation, label=lst:callmethodtype]
+(ann call-method 
+     [Class Named (IPersistentVector Class) (U nil Object) (U nil Object) * -> (U nil Object)])
+\end{lstlisting}
+
+Thankfully this function has up-to-date documention, and from it we can derive an expected type
+(listing \ref{lst:callmethodtype}).
+
+Before running the type checker we must convert our array constructors into ones that Typed Clojure
+can understand. Array types in Typed Clojure are represented by \lstinline|(Array c t)|, where
+the Java class \lstinline|c| is the Java component type,
+and the Typed Clojure type \lstinline|t| is the Typed Clojure component type. 
+We can pass this array to Java methods accepting
+type \lstinline|c[]|, and we can read and write type \lstinline|t| to the array from Typed Clojure.
+
+\begin{itemize}
+\item \lstinline|(into-array Class params)| becomes \lstinline|(into-array> Class Class params)|
+      which is of type \lstinline|(Array Class Class)|.
+\item \lstinline|(into-array Object args)| becomes \lstinline|(into-array> Object (U nil Object) args)|
+      which is of type \lstinline|(Array Object (U nil Object))|.
+\end{itemize}
+
+The second place in the \lstinline|Array| type constructor allows fine grained control over what is allowed
+in the array. The first point above must be type \lstinline|(Array Class Class)| because the 
+\lstinline|getDeclaredMethod| method on \lstinline|java.lang.Class| instances requires an array of non-null
+\lstinline|Class| objects. On the other hand, the \lstinline|invoke| method takes an array that allows
+\emph{null} members, so its type is \lstinline|(Array Object (U nil Object))|.
+
+\section{Red-Black Tree}

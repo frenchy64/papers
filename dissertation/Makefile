@@ -14,7 +14,7 @@
 TARGET = paper
 
 # define SRCS, FIGURES, BIBS, whatever other lists of files you want to add. 
-SRCS = mmm.sty intro.tex bibliography.bib implementation.tex design-choices.tex future-work.tex clj-grammar.sty
+SRCS = mmm.sty intro.tex bibliography.bib implementation.tex design-choices.tex future-work.tex clj-grammar.sty lit-review.tex experiments.tex
 
 # this is my big bib file, you can add other files as well, 
 # but they must be listed in your \bibliography{...} directive.
