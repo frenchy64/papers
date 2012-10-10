@@ -11,6 +11,10 @@
 
 \chapter{Literature Review}
 
+In this chapter we fit the design of Typed Clojure with literature from related fields.
+Forward-references are given to link the discussed literature with this project
+where there is some relevance or influence.
+
 Typed Clojure is related to several existing systems for both typed and untyped languages.
 The first section of this chapter gives an overview of type systems designed for untyped languages.
 The second section explores how existing type systems statically type check multimethods
@@ -61,6 +65,10 @@ porting of existing untyped Racket modules to a typed sister language\cite{Tob10
 Once a module is ported and type checked, it is protected from untyped modules
 by inserting runtime checks.
 
+\begin{verbatim}
+  Different levels of Gradual Typing discussed by Siek..
+\end{verbatim}
+
 \section{Interlanguage Interoperability}
 
 This section compares several existing languages that feature interlanguage interoperability.
@@ -81,7 +89,8 @@ Racket modules\cite{Tob10}\cite{TF08}.
 Interactions with untyped modules are protected by adding runtime checks based on expected types.
 Typed Racket implements a sophisticated blame calculus. It ensures 
 error messages correctly \emph{blame} the source of type errors,
-which can be difficult to determine in the presence of higher-order functions. %TODO reference
+which can be difficult to determine in the presence of higher-order functions. 
+\begin{verbatim}references, Walder etc.\end{verbatim}
 
 \section{Record Types}
 
@@ -93,43 +102,24 @@ which relate to Clojure records and heterogeneous hash maps.
 Intersection types are an interesting type construct relevant to capturing the complicated
 types manipulated by dynamic languages.
 
-Forsyth\cite{Rey96} was the first language to use intersection types.
-Uses of intersections in Forsyth include representing extensible record types
+Forsythe, a modern ALGOL dialect by Reynolds\cite{Rey96} was the first wide-spread 
+programming language to use intersection types.
+Uses of intersections in Forsythe include representing extensible record types
 and function overloading.
 
 % CIDRE
-% TODO
-CIDRE\cite{Dav05} adds \emph{refinement type checking} to SML.
+SML CIDRE is a refinement type checker for Standard ML by Davies \cite{Dav05}
+that features a form of intersection types. It is used for function overloading
+and checking invariants involving Refinement types.
+\begin{verbatim}
+Freeman & Pfenning, Refinement types
+\end{verbatim}
 
-% PADL '12 paper, Typing the Numeric Tower
-Typed Racket uses \emph{ordered intersection types} to offer a kind of function overloading.
-
-Java allows intersection types only in type parameter bounds. Instead of supporting intersection
-types in the rest of the language, Java support type inheritance by extending Classes and Interfaces.
+Typed Racket, developed by Tobin-Hochstadt and others \cite{Tob10}, uses \emph{ordered intersection types} 
+to offer a kind of function overloading.
+\begin{verbatim}PADL '12 paper, Typing the Numeric Tower\end{verbatim}
 
 \section{Statically Typed Multimethods}
-
-
-
-
-
-
-
-Designing a static type system for any dynamically typed language requires
-careful consideration. Idiomatic style in dynamically typed languages is usually
-designed to be powerful yet non-intrusive. An effective type system
-for such languages should preserve existing idioms and syntactic abstractions
-until time tested idioms are devised for the new typed language \cite{Tob10}.
-
-Typed Racket \cite{Tob10} integrates a selection of ideas to
-create a typed sister language to Racket.
-Clojure and Racket share a key similarity: they are dynamically typed Lisps.
-Consequently, a number of novel Typed Racket features are relevant to the design and implementation
-of a type system for Clojure.
-The inventions of occurrence typing \cite{TF10}
-and a systematic approach to variable-arity polymorphism
-\cite{STF09}
-are both applicable to this project.
 
 Clojure provides two dispatching mechanisms: multimethods, a mechanism to dispatch on the
 results of an arbitrary function; and protocols, a mechanism for single dispatch.
@@ -138,9 +128,8 @@ Dubious' multimethods are less powerful than Clojure's multimethods but more pow
 and Clojure's dispatch functions can be extended at runtime, unlike Dubious' multimethods.
 
 Clojure and the statically typed language Scala \cite{OCD+} 
-have some interesting similarities. The redesigned 
-of the Scala collection hierarchy
-\cite{OS10}
+have some interesting similarities. The redesign
+of the Scala collection hierarchy\cite{OS10}
 bears similarity to Clojure's encompassing ``seq''
 model, revealing an opportunity to test potential typed extensions to the Clojure 
 class hierarchy. 
@@ -150,27 +139,42 @@ to the Java Virtual Machine. Their differing treatment of the Java Virtual Machi
 relevant, particularly considering the potential of using occurrence typing \cite{TF10}
 to prevent erroneous usage of \lstinline|null|.
 
-\section{Variable-Arity Polymorphism}
+\section{Function Types}
 
-Functions with variable-arity are abundant in dynamically typed languages;
-it is common to have a large standard library of functions that utilize
-variable-arity, and Clojure is no different. 
-Support for complex variable-arity functions is sparse in typed languages,
-Strickland, Tobin-Hochstadt, and Felleisen claim \cite{STF09}
-``no typed language supports them in a systematic and principled manner''.
+There are several different approaches to representing functions in programming languages.
 
-Strickland et al. invented \cite{STF09} 
-a calculus capable of typing non-uniform variable-arity functions, a version of which
-is implemented in Typed Racket. A non-uniform variable-arity function is a function that
-takes a heterogeneous variable parameter list, which usually has a complex relationship 
-with other components of the function.
-For example, Clojure's \lstinline|map| function takes a function and one or more sequences,
+In typed languages like Haskell, functions are as simple as possible, taking a single argument.
+A function with multiple arguments is represented by chaining several single-argument function
+together. This style is characterised by direct syntactic function currying, where applying
+a function to less than its maximum number of arguments results in another function
+that takes the remaining arguments.
+
+In untyped languages like Scheme, functions can take any number of arguments. It is an
+error to supply less than the minimum number of arguments to a function.
+This style features sophisticated support for functions with variable-arity. For example,
+functions can dispatch on the number of arguments provided, and supports a \emph{rest} parameter
+as its last parameter which can accept any number of arguments.
+
+In this regard, Clojure takes an approach identical to Scheme, and supports all the features
+mentioned in the previous paragraph, and none characterised by Haskell-style functions.
+For this reason, we ignore the tradeoffs associated between the two approaches 
+and move directly to literature applicable to typing Scheme-style functions.
+
+\subsection{Variable-Arity Polymorphism}
+
+Strickland et al. invented a type system supporting variable-arity polymorphism\cite{STF09}
+a version of which is included in the current implementation of Typed Racket.
+Their main innovation centres around \emph{dotted type variables}, which represent a heterogeneous sequence
+of types. Dotted type variables allow \emph{non-uniform} variable-arity function types,
+which are used to check definitions and usages of functions with non-trivial rest parameters
+
+For example in Clojure, the function \lstinline|map| takes a function and one or more sequences,
 and returns the result of applying the function argument to each element of the sequences pair-wise.
 
 \begin{lstlisting}[caption=An application of the non-uniform variable-arity function \lstinline|map|, label=lst:map]
 (map + [1 2] [2.1 3.2]) 
 ;=> (3.1 5.2)
-\end{lstlisting}
+\end{lstlisting}\footnote{Line comments in Clojure begin with \lstinline|;| and comments to the end of the line. We use \lstinline|;=>| to mean \emph{evaluates to}.}
 
 To statically check calls to \lstinline|map|, we must enforce the provided function argument can accept as many
 arguments as there are sequence arguments to \lstinline|map|, and the parameter types of the provided function can accept
@@ -181,18 +185,6 @@ there are two sequence parameters. \lstinline|+| takes any number of \lstinline|
 and applying pair-wise arguments of \lstinline|(Vector Long)| and \lstinline|(Vector Double)| 
 results in types \lstinline|Long| and \lstinline|Double| being applied to \lstinline|+|. These are subtypes
 of \lstinline|Number|, so the expression is well typed.
-
-Clojure presents some opportunities to extend Strickland's calculus. It is idiomatic
-to utilize hash-maps as ad-hoc objects in Clojure, and it would be useful to track the keys associated
-with a hash-map.  The fundamental hash-map manipulation functions \lstinline|assoc| and \lstinline|dissoc|,
-which associate and dissociate entries to (immutable) hash-maps, both take a variable number of arguments.
-
-\begin{lstlisting}[caption=Using \lstinline|dissoc| with variable arguments, label=lst:assoc1]
-(dissoc {:a 1, :b 2} ; => {:a 1, :b 2}
-        :a           ; => {:b 2}
-        :b}          ; => {}
-;=> {}
-\end{lstlisting}
 
 \section{Type Inference}
 
@@ -207,7 +199,7 @@ propagation} propagates type information both down and up the source tree,
 known as \emph{checking} and \emph{synthesis} mode respectively.
 
 \begin{lstlisting}[caption=Bidirectional checking algorithm with Typed Clojure pseudocode, label=lst:bidir]
-(map (fn [a :- Long, b :- Float]
+(map (fn [[a :- Long] [b :- Float]]
        (+ a b))
      [1 2]
      [2.1 3.2])
@@ -273,8 +265,8 @@ using colored types to solve the polymorphic higher-order-function limitation of
 
 \section{Bounded and Unbounded Polymorphism}
 
-The Local Type Inference paper \cite{PT00}
-describes two implementations of type variables, for bounded
+Local type inference by Pierce and Turner\cite{PT00}
+describe two implementations of type variables, for bounded
 and unbounded type variables. The bounded implementation is presented
 as an optional extension  to the unbounded implementation, which preserves all
 properties described in the Local Type Inference algorithm.

@@ -27,7 +27,7 @@
   %escapeinside={\%*}{*)},          % if you want to add a comment within your code
 }
 
-\title{Typed Clojure: A Practical Optional Type System for Clojure}
+\title{A Practical Optional Type System for Clojure}
 \author{Ambrose Bonnaire-Sergeant}
 
 \keywords{Type systems, Clojure}
@@ -40,13 +40,19 @@
 
 \begin{abstract}
   % FIXME long tradition for attempts
-  There is a long tradition to create static type systems for dynamically-typed
-  languages. Static type checking promises to eliminate many common user errors
+  Since the first wide-spread programming languages like Fortran, LISP and ALGOL
+  there has been a division between languages that perform type checking at compile-time
+  and those that don't.
+  A recent trend is to combine the advantages of both kinds of languages by adding optional
+  static type systems to languages without static type checking,
+  which promises to eliminate many common user errors
   that are otherwise unnoticed or are caught when the program is run. 
 
+\begin{verbatim}
   Recent attempts have seen several promising and innovative
   type systems built for dynamically typed languages. Typed Racket is able to
   statically type check idioms ..
+\end{verbatim}
   We take the lessons learnt from these
   projects and apply them to the dynamically-typed language Clojure in the form of Typed Clojure.
 \end{abstract}

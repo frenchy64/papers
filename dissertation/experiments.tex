@@ -1,8 +1,9 @@
 \chapter{Experiments}
 
-% 
 In this chapter we look at several example of using Typed Clojure and
-how well the current prototype handles them.
+how well the current prototype handles them. 
+We intentially chose examples that could be challenging to type check
+or were particularly useful to the everyday Clojure programmer.
 
 \section{Java Interoperability}
 
@@ -26,6 +27,7 @@ object. For example, \lstinline|(doto o (.m1 a*) (m2 a*))| calls methods \lstinl
 on \lstinline|o| and returns \lstinline|o|.
 
 \begin{lstlisting}[caption=call-method, label=lst:callmethod]
+;; call-method pulled from clojure.contrib.reflect, (c) 2010 Stuart Halloway & Contributors
 (defn call-method
   "Calls a private or protected method.
 
@@ -50,7 +52,7 @@ The original function is modified slightly for readability and is presented in l
      [Class Named (IPersistentVector Class) (U nil Object) (U nil Object) * -> (U nil Object)])
 \end{lstlisting}
 
-Thankfully this function has up-to-date documention, and from it we can derive an expected type
+Thankfully this function has up-to-date documentation, and from it we can derive an expected type
 (listing \ref{lst:callmethodtype}).
 
 Before running the type checker we must convert our array constructors into ones that Typed Clojure
@@ -73,4 +75,182 @@ in the array. The first point above must be type \lstinline|(Array Class Class)|
 \lstinline|Class| objects. On the other hand, the \lstinline|invoke| method takes an array that allows
 \emph{null} members, so its type is \lstinline|(Array Object (U nil Object))|.
 
+Now we run the type checker, which produces a type error.
+
+\begin{lstlisting}
+#<Exception java.lang.Exception: 29: Cannot call instance method java.lang.reflect.AccessibleObject/setAccessible on type (U nil java.lang.reflect.Method)>
+\end{lstlisting}
+
+Because Typed Clojure assumes all methods return nilable Objects, the call to \lstinline|getDeclaredMethod|
+has return type \lstinline|(U nil java.lang.reflect.Method)|. It is not type safe to call \lstinline|setAccessible|
+on this type, so we get a type error.
+
+In this case, Typed Clojure is too conservative: according to its documentation \lstinline|getDeclaredMethod|
+never returns \emph{null}. We add this rule with \lstinline|non-nil-return|.
+
+\begin{lstlisting}
+(non-nil-return java.lang.Class/getDeclaredMethod :all)
+\end{lstlisting}
+
+Running the type checker produces a different type error.
+
+\begin{lstlisting}
+#<Exception java.lang.Exception: Type Error, REPL:32 - (U java.lang.Object nil) is not a subtype of: java.lang.Object>
+\end{lstlisting}
+
+This concerns passing \lstinline|obj| as the first argument to the \lstinline|invoke| method.
+Typed Clojure conservatively defaults method parameter types as non-nullable. 
+Therefore the first parameter of \lstinline|invoke| is \lstinline|Object| by default; \lstinline|obj|
+is \lstinline|(U java.lang.Object nil)|. Again, this is too conservative as the first argument can
+be \emph{null} for static methods, and we use \lstinline|nilable-param| to specify the first argument
+of \lstinline|invoke| may be nil, for the arity of two parameters.
+
+\begin{lstlisting}
+(nilable-param java.lang.reflect.Method/invoke {2 #{0}})
+\end{lstlisting}
+
+Here is the final successfully type checked code.
+\begin{verbatim}Is this a reasonable result?\end{verbatim}
+
+\begin{lstlisting}
+(non-nil-return java.lang.Class/getDeclaredMethod :all)
+(nilable-param java.lang.reflect.Method/invoke {2 #{0}})
+
+(ann call-method [Class Named (IPersistentVector Class) (U nil Object) (U nil Object) * -> (U nil Object)])
+
+;; call-method pulled from clojure.contrib.reflect, (c) 2010 Stuart Halloway & Contributors
+(defn call-method
+  "Calls a private or protected method.
+
+  params is a vector of classes which correspond to the arguments to
+  the method e
+
+  obj is nil for static methods, the instance object otherwise.
+
+  The method-name is given a symbol or a keyword (something Named)."
+  [^Class klass method-name params obj & args]
+  (let [method (doto (.getDeclaredMethod klass 
+                                         (name method-name)
+                                         (into-array> Class Class params))
+                 (.setAccessible true))]
+    (.invoke method obj (into-array> Object (U nil Object) args))))
+\end{lstlisting}
+
 \section{Red-Black Tree}
+
+\section{Monads}
+
+Monads[] are an interesting control structure probably most recognisable from its inclusion
+in the statically-typed language Haskell[].
+
+I chose to port a subset of the Clojure library \emph{algo.monads} to Typed Clojure. The library
+provides support for several kinds of monads.
+
+This library represents a monad as a hash-map with four keys: \lstinline|:m-bind|, \lstinline|:m-result|,
+\lstinline|:m-zero|, and \lstinline|:m-plus|. A valid monad must provide the first two, and the latter
+two may optionally be mapped to the keyword \lstinline|::undefined|\footnote{Keywords prefixed with \lstinline|::|
+are qualified in the current namespace.}.
+
+\begin{lstlisting}[caption=Untyped definition for the identity monad, label=lst:identitymdef]
+(defmonad identity-m
+   "Monad describing plain computations. This monad does in fact nothing
+    at all. It is useful for testing, for combination with monad
+    transformers, and for code that is parameterized with a monad."
+  [m-result identity
+   m-bind   (fn m-result-id [mv f]
+              (f mv))
+  ])
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Macro expansion of identity monad definition, label=lst:identitymexpand]
+(def identity-m
+  (let [m-bind :typed.test.monads/undefined
+        m-result :typed.test.monads/undefined
+        m-zero :typed.test.monads/undefined
+        m-plus :typed.test.monads/undefined
+        m-result identity
+        m-bind (fn m-result-id [mv f] (f mv))]
+    {:m-plus m-plus, :m-zero m-zero, :m-bind m-bind, :m-result m-result}))
+\end{lstlisting}
+
+A monad is defined using the macro \lstinline|defmonad|. The macro expands to code that binds a var to a hash-map
+with the aforementioned keys. For example, listing \ref{lst:identitymdef} expands to 
+the code in listing \ref{lst:identitymexpand}.
+
+\begin{lstlisting}[caption=Type for identity monad, label=lst:identitymtype]
+(ann identity-m
+     '{:m-bind (All [x y]
+                 [x [x -> y] -> y])
+       :m-result (All [x]
+                   [x -> x])
+       :m-zero '::undefined
+       :m-plus '::undefined})
+\end{lstlisting}
+
+Typed Clojure operates directly on fully macro-expanded forms, so it is unsurprising that the type
+annotation for \lstinline|identity-m| reflects its macro-expansion (listing \ref{lst:identitymtype}).
+The \lstinline|:m-bind| entry is comparable to Haskell's monadic \emph{bind},
+and the \lstinline|:m-result| entry is comparable to Haskell's monadic \emph{return}.
+
+\begin{lstlisting}[caption=Maybe monad definition, label=lst:maybemdef]
+(defmonad maybe-m
+  "Monad describing computations with possible failures. Failure is
+  represented by nil, any other value is considered valid. As soon as
+  a step returns nil, the whole computation will yield nil as well."
+  [m-zero   nil
+   m-result (fn m-result-maybe [v] 
+              v)
+   m-bind   (fn m-bind-maybe [mv f]
+              (if (nil? mv) nil (f mv)))
+   m-plus   (fn m-plus-maybe [& mvs]
+              (first 
+                (filter #(not (nil? a))) mvs))
+   ])
+\end{lstlisting}
+
+Instead of explaining the identity monad further, we show a more interesting monad, the maybe monad.
+Its untyped definition is given in listing \ref{lst:maybemdef}.
+
+\begin{lstlisting}[caption=Typed maybe monad definition, label=lst:maybemtyped]
+(ann maybe-m
+    '{:m-bind (All [x y]
+                [(U nil x) [x -> (U nil y)] -> (U nil y)])
+      :m-result (All [x]
+                  [x -> (U nil x)])
+      :m-zero nil
+      :m-plus (All [x]
+                [(U nil x) * -> (U nil x)])})
+(defmonad maybe-m
+  "Monad describing computations with possible failures. Failure is
+  represented by nil, any other value is considered valid. As soon as
+  a step returns nil, the whole computation will yield nil as well."
+  [m-zero   nil
+   m-result (ann-form 
+              (fn m-result-maybe [v] v)
+              (All [x] 
+                [x -> (U nil x)]))
+   m-bind   (ann-form 
+              (fn m-bind-maybe [mv f]
+                (if (nil? mv) nil (f mv)))
+              (All [x y]
+                [(U nil x) [x -> x] -> (U nil x)]))
+   m-plus   (ann-form 
+              (fn m-plus-maybe [& mvs]
+                (first 
+                  (filter
+                    (ann-form 
+                      #(not (nil? %))
+                      [(U nil x) -> boolean :filters {:then (is x 0)}])
+                    mvs)))
+              (All [x]
+                [(U nil x) * -> (U nil x)]))
+   ])
+\end{lstlisting}
+
+
+
+A significant difference between typing Haskell style monads in Haskell and typing monads in \emph{algo.monads} with Typed Clojure
+is that monads in Haskell are represented by type classes, while Typed Clojure does not support higher-kinded
+constructs.
+
+\section{Conduit}
