@@ -39,25 +39,28 @@
 \maketitle
 
 \begin{abstract}
-  % FIXME long tradition for attempts
-  Since the first wide-spread programming languages like Fortran, LISP and ALGOL
-  there has been a division between languages that perform type checking at compile-time
-  and those that don't.
-  A recent trend is to combine the advantages of both kinds of languages by adding optional
-  static type systems to languages without static type checking,
-  which promises to eliminate many common user errors
-  that are otherwise unnoticed or are caught when the program is run. 
 
-\begin{verbatim}
-  Recent attempts have seen several promising and innovative
-  type systems built for dynamically typed languages. Typed Racket is able to
-  statically type check idioms ..
-\end{verbatim}
-  We take the lessons learnt from these
-  projects and apply them to the dynamically-typed language Clojure in the form of Typed Clojure.
+Since the first wide-spread programming languages 
+like Fortran, LISP, and ALGOL 
+
+there has been a division between languages 
+that perform type checking at compile-time and those that don't.  
+
+A recent trend is to combine the advantages of both kinds of languages by adding optional static type systems to languages without static type checking. 
+This promises to eliminate many common user errors that are otherwise unnoticed or are caught when the program is run, while conserving the flexibility of the language. 
+A major challenge in these combinations is continuing to support the idiomatic style the original language, and some recent attempts appear to have finally produced type systems that have overcome this obstacle.  Most notably, Typed Racket, a typed sister language of the Lisp dialect Racket, is able to statically type check most idiomatic Racket code.
+
+Clojure is a recent increasingly popular Lisp dialect with an emphasis on immutability, and interoperability and execution on popular platforms like the Java Virtual Machine (JVM).
+We take the lessons learnt from several projects including Typed Racket and the advanced statically-typed JVM language Scala, and apply them to Clojure in the form of an optional static type system.
+In this seminar I will describe my work on building a prototype static type system for Clojure.
+This prototype is sufficient to allow experiments with existing Clojure code that is sufficiently complicated
+that type checking increases confidence that the code is correct.
+My findings show that it appears to be both practical and useful to design and implement an optional static type system for the
+Clojure programming language.
+
 \end{abstract}
 
-%\tableofcontents
+\tableofcontents
 
 \include{intro}
 \include{lit-review}

@@ -162,17 +162,6 @@ are qualified in the current namespace.}.
   ])
 \end{lstlisting}
 
-\begin{lstlisting}[caption=Macro expansion of identity monad definition, label=lst:identitymexpand]
-(def identity-m
-  (let [m-bind :typed.test.monads/undefined
-        m-result :typed.test.monads/undefined
-        m-zero :typed.test.monads/undefined
-        m-plus :typed.test.monads/undefined
-        m-result identity
-        m-bind (fn m-result-id [mv f] (f mv))]
-    {:m-plus m-plus, :m-zero m-zero, :m-bind m-bind, :m-result m-result}))
-\end{lstlisting}
-
 A monad is defined using the macro \lstinline|defmonad|. The macro expands to code that binds a var to a hash-map
 with the aforementioned keys. For example, listing \ref{lst:identitymdef} expands to 
 the code in listing \ref{lst:identitymexpand}.
