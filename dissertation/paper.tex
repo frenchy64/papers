@@ -3,7 +3,7 @@
 \usepackage{mmm}
 \usepackage{mathpartir}
 \usepackage{clj-grammar}
-\usepackage[style=numeric]{biblatex}
+\usepackage[style=alphabetic]{biblatex}
 \addbibresource{bibliography.bib}
 
 \usepackage{listings}
@@ -40,22 +40,47 @@
 
 \begin{abstract}
 
-Since the first wide-spread programming languages 
-like Fortran, LISP, and ALGOL 
+Traditionally there has been a clear distinction between 
+programming languages that perform type checking at compile-time, and those that do not.
+In particular, the early wide-spread programming languages ALGOL and LISP
+could be divided this way: ALGOL performs compile-time (or static) type checking,
+and LISP does not.
+Static type checking eliminates many common user errors that are otherwise unnoticed or are caught 
+when the program is run.
+On the other hand, a language without static type checking can often be designed 
+to be more flexible and forgiving.
 
-there has been a division between languages 
-that perform type checking at compile-time and those that don't.  
+A recent trend is to combine the advantages of both kinds of languages by adding optional static 
+type systems to languages without static type checking. 
+A major challenge in these combinations is continuing to support the idiomatic style of the original 
+language, and some recent attempts appear to have finally produced type systems that have overcome this obstacle.  
+Most notably Typed Racket, a typed sister language of the Lisp dialect Racket, is able to statically type 
+check most idiomatic Racket code.
 
-A recent trend is to combine the advantages of both kinds of languages by adding optional static type systems to languages without static type checking. 
-This promises to eliminate many common user errors that are otherwise unnoticed or are caught when the program is run, while conserving the flexibility of the language. 
-A major challenge in these combinations is continuing to support the idiomatic style the original language, and some recent attempts appear to have finally produced type systems that have overcome this obstacle.  Most notably, Typed Racket, a typed sister language of the Lisp dialect Racket, is able to statically type check most idiomatic Racket code.
+Clojure is a recent and increasingly popular programming language that is designed to support 
+functional programming and immutability by default. Implementations of Clojure are hosted 
+on popular platforms and provide direct interoperability with the host platform.
+There are several implementations of Clojure, each targeting different runtimes including
+the Java Virtual Machine, the Common Language Runtime, and Javascript virtual machines.
 
-Clojure is a recent increasingly popular Lisp dialect with an emphasis on immutability, and interoperability and execution on popular platforms like the Java Virtual Machine (JVM).
-We take the lessons learnt from several projects including Typed Racket and the advanced statically-typed JVM language Scala, and apply them to Clojure in the form of an optional static type system.
-In this seminar I will describe my work on building a prototype static type system for Clojure.
+This paper describes my work on designing an optional static type system for Clojure based on
+the lessons learnt from several projects, primarily Typed Racket.
+A prototype type system is developed for Clojure running on the Java Virtual Machine.
 This prototype is sufficient to allow experiments with existing Clojure code that is sufficiently complicated
 that type checking increases confidence that the code is correct.
-My findings show that it appears to be both practical and useful to design and implement an optional static type system for the
+For example, a significant portion of algo.monads, a Clojure Contrib library for monadic programming, 
+is able to be type checked. 
+On the positive side, most monad, monad transformer, and monadic function definitions can be type checked,
+usually by adding type annotations in natural places like function definitions.
+Negatively, simple monad comprehensions can be type checked, but require awkward type annotations.
+
+There is significant future work to fully type check all Clojure features and idioms.
+For example, multi-method definitions and functions accepting an even number of variable arguments
+are troublesome. 
+Also, there are desirable features from the Typed Racket project that are missing, such
+as automatic runtime contract generation and a sophisticated blame system, 
+both which significantly improve error messages when mixing typed and untyped code.
+I conclude that it appears to be both practical and useful to design and implement an optional static type system for the
 Clojure programming language.
 
 \end{abstract}
@@ -110,6 +135,14 @@ Clojure programming language.
 %\infrule[B-Assoc]
 
 %\end{mathpar}
+
+\chapter{Conclusion}
+
+\begin{verbatim}
+  Programming is an error-prone task, and verification tools are important.
+  Dynamic languages rely on several techniques for verification, but static
+  type checking is not often supported.
+\end{verbatim}
 
 \printbibliography[title=References]
 

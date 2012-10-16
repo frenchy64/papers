@@ -22,14 +22,14 @@ The Clojure programming language is a dynamically typed language running on the 
 It emphasises functional programming with immutable data structures
 and provides direct interoperability with languages on the Java Virtual Machine.
 Clojure also is also a family of languages with similar semantics, referred to as Clojure dialects.
-There are several Clojure dialects, notably the aforementioned Clojure for the Java Virtual Machine,
+There are several Clojure dialects, notably the aforementioned Clojure for the Java Virtual Machine (JVM),
 ClojureCLR which targets the Common Language Runtime, and ClojureScript which compiles to Javascript.
 Where it is clear to do so, we refer to Clojure the programming language as \emph{Clojure}, 
 and the family of Clojure-like languages as \emph{Clojure dialects}.
 
 Clojure dialects are widely used for several reasons.
-Performance is a key feature, with most dialects 
-offering access to host-level performance 
+Performance is a key feature, for example the JVM implementation of Clojure
+offers ways to access Java-like speed for certain operations.
 
 Recently languages have been created to or been modified to support aspects
 of both static and dynamic typing.
@@ -78,7 +78,7 @@ Haskell's and Scala's are useful when reasoning about higher-order code.
 When a static type checker is not available, which describes the situation
 for most dynamic languages, other techniques are used for checking
 type invariants. Runtime contracts and unit testing are a popular alternatives.
-Clojure adopts these approachs, providing easy syntax for defining pre-
+Clojure adopts these approaches, providing easy syntax for defining pre-
 and post-conditions \footnote{Inspired by Eiffel} and a library for writing unit tests.
 \begin{verbatim} but.. (why a static type system is still desirable\end{verbatim}
 
@@ -94,12 +94,33 @@ and post-conditions \footnote{Inspired by Eiffel} and a library for writing unit
 % Eg. Haskell, ML flavoured languages
 % Counterpoint: Typed Racket preserves racket idioms, adds static typing
 
+% Clojure community reactions
+% GSOC
+% Conj talk
+% 
+% Motivation: Conduit
+
 \section{Typed Clojure through Examples}
 
 % Hello world
 This section introduces Typed Clojure with example code. An attempt is
-made to introduce some Clojure syntax and sematics to those unfamiliar or needing a refresher.
-A basic knowledge of Lisp syntax is assumed.
+made to introduce some Clojure syntax and semantics to those unfamiliar or needing a refresher.
+A basic knowledge of Lisp syntax is handy, but a brief tutorial is given
+for newcomers.
+
+\subsection{Preliminary: Lisp Syntax}
+
+The core of understanding Lisp syntax can be summarised by these points
+
+\begin{itemize}
+  \item Invocations are always wrapped in a pair of balanced parenthesis 
+  \item Parenthesis start to the left of the operator
+\end{itemize}
+
+For example, the Java expressions \emph{1 + 2 / 3} is written in Lisp pseudocode \lstinline|(/ (+ 1 2) 3)|
+and \emph{numberCrunch(1, 2)} written \lstinline|(numberCrunch 1 2)|.
+
+\subsection{Simple Examples}
 
 We begin with the obligatory \emph{Hello world} example.
 
@@ -110,13 +131,14 @@ We begin with the obligatory \emph{Hello world} example.
 (println "Hello world")
 \end{lstlisting}
 
-The \lstinline|clojure.core/ns|
+Here \lstinline|clojure.core/ns|
 \footnote{All vars from the \lstinline|clojure.core| namespace are referred implicitly in new namespaces (equivalent to \lstinline|(:require [clojure.core :refer :all])|).}
-invocation declares the current namespace to be \lstinline|typed.test.hello-world|
-and requires the namespace \lstinline|typed.core| to be loaded as a dependency, referring the var
-\lstinline|typed.core/check-ns| to be referenced locally. Other than this
+declares the current namespace to be 
+\lstinline|typed.test.hello-world|
+and requires the namespace \lstinline|typed.core| to be loaded as a dependency,
+referring \lstinline|typed.core/check-ns| to be referenced as \lstinline|check-ns|. Other than this
 dependency, this is identical to the untyped \emph{Hello world}.
-% footnote: check-ns used to initiate type checking usually at REPL
+By running \lstinline|check-ns| we can verify that this namespace type checks.
 
 More complex code require extra annotations to type check:
 
@@ -135,13 +157,12 @@ More complex code require extra annotations to type check:
     :else 
       (collatz (inc (* 3 n)))))
 \end{lstlisting}
-\footnote{\emph{Example adapted from Sam's dissertation TODO}}
+\footnote{Example adapted from Tobin-Hochstadt \cite{Tob10}}
 
 In this example, we define a new var \lstinline|typed.test.collatz/collatz|. Typed Clojure requires all 
 used vars to be annotated. Here \lstinline|typed.core/ann| annotates \lstinline|typed.test.collatz/collatz|
 to be a function from \lstinline{java.lang.Number} to 
-\lstinline{java.lang.Number}
-\footnote{All Classes in the \lstinline|java.lang| package
+\lstinline{java.lang.Number}\footnote{All Classes in the \lstinline|java.lang| package
 are automatically imported in every Clojure namespace (the equivalent of Java's \lstinline|import java.lang.*;|).}.
 
 \subsection{Datatypes and Protocols}

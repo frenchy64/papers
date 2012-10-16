@@ -33,6 +33,19 @@ This AST is then recursively descended and is type checked using local type infe
 Currently only one error is reported at a time, and type checking stops if a type error
 is found.
 
+% go into more detail
+% - check function
+% - update env
+% - what is an environment? Bindings + propositions
+% - LOC
+% - link to github
+% - how occurrence typing works
+%   - update env
+%   - how to calculate reachability 
+
+% mention Conj talk
+% 
+
 \section{Occurrence typing}
 
 Typed Clojure's implementation of occurrence typing is ported and extended from Typed Racket.
@@ -81,3 +94,5 @@ The second issue is potentially resolvable.
 %      a)          ; in fact any new filters about a will be incorrectly assumed to be the argument
 %      false))
 
+\section{Filtering on Negative Propositions}
+\label{sec:filterneg}

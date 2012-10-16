@@ -140,11 +140,17 @@ Here is the final successfully type checked code.
 
 \section{Monads}
 
-Monads[] are an interesting control structure probably most recognisable from its inclusion
-in the statically-typed language Haskell[].
+Monads are an interesting control structure most used in functional programming languages,
+as described by Wadler\cite{Wad95}.
+They are most recognisable from its inclusion in the statically-typed language Haskell\cite{Mar10},
+where monads are relied on for many features including global state, file output, and exceptions.
 
-I chose to port a subset of the Clojure library \emph{algo.monads} to Typed Clojure. The library
-provides support for several kinds of monads.
+I chose to port the Clojure Contrib library \emph{algo.monads}\cite{Hic12} to Typed Clojure. The library
+provides several kinds of monads, monad transformers, and monadic functions.
+Macros are used to provide pleasant syntax for consumers of the library.
+
+\subsection{Monad Definitions}
+\label{sec:monaddef}
 
 This library represents a monad as a hash-map with four keys: \lstinline|:m-bind|, \lstinline|:m-result|,
 \lstinline|:m-zero|, and \lstinline|:m-plus|. A valid monad must provide the first two, and the latter
@@ -163,83 +169,113 @@ are qualified in the current namespace.}.
 \end{lstlisting}
 
 A monad is defined using the macro \lstinline|defmonad|. The macro expands to code that binds a var to a hash-map
-with the aforementioned keys. For example, listing \ref{lst:identitymdef} expands to 
-the code in listing \ref{lst:identitymexpand}.
+with the aforementioned keys.
 
 \begin{lstlisting}[caption=Type for identity monad, label=lst:identitymtype]
+(def-alias Undefined '::undefined)
 (ann identity-m
      '{:m-bind (All [x y]
                  [x [x -> y] -> y])
        :m-result (All [x]
                    [x -> x])
-       :m-zero '::undefined
-       :m-plus '::undefined})
+       :m-zero Undefined
+       :m-plus Undefined})
 \end{lstlisting}
 
-Typed Clojure operates directly on fully macro-expanded forms, so it is unsurprising that the type
-annotation for \lstinline|identity-m| reflects its macro-expansion (listing \ref{lst:identitymtype}).
-The \lstinline|:m-bind| entry is comparable to Haskell's monadic \emph{bind},
-and the \lstinline|:m-result| entry is comparable to Haskell's monadic \emph{return}.
+A direct typing of the identity monad would look like listing \ref{lst:identitymtype}.
+This signature assigns the expected type for the var \lstinline|identity-m| 
+to be a heterogeneous map type with the minimum entries for monads: \lstinline|:m-bind|
+and \lstinline|:m-result|. The syntax for heterogeneous map types requires a \lstinline|'| prefix,
+and any number of key-value pairs are given between curly braces. Heterogeneous map keys must be keywords,
+so the syntax is made more convenient by omitting the usually required \lstinline|'| prefix
+for keyword types.
 
-\begin{lstlisting}[caption=Maybe monad definition, label=lst:maybemdef]
-(defmonad maybe-m
-  "Monad describing computations with possible failures. Failure is
-  represented by nil, any other value is considered valid. As soon as
-  a step returns nil, the whole computation will yield nil as well."
-  [m-zero   nil
-   m-result (fn m-result-maybe [v] 
-              v)
-   m-bind   (fn m-bind-maybe [mv f]
-              (if (nil? mv) nil (f mv)))
-   m-plus   (fn m-plus-maybe [& mvs]
-              (first 
-                (filter #(not (nil? a))) mvs))
-   ])
-\end{lstlisting}
+Monad types in languages with advanced type systems are often abstracted using type constructors.
+This allows reasoning about monadic code while keeping the particular monad abstract, which is a desirable result,
+so Typed Clojure was extended to support user definable type constructors.
 
-Instead of explaining the identity monad further, we show a more interesting monad, the maybe monad.
-Its untyped definition is given in listing \ref{lst:maybemdef}.
-
-\begin{lstlisting}[caption=Typed maybe monad definition, label=lst:maybemtyped]
-(ann maybe-m
+\begin{lstlisting}[caption=An abstract definition of a monad., label=lst:monadalias]
+(def-alias Monad 
+  (TFn [[m :kind (TFn [[x :variance :covariant]] Any)]]
     '{:m-bind (All [x y]
-                [(U nil x) [x -> (U nil y)] -> (U nil y)])
+                [(m x) [x -> (m y)] -> (m y)])
       :m-result (All [x]
-                  [x -> (U nil x)])
-      :m-zero nil
-      :m-plus (All [x]
-                [(U nil x) * -> (U nil x)])})
-(defmonad maybe-m
-  "Monad describing computations with possible failures. Failure is
-  represented by nil, any other value is considered valid. As soon as
-  a step returns nil, the whole computation will yield nil as well."
-  [m-zero   nil
-   m-result (ann-form 
-              (fn m-result-maybe [v] v)
-              (All [x] 
-                [x -> (U nil x)]))
-   m-bind   (ann-form 
-              (fn m-bind-maybe [mv f]
-                (if (nil? mv) nil (f mv)))
-              (All [x y]
-                [(U nil x) [x -> x] -> (U nil x)]))
-   m-plus   (ann-form 
-              (fn m-plus-maybe [& mvs]
-                (first 
-                  (filter
-                    (ann-form 
-                      #(not (nil? %))
-                      [(U nil x) -> boolean :filters {:then (is x 0)}])
-                    mvs)))
-              (All [x]
-                [(U nil x) * -> (U nil x)]))
-   ])
+                  [x -> (m x)])
+      :m-zero Undefined
+      :m-plus Undefined}))
 \end{lstlisting}
 
+Listing \ref{lst:monadalias} captures the abstract definition of a monad.
+A \lstinline|Monad| is a type constructor parameterised by \lstinline|m|, which is
+a type constructor taking a single argument \lstinline|x| (a type) and returning a type 
+(written \lstinline|Any|)\footnote{Haskell-like syntax is helpful here, the kind \lstinline|(TFn [[x :variance :covariant]] Any)|
+is approximately \lstinline|* -> *|. A more streamlined syntax is planned for future work.}.
+The body of the type constructor uses \lstinline|m| abstractly. Typed Clojure
+ensures the correct number of arguments are passed and recognises the declared variances
+for each parameter, In this case the first argument of \lstinline|m| is declared
+a covariant position. When instantiated, \lstinline|m| must also be a type operator
+of one covariant argument returning a type.
 
+\begin{lstlisting}[caption=Identity monad using user defined type constructors, label=lst:identityctors]
+(ann identity-m (Monad (TFn [[x :variance :covariant]] x)))
+\end{lstlisting}
 
-A significant difference between typing Haskell style monads in Haskell and typing monads in \emph{algo.monads} with Typed Clojure
-is that monads in Haskell are represented by type classes, while Typed Clojure does not support higher-kinded
-constructs.
+We can now express the type of the identity monad more abstractly (listing \ref{lst:identityctors}).
+The purpose of the monad seems more apparent just from reading its type.
+In this case, the fact that identity monad has no effect is reflected
+by its type constructor returning exactly its argument.
+
+\begin{lstlisting}[caption=Type checked identity monad definition, label=lst:identitydeftyped]
+(defmonad identity-m
+   "Monad describing plain computations. This monad does in fact nothing
+    at all. It is useful for testing, for combination with monad
+    transformers, and for code that is parameterized with a monad."
+  [m-result identity
+   m-bind   (ann-form
+              (fn m-result-id [mv f]
+                (f mv))
+              (All [x y]
+                [x [x -> y] -> y]))
+  ])
+\end{lstlisting}
+
+The final type checked definition for the identity monad is given in listing \ref{lst:identitydeftyped}.
+In this case, just the monadic bind required annotation.
+
+\begin{lstlisting}[caption=Several monad types, label=lst:severalmonads]
+; Maybe monad
+(ann maybe-m (MonadPlusZero
+               (TFn [[x :variance :covariant]] 
+                 (U nil x))))
+
+; Sequence monad (called "list monad" in Haskell)
+(ann sequence-m (MonadPlusZero 
+                  (TFn [[x :variance :covariant]]
+                    (Seqable x))))
+
+; State monad
+(def-alias State
+  (TFn [[r :variance :covariant]
+        [s :variance :invariant]]
+    [s -> '[r s]]))
+(ann state-m (All [s]
+               (Monad (TFn [[x :variance :covariant]]
+                        (State x s)))))
+\end{lstlisting}
+
+Listing \ref{lst:severalmonads} shows several monad types. The alias \lstinline|MonadPlusZero|
+is identical to \lstinline|Monad|, except both \lstinline|:m-zero| and \lstinline|:m-plus| are defined.
+The definitions were type checked by adding type annotations in appropriate places, in a similar fashion
+to the identity monad. A significant obstacle was discovered in while type checking monad definitions,
+relating to filtering sequences with negative type information, discussed in section \ref{sec:filterneg}.
+
+\subsection{Monad Transformer Definitions}
+
+The initial motivation for adding user defined type constructors to Typed Clojure
+(as discussed in section \ref{sec:monaddef}) was to type check
+monad transformer definitions.
+Monad transformers are always parameterised by a monad type constructor, and should work for all
+monad type constructors. Keeping the monad type constructor abstract allows us to determine
+whether a monad transformer works \emph{for any} monads.
 
 \section{Conduit}

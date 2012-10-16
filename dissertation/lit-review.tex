@@ -49,16 +49,27 @@ never fails and an inconsistency always results in a runtime check.
 Wright and Cartwright\cite{WC97} developed Soft Scheme, a practical
 soft type system for Scheme. 
 It extended earlier work by Cartwright and Fagan\cite{CF91}
-and Fagan \cite{Fag92}, adding support for practical features such as
+and Fagan \cite{Fag91}, adding support for practical features such as
 first-class continuations and variable-arity functions.
 Soft Scheme does not require any extra type annotations.
 
-% what challenges did soft typing face?
+Type systems for Scheme have since moved away from soft typing
+to to other approaches like gradual typing.
+Alas, the best reference for commentary on this transition 
+appears to be slides from a talk by Felleisen\cite{Fell09},
+a leader in this area of research for over 20 years.
+Felleisen says that while Soft Scheme discovered type problems, 
+it suffers from incomprehensible
+errors that required PhD-level expertise to decipher. 
+
+\begin{verbatim}
+  Bidirectionality
+\end{verbatim}
 
 \subsection{Gradual Typing}
 
 Gradual typing combines static and runtime type checking so programmers
-can the most appropriate one for the situtation.
+can the most appropriate one for the situation.
 
 Typed Racket was developed as a path for module-by-module
 porting of existing untyped Racket modules to a typed sister language\cite{Tob10}.
@@ -122,7 +133,8 @@ to offer a kind of function overloading.
 \section{Statically Typed Multimethods}
 
 Clojure provides two dispatching mechanisms: multimethods, a mechanism to dispatch on the
-results of an arbitrary function; and protocols, a mechanism for single dispatch.
+results of an arbitrary function; and protocols, a mechanism for single dispatch, a common
+strategy that dispatches on the type of the first provided argument.
 Millstien and Chambers explore statically typing multiple dispatched multimethods in Dubious \cite{MS02}.
 Dubious' multimethods are less powerful than Clojure's multimethods but more powerful than protocols,
 and Clojure's dispatch functions can be extended at runtime, unlike Dubious' multimethods.
@@ -386,7 +398,7 @@ without issues, and has good potential to enable null-safe Java interop.
 
 \section{Statically Typed Multimethods}
 
-Clojure provides mulimethods as a core language feature. This section discusses systems that statically
+Clojure provides multimethods as a core language feature. This section discusses systems that statically
 verify type safety for multimethods.
 
 Millstein and Chambers\cite{MS02}
@@ -394,6 +406,13 @@ describe Dubious, a simple statically typed core language including multimethods
 dispatch on the type of its arguments. They tackle a key challenge for statically typing
 multimethods: ``it is possible for two modules containing arbitrary multimethods to typecheck
 successfully in isolation but generate type errors when linked together.''\cite{MS02}
+
+\section{Higher Kinded Programming}
+
+\begin{verbatim}
+Many advanced type systems provide support for ..
+Forward reference to algo.monad experiment.
+\end{verbatim}
 
 \section{Conclusion}
 
