@@ -1,11 +1,8 @@
 \chapter{Design Choices}
 
 Typed Clojure is designed to be of practical use to Clojure programmers.
-Many of the design goals are similar to Tobin-Hochstadt's \cite{Tob10}
-for Typed Racket.
-
-\section{Preserve Idioms}
-
+Many of the design goals are similar to Tobin-Hochstadt's 
+for Typed Racket \cite{Tob10}. Some of the main differences are described in this chapter.
 
 \section{Typed Racket}
 
@@ -61,15 +58,13 @@ else
 
 
 
-In Java, \lstinline|null| is a subtype to all reference
+In Java, \lstinline|null| is included in all reference
 types, but \lstinline|null| is not expressible as a static type. In other words,
 when a Java type claims a reference type, you should also assume it can also be of 
 type \lstinline|null|.
 
-
-
 Scala provides the Option type for safe \lstinline|null| elimination, forcing pattern matching
-where \lstinline|null| might occur.
+where \lstinline|null| might occur, and 
 
 \begin{lstlisting}[caption=null elimination in Scala]
 TODO
@@ -143,6 +138,11 @@ subtyping relationships are checked.
 \section{Heterogeneous Maps}
 % keyword keys for now, generally encouraged, fast
 % Some heterogeneous maps have string args, eg. from web frameworks
+
+As a key idiomatic feature of Clojure, we treat heterogeneous maps more formally.
+This also serves as a prototype for formalising other aspects.
+Here we give a formal syntax, operational semantics and type system using inference
+rules, as is standard in the programming language community (see, eg., Pierce\cite{Pie02}). 
 
 % Operational semantics
 

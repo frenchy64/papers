@@ -15,10 +15,7 @@ In this chapter we fit the design of Typed Clojure with literature from related 
 Forward-references are given to link the discussed literature with this project
 where there is some relevance or influence.
 
-Typed Clojure is related to several existing systems for both typed and untyped languages.
-The first section of this chapter gives an overview of type systems designed for untyped languages.
-The second section explores how existing type systems statically type check multimethods
-and their relevance to Clojure's multimethods.
+%Typed Clojure is related to several existing systems for both typed and untyped languages.
 
 \section{Static Type Systems}
 
@@ -108,48 +105,52 @@ which can be difficult to determine in the presence of higher-order functions.
 This section summarises research in typing OCaml-style records
 which relate to Clojure records and heterogeneous hash maps.
 
-\section{Intersection Types}
+\section{Intersection and Union Types}
 
-Intersection types are an interesting type construct relevant to capturing the complicated
-types manipulated by dynamic languages.
+Intersection and union types are interesting type constructs relevant to capturing the complicated
+types common in dynamic languages.
+An intersection of types \lstinline|a| and \lstinline|b|, written \lstinline|(I a b)| in Typed Clojure,
+can be used safely in both positions expecting type \lstinline|a|,
+and positions expecting type \lstinline|b|.
+Intuitively, \lstinline|(I a b)| is both of type \lstinline|a| \emph{and} \lstinline|b|.
+A union of types \lstinline|a| and \lstinline|b| is \emph{either} of type \lstinline|a| or
+\lstinline|b|, written \lstinline|(U a b)| in Typed Clojure,
+and can be used safely in positions expecting a type that is \emph{both} type \lstinline|a|
+and \lstinline|b|.
+For example, \lstinline|(U Number Boolean)| cannot be used in positions expecting \lstinline|Number|.
+
+Several interesting projects have used intersection or union types.
 
 Forsythe, a modern ALGOL dialect by Reynolds\cite{Rey96} was the first wide-spread 
 programming language to use intersection types.
 Uses of intersections in Forsythe include representing extensible record types
 and function overloading.
 
-% CIDRE
 SML CIDRE is a refinement type checker for Standard ML by Davies \cite{Dav05}
 that features a form of intersection types. It is used for function overloading
-and checking invariants involving Refinement types.
+and checking invariants involving refinement types.
 \begin{verbatim}
 Freeman & Pfenning, Refinement types
 \end{verbatim}
 
-Typed Racket, developed by Tobin-Hochstadt and others \cite{Tob10}, uses \emph{ordered intersection types} 
-to offer a kind of function overloading.
-\begin{verbatim}PADL '12 paper, Typing the Numeric Tower\end{verbatim}
+St-Amour, Tobin-Hochstadt, Flatt, and Felleisen
+describe the \emph{ordered intersection types} used in Typed Racket\cite{St12}
+that provide a kind of function overloading.
+Typed Clojure takes a similar approach
+\begin{verbatim}
+described in chapter
+\end{verbatim}
+Typed Racket also uses union types
 
-\section{Statically Typed Multimethods}
-
-Clojure provides two dispatching mechanisms: multimethods, a mechanism to dispatch on the
-results of an arbitrary function; and protocols, a mechanism for single dispatch, a common
-strategy that dispatches on the type of the first provided argument.
-Millstien and Chambers explore statically typing multiple dispatched multimethods in Dubious \cite{MS02}.
-Dubious' multimethods are less powerful than Clojure's multimethods but more powerful than protocols,
-and Clojure's dispatch functions can be extended at runtime, unlike Dubious' multimethods.
-
-Clojure and the statically typed language Scala \cite{OCD+} 
-have some interesting similarities. The redesign
-of the Scala collection hierarchy\cite{OS10}
-bears similarity to Clojure's encompassing ``seq''
-model, revealing an opportunity to test potential typed extensions to the Clojure 
-class hierarchy. 
+\section{Java Interoperability}
 
 Scala and Clojure are both languages with a focus on host interoperability, specifically
 to the Java Virtual Machine. Their differing treatment of the Java Virtual Machine's \lstinline|null| is
 relevant, particularly considering the potential of using occurrence typing \cite{TF10}
 to prevent erroneous usage of \lstinline|null|.
+\begin{verbatim}
+eg.
+\end{verbatim}
 
 \section{Function Types}
 
@@ -157,7 +158,7 @@ There are several different approaches to representing functions in programming 
 
 In typed languages like Haskell, functions are as simple as possible, taking a single argument.
 A function with multiple arguments is represented by chaining several single-argument function
-together. This style is characterised by direct syntactic function currying, where applying
+together, or by using lists, or using tuples. This style is characterised by direct syntactic function currying, where applying
 a function to less than its maximum number of arguments results in another function
 that takes the remaining arguments.
 

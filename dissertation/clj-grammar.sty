@@ -49,6 +49,10 @@
 \newcommand\abs[2]{\ma{\l #1 . #2}}
 \newcommand\comb[2]{\ma{(#1\ #2)}}
 
+% Clojure values
+\newmeta\symbol{symbol}
+\newmeta\nat{nat}
+
 % constant calls
 
 % typing judgements
@@ -58,3 +62,9 @@
 
 % evaluation contexts
 \newmeta\E{E}
+
+
+% propositions
+\newmeta\prop{P}
+\newmeta\pathelem{PE}
+\newcommand\isprop[2]{(is #1 #2)}

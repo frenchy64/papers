@@ -139,8 +139,9 @@ Here is the final successfully type checked code.
 \section{Red-Black Tree}
 
 \section{Monads}
+\label{sec:monads}
 
-Monads are an interesting control structure most used in functional programming languages,
+Monads are an interesting control structure used in functional programming languages,
 as described by Wadler\cite{Wad95}.
 They are most recognisable from its inclusion in the statically-typed language Haskell\cite{Mar10},
 where monads are relied on for many features including global state, file output, and exceptions.
@@ -277,5 +278,6 @@ monad transformer definitions.
 Monad transformers are always parameterised by a monad type constructor, and should work for all
 monad type constructors. Keeping the monad type constructor abstract allows us to determine
 whether a monad transformer works \emph{for any} monads.
+
 
 \section{Conduit}
