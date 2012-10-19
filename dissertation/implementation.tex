@@ -127,13 +127,11 @@ and returns a \emph{substitution} that satisfies the following conditions:
   \item \lstinline|R| is below \lstinline|expected|, if \lstinline|expected| is provided.
 \end{itemize}
 
-A substitution maps type variables to an upper and lower bound. 
+A substitution maps type variables to a type.
 It is valid to replace all occurrences of the type variables named in the substitution 
-with a type between their associated bounds.
-For example, usually the substitution is applied to \lstinline|R| by the caller of \lstinline|infer|.
-Whether to substitute the upper or lower bound is determined by the variance
-of the type variable in relation to the type being substituted. 
-The specific algorithm is described in Local Type Inference.
+with their associated type.
+For example, substitution are often applied to \lstinline|R| by the caller of \lstinline|infer|
+to eliminate the type variables in \lstinline|X| and \lstinline|Y|.
 
 \section{F-Bounded Polymorphism}
 
@@ -151,7 +149,11 @@ At present, a type variable can only be instantiated to a type between
 its upper and lower bounds, or, if a kind bound is defined instead, 
 to a kind below the kind bound.
 
-F-bounded polymorphism allows type variables to refer to themselves in their bounds.
+F-bounded polymorphism allows type variables to refer to themselves in their type bounds.
+Bounds are checked after a substitution is generated, guaranteeing no substitution
+can violate type variable bounds. To support F-bounds, the substitution being checked is applied to
+the lower and upper bounds for each type variable, and the type associated with the type variable 
+in the substitution is checked to be between these bounds.
 
 \section{Variable-arity Polymorphism}
 
@@ -159,8 +161,12 @@ Variable-arity polymorphism in Typed Clojure is directly ported from Typed Racke
 This was the most complicated part of the prototype. At the center of the implementation
 is manipulating dotted type variables, which can represent a sequence of types.
 
-It also required changes to the polymorphic type inference algorithm.
-The constraint-generation portion 
+It also required changes to the polymorphic type inference, where each
+reference to a type variable required a special case for a dotted type variable.
+For example, the constraint-generation algorithm for Local Type Inference
+features extra kinds of constraints for dotted variables.
+Strickland, Tobin-Hochstadt, and Felleisen elaborate on the particular changes
+required for the Typed Racket implementation\cite{STF09}.
 
 \section{Portability to other Clojure Dialects}
 
@@ -186,6 +192,77 @@ a common interface to abstract syntax trees for each Clojure implementation.
 
 \section{Composite Propositions}
 
+
+\section{Proposition Inference for Functions}
+\label{sec:filterneg}
+
+A feature not yet implemented in Typed Racket is the ability
+to infer new propositions based on existing propositions of a function.
+This feature was added to Typed Clojure to support filtering
+a sequence based on negative information, such as filtering values
+that are \emph{not} \lstinline|nil|.
+
+\begin{lstlisting}[caption=Type annotation for filter, label=lst:filterann]
+(ann clojure.core/filter 
+  (All [x y]
+    [[x -> Any :filters {:then (is y 0)}] (U nil (Seqable x)) -> (Seqable y)]))
+\end{lstlisting}
+
+To better understand the problem, listing \ref{lst:filterann} presents the type of \lstinline|filter|,
+which takes a function \lstinline|f| and a sequence \lstinline|s| as arguments, and returns a sequence that 
+contains each element in \lstinline|s| such that applying \lstinline|f| to the element returns a true value.
+The \lstinline|:filters| syntax requires some explanation. 
+Function types support an optional \emph{filter set} attached to its return type, written as a map
+with \lstinline|:then| and/or \lstinline|:else| keys (if omitted, they default to the trivially true proposition which has no effect). 
+The ``then-proposition'' and ``else-proposition'' are added
+to the type environment when the return value is a true and false value respectively.
+For example, the filter set \lstinline|{:then (is y 0)}| is read ``if the return value is a true value, then the first argument
+must be of type y, otherwise if it is a false value, nothing interesting is enforced''
+The type given for \lstinline|filter| works because the type variable
+\lstinline|y| occurs in both the ``then-proposition'' of the first argument and the return type 
+\lstinline|(Seqable y)|.
+
+\begin{lstlisting}[caption=Troublesome filter, label=lst:filtertrouble]
+(filter (fn [a] (not (nil? a))) coll)|
+\end{lstlisting}
+
+The difficulty starts with something like listing \ref{lst:filtertrouble},
+where the inferred filter set for the first argument to \lstinline|filter|
+is \lstinline|{:then (! nil 0) :else (is nil 0)}|\footnote{(! nil 0) is the proposition that the first argument is \emph{not}
+of type \lstinline|nil|.}. The ``then-proposition'' \lstinline|(! nil 0)| does not fit with
+\lstinline|(is y 0)| that \lstinline|filter| expects.
+
+We can sometimes get around this if we already have a predicate with a positive
+``then-proposition''. For example, if we are filtering out \lstinline|nil| values
+from a sequence of type \lstinline|(Seqable (U Number nil))|, we can replace
+listing \ref{lst:filtertrouble} with \lstinline|(filter number? coll)|,
+where \lstinline|number?| has the filter set \lstinline|{:then (is Number 0) :else (! Number 0)}|.
+This does not work, however, when filtering a sequence of type like \lstinline|(Seqable (U x nil))|
+for some unspecified \lstinline|x| because there is no built-in predicate with ``then-proposition''
+\lstinline|(is x 0)|.
+
+\begin{lstlisting}[caption=Filtering with negative propositions, label=lst:filtergood]
+  (filter (ann-form 
+            #(not (nil? %))
+            [(U nil x) -> boolean :filters {:then (is x 0)}])
+          mvs)
+\end{lstlisting}
+
+Instead, we generate new propositions using a technique 
+suggested by Tobin-Hochstadt\cite{Tob12},
+that follows from the occurrence typing calculus defined 
+by Tobin-Hochstadt and Felleisen\cite{TF10}.
+First the filter set for functions are inferred as usual.
+Then the ``then-proposition'' is applied to the environment and new propositions
+are added to the filter set for each variable in the type environment that changes.
+The same procedure is followed for the ``else-proposition''.
+
+Using this technique, the anonymous function in listing 
+\ref{lst:filtergood}\footnote{The Clojure syntax \lstinline|#(not (nil? \%))| 
+is equivalent to \lstinline|(fn [a] (not (nil? a)))|}
+has the filter set \lstinline|{:then (& (! nil 0) (is x 0)) :else (is nil 0)}|
+which is good enough to infer the \lstinline|filter|ed result as \lstinline|(Seqable x)|.
+
 \section{Non-hygienic Macro Expansion and Filters}
 % need to remove bindings as they fall out of scope
 % Need hygiene to ensure correct propagation of filters
@@ -194,6 +271,3 @@ a common interface to abstract syntax trees for each Clojure implementation.
 %    (let [a 'foo] ; here this shadows the argument, impossible to recover filters
 %      a)          ; in fact any new filters about a will be incorrectly assumed to be the argument
 %      false))
-
-\section{Filtering on Negative Propositions}
-\label{sec:filterneg}

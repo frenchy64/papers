@@ -105,19 +105,26 @@ which can be difficult to determine in the presence of higher-order functions.
 This section summarises research in typing OCaml-style records
 which relate to Clojure records and heterogeneous hash maps.
 
-\section{Intersection and Union Types}
+\section{Intersection, Union, and Singleton Types}
+\label{sec:intersection_types}
+
+% Hiyashi Singleton types
+% Intersection types - CDV81
+% Unions in soft typing CF91
+% - Static Type Inference in a Dynamically Typed Lanugage
+%  - cited by CF91, which has unions
 
 Intersection and union types are interesting type constructs relevant to capturing the complicated
 types common in dynamic languages.
-An intersection of types \lstinline|a| and \lstinline|b|, written \lstinline|(I a b)| in Typed Clojure,
-can be used safely in both positions expecting type \lstinline|a|,
+An expression of type \lstinline|(I a b)|, an intersection type including types \lstinline|a|
+and \lstinline|b| in Typed Clojure, can be used safely in both positions expecting type \lstinline|a|,
 and positions expecting type \lstinline|b|.
-Intuitively, \lstinline|(I a b)| is both of type \lstinline|a| \emph{and} \lstinline|b|.
-A union of types \lstinline|a| and \lstinline|b| is \emph{either} of type \lstinline|a| or
-\lstinline|b|, written \lstinline|(U a b)| in Typed Clojure,
-and can be used safely in positions expecting a type that is \emph{both} type \lstinline|a|
-and \lstinline|b|.
+An expression of type \lstinline|(U a b)|, a union type including types \lstinline|a| in Typed Clojure,
+and expressions of this type can be used safely in positions 
+that expect a type that is \emph{either} type \lstinline|a|
+or \lstinline|b|.
 For example, \lstinline|(U Number Boolean)| cannot be used in positions expecting \lstinline|Number|.
+% TODO Intersection example
 
 Several interesting projects have used intersection or union types.
 
@@ -126,11 +133,14 @@ programming language to use intersection types.
 Uses of intersections in Forsythe include representing extensible record types
 and function overloading.
 
-SML CIDRE is a refinement type checker for Standard ML by Davies \cite{Dav05}
-that features a form of intersection types. It is used for function overloading
-and checking invariants involving refinement types.
+Refinement types add a level of types refining an existing type system
+in order to type check more detailed properties and invariants than standard static type systems
+(described by Freeman and Pfenning\cite{FP91}).
+Intersection types are critical here to allow more than one property or invariant
+to be expressed for a function.
+SML CIDRE is a refinement type checker for Standard ML by Davies \cite{Dav05}.
 \begin{verbatim}
-Freeman & Pfenning, Refinement types
+Refinement types are similar to this project ... how?
 \end{verbatim}
 
 St-Amour, Tobin-Hochstadt, Flatt, and Felleisen
@@ -140,7 +150,7 @@ Typed Clojure takes a similar approach
 \begin{verbatim}
 described in chapter
 \end{verbatim}
-Typed Racket also uses union types
+Typed Racket also uses disjoint union types, 
 
 \section{Java Interoperability}
 

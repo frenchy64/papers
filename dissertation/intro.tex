@@ -8,10 +8,6 @@ using idioms and style found in current Clojure code.}
 
 \section{Motivation}
 
-% Type Systems for lisp?
-% Why type systems?
-% Why Clojure?
-
 In the last decade it has become increasingly common to enhance
 dynamically typed languages with static type systems. 
 This idea not new, but recent attempts are noteworthy for their successful use of bidirectional checking\footnote{These 
@@ -39,8 +35,8 @@ and immutability by default, Clojure is a compelling general purpose programming
 
 Recently languages have been created to or been modified to support aspects
 of both static and dynamic typing.
-Dart\footnote{http://www.dartlang.org/} is dynamically typed but offers optional type annotations
-that do not affect runtime semantics. 
+Dart\footnote{http://www.dartlang.org/} is dynamically typed but offers a simple form of optional
+static typing that specifically do not affect runtime semantics.
 Typescript\footnote{http://www.typescriptlang.org/} adds an optional type system to Javascript,
 a well-known dynamic language.
 
@@ -256,8 +252,11 @@ is an instance of \lstinline|Age| from the datatype definition, therefore \lstin
 
 \subsection{Polymorphism}
 
-Typed Clojure supports F-bounded polymorphism. All type variables may have
-upper and lower bounds.
+Typed Clojure supports F-bounded polymorphism, first introduced by Canning, Cook, Hill and Olthoff\cite{CCHOM89}. 
+F-bounded polymorphism is an extension of bounded polymorphism, where polymorphic type variables
+can be restricted by \emph{bounds}.
+In particular, F-bounded polymorphism allows type variable bounds to recursively refer to the
+variable being bounded. Typed Clojure supports upper and lower type variable bounds.
 
 Typed Clojure parameterises some of Clojure's data structures. For example,
 the interface behind Clojure's \emph{seq} abstraction \lstinline|clojure.lang.Seqable| has one 
@@ -285,23 +284,46 @@ The vast majority of types for collection processing functions in the Clojure co
 it as an input type, where passing \lstinline|nil| either has some special behaviour 
 or is synonymous with passing an empty \lstinline|Seqable|.
 
+\subsection{Singleton Types}
+
+Following Typed Racket, singleton types for certain values are provided
+in Typed Clojure.
+A singleton type is a type with a single member, like \lstinline|1|,
+\lstinline|:a|, or \lstinline|"a"|\footnote{Strings are delimited by " in Clojure}.
+Typed Clojure provides syntax for singleton types, either by passing
+the value literal to the \lstinline|Value| primitive, or by prefixing
+a quote (').
+
+\begin{lstlisting}[caption=Singleton Types, label=lst:singletoneeg]
+(ann k ':my-keyword)
+(def k :my-keyword)
+\end{lstlisting}
+
+Listing \ref{lst:singletoneeg} shows a simple example of using
+singleton types in Typed Clojure.
+Singleton types are are discussed further in section \ref{sec:intersectionunion}.
+
 \subsection{Heterogeneous Maps}
 
+A novel feature of Clojure compared to other dialects of Lisp (including Racket)
+is an emphasis on key-value paired, unordered \emph{maps}.
 Where particularly object-oriented languages reach for objects, Clojure
 utilises maps. Clojure provides a map literal using curly braces. For example,
-\lstinline|{:a 1, :b 2}| is a map with two key-value entries: from Keyword key \lstinline|:a|
-to value \lstinline|1|, and Keyword key \lstinline|:b| to value \lstinline|2|. Note that commas are always
-whitespace in Clojure and are included for readability.
+\lstinline|{:a 1, :b 2}| is a map value with two key-value entries: from keyword key \lstinline|:a|
+to value \lstinline|1|, and keyword key \lstinline|:b| to value \lstinline|2|. Note that commas are always
+whitespace in Clojure and are included occasionally for readability.
 
-Typed Clojure provides a heterogeneous map type, restricted to 
-maps with singleton Keyword keys. This restriction is reflected
+Typed Clojure provides a heterogeneous map type which captures this common
+``maps as objects'' pattern. A heterogeneous map type has only \emph{positive}
+information on the types of key-value entries. In other words, it conveys
+whether a particular key is present, but not whether it is absent.
+The implications of this is discussed in section \ref{ref:designhmap}.
+Heterogeneous maps only support keys that are singleton Keyword types. This restriction is reflected
 in the syntax for defining heterogeneous map types.
 
 \begin{lstlisting}[caption=Heterogeneous map types in Typed Clojure]
 ...
-(ann config
-     (HMap {:file String,
-            :ns Symbol}))
+(ann config '{:file String, :ns Symbol}))
 (def config
   {:file "clojure/core.clj",
    :ns 'clojure.core})
@@ -314,52 +336,130 @@ type \lstinline|String| and \lstinline|Symbol| respectively.
 
 Heterogeneous vector and seq types are also provided.
 
-\subsection{Multi-Arity Functions}
-
-Clojure function objects support multiple arities, allowing dispatch
-on the number of supplied arguments.
-
-\begin{lstlisting}[caption=Annotating multi-arity functions in Typed Clojure]
-(ns typed.test.poly
-  (:require [typed.core :refer [ann AnyInteger check-ns cf]])
-  (:import [clojure.lang Seqable]))
-
-(ann repeatedly'
-     (All [x]
-       (Fn [[-> x] -> (Seqable x)]
-           [AnyInteger [-> x] -> (Seqable x)])))
-(defn repeatedly'
-  "Takes a function of no args, presumably with side effects, and
-  returns an infinite (or length n if supplied) lazy sequence of calls
-  to it"
-  ([f] (lazy-seq (cons (f) (repeatedly' f))))
-  ([n f] (take n (repeatedly' f))))
-\end{lstlisting}
-
-This example defines \lstinline|repeatedly'|\footnote{Identical to \lstinline|clojure.core/repeatedly|},
-a multi-arity function taking either a zero-argument function, or an integer and a zero-argument function as arguments.
-The type variable \lstinline|x| links the return type of the generator function to
-the resulting \lstinline|Seqable| instance.
-
-When checking the definition of multi-arity functions, Typed Clojure
-finds the matching function types for a particular arity by number of arguments
-and requires each relevant type to check successfully.
-
 \subsection{Variable-Arity Functions}
 
-Clojure functions can take an optional \emph{rest} argument.
+Functions in Clojure are multi-arity, which means a function
+can be defined with several function bodies (or \emph{arities})
+and which arity is executed depends on the number of arguments passed
+to the function. A function can have any number of arities with fixed parameters, and at most one arity with
+variable-parameters. Each arity must have a unique number of
+parameters and have a lower number of parameters than the ``variable arity'', if present.
+
+Strickland, Tobin-Hochstadt, and Felleisen invented a calculus and corresponding
+implementation in Typed Racket for variable-arity polymorphism \cite{STF09}
+that is sufficient to handle uniform and non-uniform variable-arity functions.
+Typed Clojure includes an implementation of the most immediately useful parts of variable-arity
+polymorphism using algorithms, nomenclature, and implementation based on this work.
 
 \subsubsection{Uniform Variable-Arity}
 
-\subsubsection{Non-uniform Variable-Arity}
+A function with uniform variable parameters can treat its variable parameter
+as a homogeneous list. 
+Strickland et al. attaches a \emph{starred pre-type} \lstinline|T *| to the right of the fixed arguments
+in a function type, where \emph{T} is some type, and we take an identical approach.
+For example, \lstinline|+| in Clojure accepts any number of arguments
+of type \lstinline|Number|, represented by the type \lstinline|[Number * -> Number]|.
+
+
+\begin{lstlisting}[caption=Typing multi-arity functions, label=lst:noteq]
+(ann not= (Fn [Any -> boolean]
+              [Any Any -> boolean]
+              [Any Any Any * -> boolean]))
+(defn not=
+  "Same as (not (= obj1 obj2))"
+  ([x] false)
+  ([x y] (not (= x y)))
+  ([x y & more]
+   (not (apply = x y more))))
+\end{lstlisting}
+
+It is common to find Clojure library functions that define seemingly redundant
+function arities for performance reasons.
+Listing \ref{lst:noteq} defines the multi-arity function \lstinline|not=|,
+taken from the Clojure standard library \lstinline|clojure.core| that uses this pattern.
+\lstinline|not=| has three arities in its definition, including
+one that takes a variable number of arguments.
+The \lstinline|Fn| type constructor builds an \emph{ordered function intersection type} from
+function types. Each arity must have at least one matching function type associated with it.
+The two ``fixed arities'' are given familiar function types, with one and two fixed parameters respectively.
+The type given for the arity with variable arguments \lstinline|[Any Any Any * -> boolean]|
+uses a starred pre-type to signify any number of arguments of type \lstinline|Any|
+can be provided to the right of its fixed arguments.
+
+\subsubsection{Non-uniform Variable-Arity Functions}
+
+Where \emph{uniform} variable-arity function types use \emph{starred pre-types}, \emph{non-uniform}
+variable-arity function types use \emph{dotted pre-types}.
+Typed Clojure supports usages of \emph{non-uniform} variable-arity functions,
+where the variable parameter is a heterogeneous list, represented by a \emph{dotted type variable}.
+
+For example, the variable argument function \lstinline|clojure.core/map| takes a function and one or more sequences,
+and returns the result of applying the function argument to each element of the sequences in a pair-wise fashion.
+Its type is given in listing \ref{lst:maptype}.
+
+\begin{lstlisting}[caption=Type signature for \lstinline|clojure.core/map|, label=lst:maptype]
+(ann clojure.core/map
+     (All [c a b ...]
+       [[a b ... b -> c] (U nil (Seqable a)) (U nil (Seqable b)) ... b -> (LazySeq c)]))
+\end{lstlisting}
+
+By adding \lstinline|...| after the last type variable in an \lstinline|All| binder
+we can introduce a \emph{dotted type variable} into scope, which is a placeholder for a sequence of types.
+A \emph{dotted pre-type} \lstinline|T ... b| over \emph{base} \lstinline|T| (a type) and \emph{bound}
+\lstinline|b| (a dotted type variable)
+serves as a placeholder for this sequence of types.
+Dotted pre-types must appear to the right of all fixed parameters in a function type,
+and cannot be mixed with other kinds of variable parameters like starred pre-types.
+When a sequence of types of length \emph{n} is associated with a dotted pre-type, 
+the dotted pre-type is expanded to \emph{n} copies of \lstinline|T|.
+One other special property of a dotted pre-type is that the bound \lstinline|b|
+is \emph{in scope} as a \emph{normal} type variable in its base \lstinline|T|.
+
+To demonstrate dotted pre-types, we use \lstinline|typed.core/inst| to instantiate
+\lstinline|map|. \lstinline|inst| takes a polymorphic expression and a number of types
+that are satisfactory for instantiating the polymorphic type and returns an expression
+of the instantiated polymorphic type.
+
+The instantiation
+
+\begin{lstlisting}
+(inst map Number boolean String)
+\end{lstlisting}
+
+returns an expression of type
+
+\begin{lstlisting}
+[[boolean String Integer -> Number] (U (Seqable boolean) nil) (U (Seqable String) nil) (U (Seqable Integer) nil) -> (LazySeq Number)]
+\end{lstlisting}
+
+However, if sufficient types are given, the instantiation for \lstinline|map| can be inferred.
+The invocation
+
+\begin{lstlisting}
+(map (ann-form (fn [a b c] c) 
+               [boolean String Number -> Number]) 
+     [true false] ["mystr" "astr"] [1 4])
+\end{lstlisting}
+
+uses \lstinline|typed.core/ann-form| to assign an expected to
+the first argument,
+which is sufficient to infer the result type
+
+\begin{lstlisting}
+(LazySeq Number)
+\end{lstlisting}
+
 
 \subsection{Occurrence Typing}
 
-Typed Clojure uses occurrence typing to improve inference\footnote{TODO occurrence typing reference}.
-Occurrence typing is used to refine types for immutable local bindings 
-as programs follow conditional branches.
+It is common in Clojure, like other dynamically-typed languages, to
+encode implicit type invariants in conditional tests.
+In listing \ref{lst:numvec2} conditional tests are used
+to refine the type of the bindings \lstinline|a| and \lstinline|b|.
+Occurrence typing is a technique useful for capturing these kinds
+of type invariants (occurrence typing is discussed in further detail in section \ref{sec:OccurrenceTyping}).
 
-\begin{lstlisting}[caption=Example of occurrence typing in Typed Clojure]
+\begin{lstlisting}[caption=Example of occurrence typing in Typed Clojure, label=lst:numvec2]
 (ann num-vec2 
      [(U nil Number) (U nil Number) -> (Vector* Number Number)])
 (defn num-vec2 [a b]
@@ -376,10 +476,10 @@ to \lstinline|nil| from \lstinline|(U nil Number)|.
 
 \subsection{Java Interoperability}
 
-Typed Clojure currently provides safe interop\footnote{Interop is short for interoperability} with (non-Generic) Java
+Typed Clojure currently provides safe interoperability
 \footnote{Compatibility with Generic Java is planned future work}.
 
-The key to safe Java interop is the treatment of Java's \emph{null}.
+The key to safe Java interoperability is the treatment of Java's \emph{null}.
 \emph{null} is a subtype to all reference types
 represented in Clojure by \lstinline|nil|. Unlike Java's type system
 Clojure explicitly separates \emph{null} and reference types, allowing

@@ -136,8 +136,15 @@ after which each unground bound is substituted with the inferred types and the
 subtyping relationships are checked.
 
 \section{Heterogeneous Maps}
+\label{ref:designhmap}
 % keyword keys for now, generally encouraged, fast
 % Some heterogeneous maps have string args, eg. from web frameworks
+
+\begin{verbatim}
+HMaps only convey positive information, not negative.
+Map concatenation is not approached, see lit review, many
+complications. Instead, only support assoc, dissoc, get.
+\end{verbatim}
 
 As a key idiomatic feature of Clojure, we treat heterogeneous maps more formally.
 This also serves as a prototype for formalising other aspects.
