@@ -3,18 +3,18 @@
 \section{Thesis}
 
 \emph{It is practical and useful to design and implement an optional typing system 
-for the Clojure programming language that allows Clojure programmers to continue 
+for the Clojure programming language using bidirectional checking that allows Clojure programmers to continue 
 using idioms and style found in current Clojure code.}
 
 \section{Motivation}
 
 In the last decade it has become increasingly common to enhance
 dynamically typed languages with static type systems. 
-This idea not new, but recent attempts are noteworthy for their successful use of bidirectional checking\footnote{These 
-slides by Felleisen, a practitioner in this area for over 20 years, present a history of optional type checking
-for Lisp/Scheme that spans around 40 years\cite{Fell09}}.
-Instead of always attempting to infer types the algorithm relies on programmer annotations
-appearing in some natural places, such as giving the type of each top-level function.
+This is idea not new, but recent attempts are noteworthy for 
+their broad success in matching many of the advantages of statically typed
+languages, notably due to the use of \emph{bidirectional checking}.
+Instead of always attempting to infer types, this algorithm relies on programmer annotations
+appearing in some natural places such as giving the type of each top-level function.
 
 The Clojure programming language is a dynamically typed dialect of Lisp invented
 by Hickey, designed to run on popular platforms\footnote{http://clojure.org/}.
@@ -28,53 +28,62 @@ and therefore this project focuses on the JVM implementation.
 Clojure has attracted wide-spread users in part by concentrating on pragmatism.
 Performance is a key feature, for example the JVM implementation of Clojure
 offers ways to access Java-like speed for certain operations.
-Also, Clojure's excellent host interoperability offers Clojure programmers
+Also, Clojure's extensive host interoperability offers Clojure programmers
 access to existing libraries for their platform, such as the extensive Java library ecosystem.
-By coupling pragmatic necessities with elegant features like Lisp, functional programming,
+By coupling pragmatic necessities with elegant features like Lisp-style macros, functional programming,
 and immutability by default, Clojure is a compelling general purpose programming language.
 
-Recently languages have been created to or been modified to support aspects
+Recently a number of languages have been created to or been modified to support aspects
 of both static and dynamic typing.
 Dart\footnote{http://www.dartlang.org/} is dynamically typed but offers a simple form of optional
 static typing that specifically do not affect runtime semantics.
 Typescript\footnote{http://www.typescriptlang.org/} adds an optional type system to Javascript,
 a well-known dynamic language.
+Typed Racket~\cite{TF08,Tob10} goes further by offering safe interoperability
+between typed and untyped modules by generating appropriate runtime assertions based
+on expected static types.
 
 When a static type checker is not available, which describes the situation
 for most dynamic languages, other techniques are used for checking
 type invariants. For example, ``design by contract'' is often used,
-introduced by Meyer for the Eiffel language\cite{Mey92},
+introduced by Meyer for the Eiffel language~\cite{Mey92},
 in which the programmer defines contracts that are enforced at runtime.
 Unit testing is also a popular verification technique in dynamic languages.
 Clojure adopts these approaches, providing easy syntax for defining 
 Eiffel-inspired pre- and post-conditions and a library for writing unit tests.
 
-Static type systems, however, are still desirable for certain situations.
-Powerful type systems like ML's\cite{Mil97} and Haskell's\cite{Mar10} have proved particularly useful
-for writing in complicated programming styles. For example,
-Haskell's advanced static type system helps the programmer write correct monadic code,
+Static type systems, however, are still desirable for many situations.
+Powerful type systems like ML's~\cite{Mil97} and Haskell's~\cite{Mar10} have proved particularly useful
+when complicated programming styles are required. For example,
+Haskell's advanced static type system helps the programmer write correct monadic code
+(as detailed by Wadler~\cite{Wad95})
 especially in more complicated situations like combining monads via monad transformers.
 
 \subsection{Why implement an optional type system for Clojure?}
 
 The initial motivation for implementing an optional type system
-for Clojure occurred during an anecdotal account of the struggles
-of a Clojure programmer. In a heroic effort, he managed to 
-implement a library for conduits (or \emph{arrows}) in Clojure, 
-which probably surpass monads in complexity, and is usually reserved
+for Clojure was an anecdotal account of the struggles
+of a Clojure programmer. In an apparently heroic effort, he managed to 
+implement a Clojure library for conduits, an advanced form of ``pipes'',
+using arrows, a generalisation of monads.
+\footnote{CONDUIT REFERENCE TODO}
+Conduits also significantly surpass monads in complexity and are usually reserved
 for languages with advanced type systems like Haskell.
 
 He highlighted a strong desire for a type system for several reasons.
-Firstly, to verify the correctness
-of the library (before noting that unit tests and runtime contracts
-were insufficient for this task).
+Firstly, to verify the correctness of the library.
+Without a static type system, it is a significant task
+to verify such a implementation correct due to heavy use
+of higher-order functions.
 Secondly, to aid him while writing the library.
 
-Since then, the Clojure community has shown interest in this work.
-I developed this project as a Google Summer of Code 2012 project,
-after it was selected by the Clojure community.
+Since then, the Clojure community has shown significant interest in this work.
+I also developed this project as a Google Summer of Code 2012 project,
+after it was selected by the Clojure community as a Clojure Google Summer of Code
+project for 2012.
+\footnote{CITE GSOC, or FOOTNOTE}
 I have also been invited to speak on this project at the Clojure Conj
-2012 conference, a major annual Clojure conference.
+2012 conference in November, the main international conference related to Clojure.
 
 \subsection{What kind of type system does Typed Clojure provide?}
 
@@ -89,9 +98,10 @@ A programmer who uses dynamically-typed languages may have a drastically differe
 of what a type is than, say, a programmer preferring languages with advanced static type systems.
 There is some debate as to whether optional static type systems like Typed Clojure
 can even be called a type system. We choose to
-follow the terminology of Pfenning\cite{Pfe08} and Reynolds\cite{Rey01},
+follow the terminology of Pfenning~\cite{Pfe08} and Reynolds~\cite{Rey01},
 where such optional type systems are \emph{extrinsic} type systems, and more
 traditional type systems are \emph{intrinsic} type systems.
+This distinction has a long history, originating in work in the 
 
 An ordinary static type system is used to check whether programs are basically
 meaningful. Pfenning and Reynolds call these type systems \emph{intrinsic}. A language with an intrinsic
@@ -104,8 +114,8 @@ A static type system is \emph{extrinsic} when runtime semantics
 does not depend on the type system. In other words, passing a static type checker
 is not essential to running programs. A dynamically typed language can be viewed
 as having a trivial static type system that supports exact one type,
-a view strongly advocated by Harper\cite{Har12}
-and common in the literature on static types (for example, Pierce\cite{Pie02}).
+a view strongly advocated by Harper~\cite{Har12}
+and common in the literature on static types (for example, Pierce~\cite{Pie02}).
 
 \section{Typed Clojure through Examples}
 
@@ -184,7 +194,7 @@ More complex code require extra annotations to type check:
     :else 
       (collatz (inc (* 3 n)))))
 \end{lstlisting}
-\footnote{Example adapted from Tobin-Hochstadt \cite{Tob10}}
+\footnote{Example adapted from Tobin-Hochstadt~\cite{Tob10}}
 
 In this example, we define a new var \lstinline|typed.test.collatz/collatz|. Typed Clojure requires all 
 used vars to be annotated. Here \lstinline|typed.core/ann| annotates \lstinline|typed.test.collatz/collatz|
@@ -252,7 +262,7 @@ is an instance of \lstinline|Age| from the datatype definition, therefore \lstin
 
 \subsection{Polymorphism}
 
-Typed Clojure supports F-bounded polymorphism, first introduced by Canning, Cook, Hill and Olthoff\cite{CCHOM89}. 
+Typed Clojure supports F-bounded polymorphism, first introduced by Canning, Cook, Hill and Olthoff~\cite{CCHOM89}. 
 F-bounded polymorphism is an extension of bounded polymorphism, where polymorphic type variables
 can be restricted by \emph{bounds}.
 In particular, F-bounded polymorphism allows type variable bounds to recursively refer to the
@@ -346,7 +356,7 @@ variable-parameters. Each arity must have a unique number of
 parameters and have a lower number of parameters than the ``variable arity'', if present.
 
 Strickland, Tobin-Hochstadt, and Felleisen invented a calculus and corresponding
-implementation in Typed Racket for variable-arity polymorphism \cite{STF09}
+implementation in Typed Racket for variable-arity polymorphism~\cite{STF09}
 that is sufficient to handle uniform and non-uniform variable-arity functions.
 Typed Clojure includes an implementation of the most immediately useful parts of variable-arity
 polymorphism using algorithms, nomenclature, and implementation based on this work.

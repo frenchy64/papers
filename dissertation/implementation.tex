@@ -48,8 +48,8 @@ which takes an expression, represented as an AST generated from \emph{analyze}, 
 the given expression. If the expected type is present, the bidirectional algorithm \emph{checks}
 that the expected type matches the actual type of the expression.
 If the expected type is omitted, a type is instead \emph{synthesised} for the expression.
-The algorithm is based on Pierce and Turner's  Local Type Inference\cite{PT00}
-and the implementation is similar in shape to Typed Racket's\cite{TF08}, in that
+The algorithm is based on Pierce and Turner's  Local Type Inference~\cite{PT00}
+and the implementation is similar in shape to Typed Racket's~\cite{TF08}, in that
 one function with an extra ``expected type'' argument is preferred over two complementary
 functions, one for checking and one for synthesis.
 
@@ -81,7 +81,7 @@ The implementation of these features are discussed in this section.
 The basic idea of occurrence typing involves keeping a separate environment of \emph{propositions}
 that relate bindings to types. These propositions are then used to update the type environment.
 In Typed Clojure there are several types of propositions, referred to as \emph{filters}.
-They are based on the theory by Tobin-Hochstadt and Felleisen\cite{TF10}, and are ported directly
+They are based on the theory by Tobin-Hochstadt and Felleisen~\cite{TF10}, and are ported directly
 from Typed Racket.
 
 
@@ -104,7 +104,7 @@ These additions do not appear to introduce any significant new complexities rela
 
 The polymorphic type inference algorithm is directly ported from Typed Racket with slight extensions
 for bounded variables,
-and is reminiscent to Pierce and Turner's Local Type Inference\cite{PT00}.
+and is reminiscent to Pierce and Turner's Local Type Inference~\cite{PT00}.
 A common entry point for inferring type variables to polymorphic function invocations
 \lstinline|typed.core/infer|.
 
@@ -144,7 +144,7 @@ Bounds consist of an upper and lower type bound, or a \emph{kind bound}.
 Kind bounds are experimental following the inclusion of user definable type constructors
 (motivated in section \ref{sec:monads}).
 They are a stub for a more comprehensive treatment of higher-kinded operators
-such as that described by Moors, Piessens, and Odersky for Scala\cite{MPO08}.
+such as that described by Moors, Piessens, and Odersky for Scala~\cite{MPO08}.
 At present, a type variable can only be instantiated to a type between
 its upper and lower bounds, or, if a kind bound is defined instead, 
 to a kind below the kind bound.
@@ -166,7 +166,7 @@ reference to a type variable required a special case for a dotted type variable.
 For example, the constraint-generation algorithm for Local Type Inference
 features extra kinds of constraints for dotted variables.
 Strickland, Tobin-Hochstadt, and Felleisen elaborate on the particular changes
-required for the Typed Racket implementation\cite{STF09}.
+required for the Typed Racket implementation~\cite{STF09}.
 
 \section{Portability to other Clojure Dialects}
 
@@ -249,9 +249,9 @@ for some unspecified \lstinline|x| because there is no built-in predicate with `
 \end{lstlisting}
 
 Instead, we generate new propositions using a technique 
-suggested by Tobin-Hochstadt\cite{Tob12},
+suggested by Tobin-Hochstadt~\cite{Tob12},
 that follows from the occurrence typing calculus defined 
-by Tobin-Hochstadt and Felleisen\cite{TF10}.
+by Tobin-Hochstadt and Felleisen~\cite{TF10}.
 First the filter set for functions are inferred as usual.
 Then the ``then-proposition'' is applied to the environment and new propositions
 are added to the filter set for each variable in the type environment that changes.
