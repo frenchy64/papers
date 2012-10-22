@@ -1,6 +1,15 @@
 \chapter{Future Work}
 
 \section{Multimethods}
+\label{sec:mmfuture}
+
+\begin{verbatim}
+Multimethods in Clojure are an idiomatic and often used feature.
+It would be essential for an optional static type system for
+Clojure to support
+There are at least two hurdles to supporting multimethods.
+\end{verbatim}
+
 % Problem - typing isa?
 % - probably impossible to type higher order usages of isa?.
 % Dispatch function must infer latent filters for multi-arity functions. (Typed Racket only infers single arg I think)
@@ -10,6 +19,11 @@
 
 \section{Records}
 % A composition of existing features: Datatypes and Heterogeneous Maps
+
+A Clojure record is a composite of datatypes and maps; it is a datatype
+with fields that can be treated like a map (records support map operations like \lstinline|get|,
+\lstinline|assoc|, and \lstinline|dissoc|).
+Records have some quirks that may prove difficult to 
 
 \subsection{Other Clojure Dialects}
 % unify ASTs for easier porting

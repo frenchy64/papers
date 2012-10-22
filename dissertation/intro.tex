@@ -35,11 +35,11 @@ and immutability by default, Clojure is a compelling general purpose programming
 
 Recently a number of languages have been created to or been modified to support aspects
 of both static and dynamic typing.
-Dart\footnote{http://www.dartlang.org/} is dynamically typed but offers a simple form of optional
+Dart~\cite{Dart2012} (created by Google) is dynamically typed but offers a simple form of optional
 static typing that specifically do not affect runtime semantics.
-Typescript\footnote{http://www.typescriptlang.org/} adds an optional type system to Javascript,
+Typescript~\cite{TypeS2012} (created by Microsoft) adds an optional type system to Javascript,
 a well-known dynamic language.
-Typed Racket~\cite{TF08,Tob10} goes further by offering safe interoperability
+Typed Racket~\cite{TF08,Tob10} (by Tobin-Hochstadt et al.) goes further by offering safe interoperability
 between typed and untyped modules by generating appropriate runtime assertions based
 on expected static types.
 
@@ -383,7 +383,7 @@ polymorphism using algorithms, nomenclature, and implementation based on this wo
 
 A function with uniform variable parameters can treat its variable parameter
 as a homogeneous list. 
-Strickland et al. attaches a \emph{starred pre-type} \lstinline|T *| to the right of the fixed arguments
+Strickland et al.\ attaches a \emph{starred pre-type} \lstinline|T *| to the right of the fixed arguments
 in a function type, where \emph{T} is some type, and we take an identical approach.
 For example, \lstinline|+| in Clojure accepts any number of arguments
 of type \lstinline|Number|, represented by the type \lstinline|[Number * -> Number]|.

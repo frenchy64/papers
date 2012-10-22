@@ -195,7 +195,7 @@ and move directly to literature applicable to typing Scheme-style functions.
 \subsection{Variable-Arity Polymorphism}
 \label{sec:variablearity}
 
-Strickland et al. invented a type system supporting variable-arity polymorphism~\cite{STF09}
+Strickland et al.\ invented a type system supporting variable-arity polymorphism~\cite{STF09}
 a version of which is included in the current implementation of Typed Racket.
 Their main innovation centres around \emph{dotted type variables}, which represent a heterogeneous sequence
 of types. Dotted type variables allow \emph{non-uniform} variable-arity function types,
@@ -251,7 +251,7 @@ synthesise the type of listing \ref{lst:bidir} to be \lstinline|(List Float)|.
 Pierce and Turner split \emph{local type argument synthesis} into two further
 algorithms: bounded, and unbounded quantification~\cite{PT00}. 
 Typed Racket 
-supports unbounded polymorphism~\cite{Tob10}, implementing the latter algorithm by Piece et al.
+supports unbounded polymorphism~\cite{Tob10}, implementing the latter algorithm by Piece et al.\ .
 Scala supports bounded quantification with F-bounded polymorphism~\cite{CCHOM89},
 basing its type argument synthesis on the bounded quantification algorithm.
 
@@ -292,9 +292,7 @@ as required by Local Type Inference.
 \emph{Colored} types contain extra contextual information, including the propagation direction
 and missing parts of the type. They are generally useful
 for describing ``information flow in polymorphic type systems with propagation-based type inference''~\cite{OZZ01}. 
-If the scope of my research permits it, I plan to investigate
-using colored types to solve the polymorphic higher-order-function limitation of Local Type Inference
-(see listing \ref{lst:hts}).
+Colored Local Type Inference is a candidate for 
 
 \section{Bounded and Unbounded Polymorphism}
 
@@ -427,17 +425,29 @@ dispatch on the type of its arguments. They tackle a key challenge for staticall
 multimethods: ``it is possible for two modules containing arbitrary multimethods to typecheck
 successfully in isolation but generate type errors when linked together.''~\cite{MS02}
 
+After some investigation, typing multimethods with Typed Clojure is assigned as future work
+(see section \label{sec:mmfuture}).
+
 \section{Higher Kinded Programming}
 
-\begin{verbatim}
-Many advanced type systems provide support for ..
-Forward reference to algo.monad experiment.
-\end{verbatim}
+Many advanced type systems provide support for \emph{higher kinds},
+which are ``another level up'' from types.
+For example, a type \lstinline|Number| is distinguished from a
+\emph{type constructor} \lstinline|Monad| (see section \ref{sec:monads}), which is a type level \emph{function}
+(similar to the difference between values and functions on the value level, but on the type level).
+
+F-$\omega$ is a typed $\lambda$-calculus with support for higher kinds,
+specifically type constructors (see Pierce~\cite{Pie02}).
+Haskell~\cite{Mar10} distinguishes between types and type constructors,
+the latter of which is an essential part of its monad library 
+(see section \ref{sec:monads} for a monad library ported to Typed Clojure
+that uses type constructors similarly).
 
 \section{Conclusion}
 
 Many related components must come together in the design of a
 static type system. Typed Racket achieves a satisfying balance of 
 occurrence typing, local type inference and variable-arity polymorphism.
-Similarly, Scala features F-bounded polymorphism, a class hierarchy
+Scala features F-bounded polymorphism, a class hierarchy
 that is compatible with Java, and colored local type inference.
+Typed Clojure takes inspiration from these, and similar, projects.
