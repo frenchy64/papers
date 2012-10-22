@@ -1,5 +1,8 @@
 \chapter{Future Work}
 
+\section{Contracts and Blame}
+\label{sec:contractsblame}
+
 \section{Multimethods}
 \label{sec:mmfuture}
 
@@ -18,14 +21,34 @@ There are at least two hurdles to supporting multimethods.
 % Suppress warnings, similar to prefer-method syntax
 
 \section{Records}
-% A composition of existing features: Datatypes and Heterogeneous Maps
 
 A Clojure record is a composite of datatypes and maps; it is a datatype
-with fields that can be treated like a map (records support map operations like \lstinline|get|,
-\lstinline|assoc|, and \lstinline|dissoc|).
-Records have some quirks that may prove difficult to 
+with fields that can be treated like a map (records support map operations like \lstinline|get| (lookup),
+\lstinline|assoc| (add entries), and \lstinline|dissoc| (remove entries)).
+One interesting property from the perspective of static typing is that if
+a entry corresponding to a field of the underlying datatype is removed
+with \lstinline|dissoc|, then the resulting type is a plain map: it loses
+its record type.
+Correspondingly, a record keeps its type if any other entry is removed.
+
+Records are used frequently in Clojure code, so it is desirable
+to support them to some degree. Future work is planned to investigate solutions
+to satisfactorily capture their subtle semantics in a practical way.
 
 \subsection{Other Clojure Dialects}
 % unify ASTs for easier porting
+
+\begin{verbatim}
+Other Clojure implementations
+\end{verbatim}
+
+\subsection{Java Generics}
+
+\begin{verbatim}
+Currently, Typed Clojure does not interact with Java generics,
+which provide
+instead 
+It may be desirable to 
+\end{verbatim}
 
 \subsection{Linter}

@@ -12,7 +12,8 @@
 \chapter{Literature Review}
 
 In this chapter we fit the design of Typed Clojure with literature from related fields.
-Forward-references are given to link the discussed literature with this project
+Forward-references are often given to link the discussed literature with this later parts
+of this dissertation
 where there is some relevance or influence.
 
 %Typed Clojure is related to several existing systems for both typed and untyped languages.
@@ -25,15 +26,14 @@ where there is some relevance or influence.
 % Java C#
 % Scala
 
-% cite: Dynamic Typing in Polymorphic languages
+% cite: Dynamic Typing in Polymorphic languages (1991?)
 % - coming from the other direction
 % - extending static languages to be more dynamic
 
 % A more recent reference in the same area is "Typed Open Programming" a PhD dissertation from 2007 - at least have a look at 1.3.2 for a good summary of work on dynamics in statically typed languages since 1991 - probably it's good to cite this as a good recent survey of the area.
 \section{Static Types for Untyped Languages}
 
-
-There is a history of designing static type systems for untyped languages. 
+This section briefly reviews work on designing static type systems for untyped languages.
 
 \subsection{Soft Typing}
 
@@ -56,14 +56,21 @@ and Fagan~\cite{Fag91}, adding support for practical features such as
 first-class continuations and variable-arity functions.
 Soft Scheme does not require any extra type annotations.
 
+% Rowan
+% You've missed some of the steps. Most importantly the move to program analysis
+% techniques like Set Based Analysis (SBA) - which suffered from modularity issues
+% due to the lack of declared intended types.
+% Maybe quote Felleisen - "problem: Mr Spidey and friends infer brittle and large
+% types; errors remain difficult to explain and fix"
+
 Type systems for Scheme have since moved away from soft typing
 to to other approaches like gradual typing.
-Alas, the best reference for commentary on this transition 
+Alas, the only reasonably complete reference for commentary on this transition 
 appears to be slides from a talk by Felleisen~\cite{Fell09},
 a leader in this area of research for over 20 years.
 Felleisen says that while Soft Scheme discovered type problems, 
 it suffers from incomprehensible
-errors that required PhD-level expertise to decipher. 
+error reporting that required PhD-level expertise to decipher. 
 
 \begin{verbatim}
   Bidirectionality
@@ -177,9 +184,11 @@ There are several different approaches to representing functions in programming 
 
 In typed languages like Haskell, functions are as simple as possible, taking a single argument.
 A function with multiple arguments is represented by chaining several single-argument function
-together, or by using lists, or using tuples. This style is characterised by direct syntactic function currying, where applying
+together, or by using lists, or using tuples. This first style is characterised by direct syntactic function currying, where applying
 a function to less than its maximum number of arguments results in another function
 that takes the remaining arguments.
+Using tuples instead requires that the same number of arguments be supplied,
+while using lists allows any number, but requires that all arguments have the same type.
 
 In untyped languages like Scheme, functions can take any number of arguments. It is an
 error to supply less than the minimum number of arguments to a function.
@@ -207,7 +216,9 @@ and returns the result of applying the function argument to each element of the 
 \begin{lstlisting}[caption=An application of the non-uniform variable-arity function \lstinline|map|, label=lst:map]
 (map + [1 2] [2.1 3.2]) 
 ;=> (3.1 5.2)
-\end{lstlisting}\footnote{Line comments in Clojure begin with \lstinline|;| and comments to the end of the line. We use \lstinline|;=>| to mean \emph{evaluates to}.}
+\end{lstlisting}
+
+(Line comments in Clojure begin with \lstinline|;| and comments to the end of the line. We use \lstinline|;=>| to mean \emph{evaluates to}).
 
 To statically check calls to \lstinline|map|, we must enforce the provided function argument can accept as many
 arguments as there are sequence arguments to \lstinline|map|, and the parameter types of the provided function can accept
@@ -376,14 +387,13 @@ a \lstinline|String|, since we have ruled out the case of being a \lstinline|Num
 
 Occurrence typing~\cite{TF08,TF10} extends the type 
 system with a \emph{proposition environment} that represents 
-the type refinements inferred down a particular path.
-The 2010 paper~\cite{TF10}
-reformulated occurrence typing, improving the original 2008 paper
-~\cite{TF08}
-after revealing that ``three years of practical experience has revealed
-serious shortcoming of our type system.''~\cite{TF10}
-The new implementation utilizes a simple proof system to solve
-propositional logic statements, in terms of type predicates and selectors.
+the information on the types of bindings down conditional branches.
+These propositions are then used to update the types associated
+with bindings in the \emph{type environment} down branches
+so binding occurrences are given different types 
+depending on the branches they appear in, and the conditionals
+that lead to that branch.
+(See section \ref{sec:occurenceimpl} for details on how Typed Clojure uses occurrence typing).
 
 For occurrence typing to infer propositions from type predicate usages, it requires 
 two extra annotations: a ``then'' proposition
@@ -391,9 +401,9 @@ when the result is a true value, and an ``else'' proposition for a false value.
 For example, \lstinline|number?| has a ``then'' proposition that says its argument
 is of type \lstinline|Number|, and an ``else'' proposition that says its argument is not of type \lstinline|Number|.
 
-An exciting application of occurrence typing as yet unexplored is facilitating null-safe interop with Java.
+An exciting application of occurrence typing as yet unexplored is facilitating null-safe interoperability with Java.
 By declaring \lstinline|nil| (Clojure's value of Java's \lstinline|null|) to \emph{not} be a subtype of reference types,
-we can begin to statically disallow potential inconsistent usages of \lstinline|nil| as part of the type system.
+we can begin to statically disallow potentially inconsistent usages of \lstinline|nil| as part of the type system.
 
 \begin{lstlisting}[caption=Observing nil-checks using occurrence typing, label=lst:nil]
 (let [a (ObjectFactory/getObject)]
@@ -403,16 +413,17 @@ we can begin to statically disallow potential inconsistent usages of \lstinline|
 
 Listing \ref{lst:nil} infers from the Java signature \lstinline|Object getObject()| that
 that \lstinline|a| is of type \lstinline|(U nil Object)|. This is equivalent to Java's
-\lstinline|Object| static type, as \lstinline|null| is a subtype of all reference types. By surrounding
+\lstinline|Object| static type, as \lstinline|null| is a member of all reference types. By surrounding
 the call \lstinline|(expects-non-nil a)| with \lstinline|(when a ...)|, we guarantee that
 \lstinline|a| is non-nil when passed to \lstinline|expects-non-nil|. Occurrence typing infers
 this by observing \lstinline|nil| is a false value in Clojure, therefore \lstinline|a| cannot
 be \lstinline|nil| the body of the \lstinline|when|, refining \lstinline|a|'s type to \lstinline|Object|
-from \lstinline|(Union nil Object)|.
+from \lstinline|(U nil Object)|.
 
-Occurrence typing is a relatively simple, time worn technique used successfully 
+Occurrence typing is a relatively simple technique used successfully 
 in Typed Racket. Clojure is similar enough to Racket for occurrence typing to work
-without issues, and has good potential to enable null-safe Java interop.
+without issues, and has good potential to help programmers avoid using
+\lstinline|nil| incorrectly
 
 \section{Statically Typed Multimethods}
 
@@ -433,7 +444,7 @@ After some investigation, typing multimethods with Typed Clojure is assigned as 
 Many advanced type systems provide support for \emph{higher kinds},
 which are ``another level up'' from types.
 For example, a type \lstinline|Number| is distinguished from a
-\emph{type constructor} \lstinline|Monad| (see section \ref{sec:monads}), which is a type level \emph{function}
+\emph{type constructor} \lstinline|Monad| (see section \ref{sec:monads}), which is a type level function
 (similar to the difference between values and functions on the value level, but on the type level).
 
 F-$\omega$ is a typed $\lambda$-calculus with support for higher kinds,

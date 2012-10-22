@@ -7,6 +7,10 @@ for Typed Racket~\cite{Tob10}. Some of the main differences are described in thi
 \section{Typed Racket}
 
 The majority of the design and implementation of Typed Clojure is based on Typed Racket.
+This is a deliberate choice: the purpose of this work is to produce
+a practical tool, and there is already good evidence that Typed Racket
+is practical and makes good tradeoffs and design choices.
+Our differences are mostly due to the differences between Clojure and Racket.
 
 \subsection{Occurrence Typing}
 % interesting paths
@@ -78,45 +82,19 @@ Clojure
 % Separate read and write types into two parameters.
 
 \subsection{Interaction with null}
-% null is explicitly expressible in my type system
-% In Java, null is subtype of all reference types, any reference type must be tested to prevent NPE
-% 
+
+It is a goal of Typed Clojure to statically prevent many Java \emph{NullPointerException}
+exceptions.
+\emph{null} is explicitly expressible in Typed Clojure as the type \listline|nil|.
+This enables more expressive types that specify where \emph{null} is and is not allowed.
+Section \ref{sec:javainterop} gives an example of how this could be useful 
+when using Java interoperability and gives details on the different ways Typed Clojure.
+
+%===> Occurrence typing~\cite{TF10} also plays a crucial role in Typed Clojure's
 
 \subsection{Generic Java}
 % Existential types are needed to fully express Generic Java types in Typed Clojure
 % F-bounded polymorphism supported
-
-\section{Multimethods}
-
-% INTRODUCTION TO CLOJURE MULTIMETHODS
-
-%A multimethod in Clojure differs from most other
-%abstractions of the same name. Clojure multimethods
-%dispatch on the result of an arbitrary function
-%rather than the types or structure of its arguments.
-%
-%\begin{lstlisting}[caption=Clojure Multimethods, label=lst:mm1]
-%(defmulti ToString class)
-%
-%(defmethod ToString java.lang.Integer
-%  [a]
-%  (str "Integer: " a))
-%
-%(defmethod ToString java.lang.Number
-%  [a]
-%  (str "Number: " a))
-%\end{lstlisting}
-%
-%Even with this extra flexibility, multimethods are often used to dispatch on the type of its arguments.
-%Listing \ref{lst:mm1} illustrates a common usage of multimethods: dispatching on the class of the first argument.
-%We use \lstinline|defmulti| to define a new multimethod.
-%The function \lstinline|class| is used as the dispatch function, a one-argument function returning the class of its argument
-%as an instance of \lstinline|java.lang.Class|.
-%
-%A multimethod invocation redirects control flow to exactly one of its \emph{methods} with unresolved ambiguities resulting in
-%a runtime error. The method is selected by first comparing the result of the dispatch function to
-%the dispatch values defined by each method. If one or more methods match, multimethods provide
-%the ability to prefer one method over another.
 
 \section{Clojure Class Hierarchy}
 \section{Protocols and Datatypes}
@@ -124,11 +102,11 @@ Clojure
 \section{Local Type Inference}
 
 Similar to Typed Racket, type inference is based on Local Type Inference
-by Pierce and Turner.
+by Pierce and Turner~\cite{PT00}.
 
 \section{F-bounded Polymorphism}
 
-Typed Clojure includes support for F-bounds on type variables, as an extension
+Typed Clojure includes support for F-bounds on type variables\cite{CCHOM89}, as an extension
 to Local Type Inference. 
 
 An extra environment from type variables to bounds is kept until after inference,

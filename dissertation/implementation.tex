@@ -71,6 +71,7 @@ In terms of the bidirectional checking, the difference is mostly cosmetic.
 %   - how to calculate reachability 
 
 \subsection{Occurrence typing}
+\label{sec:occurenceimpl}
 
 Typed Clojure's implementation of occurrence typing is ported and extended from Typed Racket.
 Occurrence typing plays several roles in Typed Clojure.
@@ -97,7 +98,6 @@ from Typed Racket.
     (written \lstinline[mathescape]|(& $\overrightarrow{p}$)|), and
     logical disjunction of propositions
     (written \lstinline[mathescape]{(| $\overrightarrow{p}$)}) for propositions \lstinline|p|.
-        
 \end{itemize}
 
 Propositions can optionally carry \emph{path} information
@@ -137,7 +137,7 @@ and returns a \emph{substitution} that satisfies the following conditions:
   \item \lstinline|R| is below \lstinline|expected|, if \lstinline|expected| is provided.
 \end{itemize}
 
-A substitution maps type variables to a type.
+A substitution maps type variables to types.
 It is valid to replace all occurrences of the type variables named in the substitution 
 with their associated type.
 For example, substitution are often applied to \lstinline|R| by the caller of \lstinline|infer|
@@ -238,9 +238,6 @@ separately.
 The second issue is potentially resolvable either by enforcing a standard representation for 
 abstract syntax trees across Clojure implementations, or developing a library that provided
 a common interface to abstract syntax trees for each Clojure implementation.
-
-\section{Composite Propositions}
-
 
 \section{Proposition Inference for Functions}
 \label{sec:filterneg}
