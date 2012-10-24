@@ -93,13 +93,13 @@ always avoiding a \emph{NullPointerException}.
 
 \subsection{Variable-arity Polymorphism}
 
-Strickland, Tobin-Hochstadt, and Felleisen's describe variable-arity polymorphism~\cite{STF09},
+Strickland, Tobin-Hochstadt, and Felleisen describe variable-arity poly\-morphism ~\cite{STF09},
 which has been implemented in Typed Racket.
 Typed Clojure directly ports most of Typed Racket implementation of variable-arity polymorphism,
 as described in section \ref{sec:impvariablearity}
 
 Some common idiomatic Clojure functions like \lstinline|assoc|, \lstinline|hash-map|,
-and \lstinline|partial| cannot be typed by Strickland et al./ .
+and \lstinline|partial| cannot be typed by Strickland et al.\ .
 Instead, Typed Clojure hard-codes some of these functions as primitives that cannot
 be used in a higher-order context.
 Expressing the types of these functions is set as future work (section \ref{sec:futurearity}).
@@ -213,15 +213,15 @@ Adding runtime assertions that enforce these assumptions would allow more
 accurate errors, an approach similar to that taken by Typed Racket~\cite{Tob10} when
 interfacing with untyped Racket code.
 
-\section{Clojure Hierarchy}
+\section{Clojure type hierarchy}
 
-The Clojure hierarchy is a set of Java classes and interfaces, mostly in the
+The Clojure type hierarchy is a set of Java classes and interfaces, mostly in the
 \emph{clojure.lang} package, that define Clojure's core 
 interfaces and data structures.
 Typed Clojure parameterises some of these classes in a way that resembles
 Java or Scala generics.
 
-Clojure's hierarchy was accommodating to this process.
+Clojure's type hierarchy was accommodating to this process.
 For example, \lstinline{clojure.lang.Seqable} is the main interface behind
 Clojure's sequence abstraction. Sequences are immutable collections,
 so it was natural to parameterise \lstinline{Seqable} with one covariant
@@ -259,7 +259,7 @@ Type inference in Typed Clojure is based on Local Type Inference
 by Pierce and Turner~\cite{PT00}.
 The main extension to Local Type Inference in Typed Clojure
 is support for \emph{dotted variables} for variable-arity polymorphism.
-This implementation is lifted directly from Typed Racket.
+This implementation is ported directly from Typed Racket.
 
 \section{F-bounded Polymorphism}
 
@@ -278,7 +278,9 @@ Heterogeneous maps types in Typed Clojure are simple enough to avoid
 the complications associated with concatenable records (section \ref{sec:recordtypes})
 while still supporting many Clojure idioms.
 They support adding new entries with keyword keys, removing entries,
-and lookup of keyword keys.
+and lookup of keyword keys with the type associated with each key in
+a map tracked separately, similar to type systems for record types 
+(see work by Harper and Pierce~\cite{HP91}).
 When using these operations with non-keyword keys, heterogeneous maps
 are treated like plain hash-maps.
 
@@ -286,7 +288,7 @@ Heterogeneous map types do not support concatenation (merging), as they
 only hold positive information on the keys with entries, not
 which keys are \emph{absent}.
 This makes concatenation unsafe, as keys to the right of a
-concatenation can ``overwrite'' keys to the left. With no information
+concatenation can ``overwrite'' keys to the left with different types. With no information
 on the absence of keys, concatenation becomes an unsound operation.
 
 We formalised some aspects of the behaviour of heterogeneous map types in Appendix~\ref{sec:hmaptheory}.

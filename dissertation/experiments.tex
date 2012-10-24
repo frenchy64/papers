@@ -1,6 +1,6 @@
 \chapter{Experiments}
 
-In this chapter we look at several example of using Typed Clojure and
+In this chapter work through several examples of using Typed Clojure and
 how well the current prototype handles them. 
 We intentially chose examples that could be challenging to type check
 or were particularly useful to the everyday Clojure programmer.
@@ -303,7 +303,7 @@ The initial motivation for adding user defined type constructors to Typed Clojur
 monad transformer definitions.
 Monad transformers are always parameterised by a monad type constructor, and should work for all
 monad type constructors. Keeping the monad type constructor abstract allows us to determine
-whether a monad transformer works \emph{for any} monads.
+whether a monad transformer works \emph{for all} monads.
 
 Listing \ref{lst:maybet} shows the full code for type checking the definition
 of the maybe monad transformer.
@@ -369,7 +369,7 @@ that parameterise over higher kinds, which cannot be inferred by Typed Clojure.
 
 \section{Conduit}
 
-Conduits are an advanced form of ``pipes'' using arrows, and a generalisation of monads~\cite{ConduitRef}.
+Conduits are an advanced form of ``pipes'' using arrows, a generalisation of monads~\cite{ConduitRef}.
 \emph{Conduit} is a Clojure library developed by Duey and 
 contributors~\footnote{Github home of Conduit: \url{https://github.com/jduey/conduit}} 
 that supports programming with conduits.
@@ -382,8 +382,8 @@ In these cases, simplified versions of the conduits were created that
 took fixed arguments.
 
 An interesting property of the types assigned to conduits (which
-are internally functions of a single argument) is that it is
-a recursive type. This is not in itself interesting, but Typed Clojure
+are internally functions of a single argument) is that they are 
+recursive types. This is not in itself interesting, but Typed Clojure
 implements conduit types as \emph{type functions} with variance,
 which required the variance of the conduit types to be known in advance.
 
@@ -426,6 +426,8 @@ so they are not explained).
 
 The resulting port of \emph{Conduit} was unsatisfying for real world use.
 The simplifications made in order to type check the library reversed
-any effort \emph{Conduit} made to conform to common Clojure idioms.
+any effort that was invested into \emph{Conduit} to conform to common Clojure idioms.
 The future work on improving variable-argument types should reveal whether
-this library can be ported satisfactorily.
+this library can be ported satisfactorily. It is desirable to port
+this library because implementations and usages of conduits result in very abstract code
+which static type systems can help verify as correct.

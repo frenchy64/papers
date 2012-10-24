@@ -144,11 +144,11 @@ with their associated type.
 For example, substitution are often applied to \lstinline|R| by the caller of \lstinline|infer|
 to eliminate the type variables in \lstinline|X| and \lstinline|Y|.
 
-\lstinline|infer| is almost always used when invoking polymorphic functions.
-\lstinline|clojure.core/constantly| is a polymorphic function with type \lstinline|(All [x y] [x -> [y * -> x]])|
+\lstinline|infer| is almost always used when invoking polymorphic functions like,
+for example, \lstinline|constantly|, which has type \lstinline|(All [x y] [x -> [y * -> x]])|
 (read as a function taking \lstinline|x| and returning a function that takes any number
 of \lstinline|y|'s and returns \lstinline|x|).
-For instance, \lstinline|((constantly true) 'any 'number)| results in the value \lstinline|true|.
+For instance, \lstinline|((constantly true) 'any 'number)|, results in the value \lstinline|true|.
 
 Type checking the invocation \lstinline|(constantly true)|
 calls \lstinline|infer| roughly like

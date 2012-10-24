@@ -91,6 +91,41 @@ Clojure programming language.
 
 \end{abstract}
 
+\begin{acknowledgements}
+
+The past year has included by far my most enjoyable and motivating programming-related experiences.
+
+Last November I attended my first conference, Clojure Conj 2011 (Raleigh, NC),
+where I delivered a talk on logic programming with Clojure and met some of my programming heroes.
+A week later my supervisor Rowan Davies invited me to visit Carnegie-Mellon University
+where he was working on his PhD project. Most memorably, I was invited to a meeting between
+Rowan and his PhD supervisor Frank Pfenning, which was a great thrill.
+
+This trip was funded by donations from the programming community. Thank you to all who helped me get there:
+this work was directly inspired from conversations during this period.
+
+Many thanks go to my supervisor Rowan. His influence as a lecturer inspired my exploration of
+functional programming languages. He has exceeded my expectations as an honours supervisor,
+often dedicating time to assist me on public holidays and weekends.
+Rowan's experience with refinement types brought a unique perspective to this project
+which was very welcome.
+
+I'd also like to thank: Sam Tobin-Hochstadt for his consistent assistance and patience;
+David Nolen for mentoring this project as part of Google Summer of Code 2012;
+and Chas Emerick, without whom I would have never considered attending Clojure Conj 2011
+(and this work probably would not have happened).
+Also, Daniel Spiewak, Dan Friedman and William Byrd, Jim Duey, Baishampayan Ghose, and
+Steve Strickland, thank you for your help and inspiration.
+Thank you Rich Hickey for creating Clojure, it is a thrill to build tools that make
+this great language even better.
+
+Fittingly, I have been invited to talk on Typed Clojure at Clojure Conj
+2012 in November, which I am highly anticipating.
+
+Finally, thanks to my family, friends and to my girlfriend Tamara for your love and support.
+
+\end{acknowledgements}
+
 \tableofcontents
 
 \include{intro}
@@ -130,10 +165,10 @@ like Typed Racket, we are able to design and implement a prototype type system
 \emph{Typed Clojure} that can statically check many Clojure idioms.
 
 Typed Clojure is intended to be of practical use to Clojure programmers.
-We show that Typed Clojure help verify Clojure code written in sophisticated
-programming styles is correct by porting most of a wide-spread Clojure library for monadic programming.
+We show that Typed Clojure helps verify the absence of errors in Clojure code written in sophisticated
+programming styles by porting most of a wide-spread Clojure library for monadic programming.
 Similarly, we show that Typed Clojure helps verify code using Java interoperability is correct, and is
-a useful tool when code involves usages of Java's \emph{null}.
+a useful tool to show misusing of Java's \emph{null}.
 
 There is still significant future work in order to type check all Clojure idioms,
 but the work already carried out suggests that an optional type system for Clojure
