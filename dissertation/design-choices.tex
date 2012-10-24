@@ -1,24 +1,100 @@
 \chapter{Design Choices}
 
+This chapter describes the design choices made for Typed Clojure.
 Typed Clojure is designed to be of practical use to Clojure programmers.
-Many of the design goals are similar to Tobin-Hochstadt's 
-for Typed Racket~\cite{Tob10}. Some of the main differences are described in this chapter.
+To this end, many of the design choices are borrowed from other existing projects.
+Some of the main design choices that specifically concern Typed Clojure are given more
+more detailed descriptions.
 
 \section{Typed Racket}
 
-The majority of the design and implementation of Typed Clojure is based on Typed Racket.
+The majority of the design and implementation of Typed Clojure is based on Typed Racket~\cite{Tob10}.
 This is a deliberate choice: the purpose of this work is to produce
 a practical tool, and there is already good evidence that Typed Racket
 is practical and makes good tradeoffs and design choices.
 Our differences are mostly due to the differences between Clojure and Racket.
+This section details some of these differences.
 
 \subsection{Occurrence Typing}
-% interesting paths
-% - count path element
-% - class path element
-% - keyword path element
+
+Occurrence typing, described by Tobin-Hochstadt and Felleisen~\cite{TF10},
+plays a major role in capturing many common Clojure idioms.
+One important idiom it helps Typed Clojure to understand 
+is the \emph{sequence abstraction}, which
+is made up of the \lstinline|clojure.core| functions \lstinline|seq|, \lstinline|first|, and \lstinline|rest|.
+
+\lstinline|seq| takes an argument that is either a sequence or \lstinline|nil|,
+and returns a non-empty sequence if passed a non-empty sequence, or returns
+\lstinline|nil| if passed an empty sequence or \lstinline|nil|.
+It is a common idiom to test \lstinline|(seq coll)| in a conditional
+to determine whether the sequence \lstinline|coll| is empty:
+if \lstinline|(seq coll)| is a true value, then \lstinline|coll|
+is non-empty, otherwise it should be considered empty.
+Occurrence typing allows us to capture this idiom as shown in
+listing \ref{lst:seqtype}.
+
+\begin{lstlisting}[caption=Type assiciated with clojure.core/seq, label=lst:seqtype]
+(All [x]
+  [(U nil (Seqable x)) -> (U nil (Seqable x))
+   :filters {:then (is (CountRange 1) 0)
+             :else (| (is nil 0)
+                      (is (ExactCount 0) 0))}])
+\end{lstlisting}
+
+This function type takes an argument of type \lstinline|(U nil (Seqable x))| (the syntax \lstinline[mathescape]{(U $\overrightarrow{t}$)}
+constructs a union of types \lstinline|t|), and returns a type \lstinline|(U nil (Seqable x))|.
+Occurrence typing allows us to attach propositions to the return
+type of a function. Roughly, these say if \lstinline|(seq coll)|
+returns a true value, then \lstinline|coll| is of type
+\lstinline|(CountRange 1)| (a type representing a sequence of length 1 or greater),
+otherwise \lstinline|coll| is \emph{either} of type \lstinline|nil| or of type \lstinline|(ExactCount 0)| (a type
+representing an empty sequence).
+(See section \ref{sec:filterneg} for a more detailed explanation of the filter syntax).
+
+Correspondingly, \lstinline|first| which gets the first member of a sequence.
+can be given a more accurate (and surprisingly subtle) type.
+\lstinline|first| is overloaded in a similar fashion to \lstinline|seq|.
+\lstinline|first| takes an argument that is either a sequence or \lstinline|nil|.
+If it is passed \lstinline|nil| or an empty sequence, it returns \lstinline|nil|. Otherwise, if it is passed
+non-empty sequence, it returns the first member of the sequence.
+Listing \ref{lst:firsttype} shows the type of \lstinline|first|.
+
+\begin{lstlisting}[caption=Type assiciated with clojure.core/first, label=lst:firsttype]
+(All [x]
+  (Fn [(U nil (I (Seqable x) (ExactCount 0))) -> nil]
+      [(I (Seqable x) (CountRange 1)) -> x]
+      [(U nil (Seqable x)) -> (U nil x)])))
+\end{lstlisting}
+
+The function type has three arities, the last of which can be considered a ``default'' arity.
+The first two arities correspond exactly to the two cases described for when 
+\lstinline|first| is passed an empty sequence or \lstinline|nil|, and
+when \lstinline|first| is passed a non-empty sequence
+(the syntax \lstinline[mathescape]{(I $\overrightarrow{t}$)}
+constructs an intersection of types \lstinline|t|).
+
+These two functions interact via occurrence typing.
+For example, listing \ref{lst:seqocc} tests
+\lstinline|(seq coll)| which means occurrences of \lstinline|coll|
+in the ``then'' branch are non-empty and those in the
+``else'' branch are empty.
+We can safely call \lstinline|(.method (first coll))| in the ``then''
+branch (assuming elements of \lstinline|coll| have a no-argument method called \lstinline|method|)
+always avoiding a \emph{NullPointerException}.
+
+\begin{lstlisting}[caption=Example of using the sequence abstraction with occurrence typing, label=lst:seqocc]
+...
+(let [coll (possibly-empty-coll)
+  (if (seq coll)
+    (.method (first coll))
+    nil))
+...
+\end{lstlisting}
 
 \subsection{Variable-arity Polymorphism}
+
+%Tobin-Hochstadt 
+
 % Problematic areas
 % - flattened paired arguments. assoc, hash-maps, array-map
 % - complex argument dependencies. comp, partial
@@ -30,8 +106,8 @@ Our differences are mostly due to the differences between Clojure and Racket.
 
 % what is this paragraph saying?
 Dialects of Clojure provide fast and unrestricted access to their host platform. 
-This is a intentional source of incompatibility between dialects.
-For example, Clojure is hosted on the Java Virtual Machine (JVM), ClojureCLR on the Common Language Runtime (CLR),
+This is a intentional source of incompatibility between Clojure implementations.
+For example, Clojure is hosted on the Java Virtual Machine (JVM), ClojureCLR on the Common Language Runtime,
 and ClojureScript on Javascript VMs. These are very different platforms, and it is unlikely
 a Clojure dot call will be portable. There is no attempt at reconciling
 host interoperability differences, and it is up to the programmer to decide
@@ -44,7 +120,7 @@ reach to Java libraries. Java is statically typed language. It follows that any 
 Java will already have an annotated Java type. Typed Clojure can use these annotations
 to statically type check these interactions.
 
-Typed Clojure attempts to improve some shortcomings of Java's type system.
+Typed Clojure attempts to improve some shortcomings of Java's static type system.
 
 Java's static type system does not provide a type-safe construct for eliminating
 the \lstinline|null| pointer. Instead, Java programmers often rely on either testing
@@ -61,45 +137,94 @@ else
 \end{lstlisting}
 
 
-
 In Java, \lstinline|null| is included in all reference
 types, but \lstinline|null| is not expressible as a static type. In other words,
 when a Java type claims a reference type, you should also assume it can also be of 
 type \lstinline|null|.
 
 Scala provides the Option type for safe \lstinline|null| elimination, forcing pattern matching
-where \lstinline|null| might occur, and 
-
-\begin{lstlisting}[caption=null elimination in Scala]
-TODO
-\end{lstlisting}
-
-Clojure 
+where \lstinline|null| might occur. This approach is not appropriate for Typed Clojure
+as pattern matching is not idiomatic in Clojure.
 
 \subsection{Primitive Arrays}
+
 % Primitive arrays are covariant, which is well-known to be statically unsound.
 % We cannot trust the type signature of any Java method or field.
 % Separate read and write types into two parameters.
 
 \subsection{Interaction with null}
+\label{sec:interactionnull}
 
 It is a goal of Typed Clojure to statically prevent many Java \emph{NullPointerException}
 exceptions.
-\emph{null} is explicitly expressible in Typed Clojure as the type \listline|nil|.
-This enables more expressive types that specify where \emph{null} is and is not allowed.
+\emph{null} is explicitly expressible in Typed Clojure as the singleton type \lstinline|nil|,
+representing the \emph{value} \lstinline|nil|.
+This enables more expressive types that specify where \emph{nil} is and is not allowed.
 Section \ref{sec:javainterop} gives an example of how this could be useful 
 when using Java interoperability and gives details on the different ways Typed Clojure.
 
-%===> Occurrence typing~\cite{TF10} also plays a crucial role in Typed Clojure's
+Occurrence typing~\cite{TF10} also plays a crucial role in Typed Clojure's
+treatment of \lstinline|nil|.
+It allows us to track whether particular bindings are possibly \lstinline|nil|
+down conditional branches, and makes it practical to throw type errors 
+where \lstinline|nil| is not allowed (see section \label{sec:OccurrenceTyping} for examples).
+This is not practical in Java's type system because \emph{null} is not directly
+expressible, which makes it impractical to error when a \emph{NullPointerException}
+exception is possible: according to the type system, almost every operation
+could involve \emph{null}!
+Eliminating \emph{NullPointerException} exceptions is entirely the programmers
+responsibility in Java.
+Typed Clojure helps the programmer by statically proving certain misuses of \lstinline|nil| are impossible.
 
-\subsection{Generic Java}
-% Existential types are needed to fully express Generic Java types in Typed Clojure
-% F-bounded polymorphism supported
+The design choice of potentially misusing \lstinline|nil| results in a type error
+needs further work to be completely satisfying.
+Certain cases of type inference should be improved to avoid redundant code
+that ``pleases the type checker''.
+For example, we currently do not know how to infer \lstinline|(filter identity coll)|
+as returning a sequence of non-nil elements, for any sequence \lstinline|coll|.
+(see section \ref{sec:filterneg}).
+It is also possible for code interacting with Java to introduce unexpected \emph{null}
+values. Currently, we let the programmer define a set of unenforced \emph{assumptions}
+where \emph{null} is allowed in Java fields and methods (see section \label{sec:javainterop}).
+Adding runtime assertions that enforce these assumptions would allow more
+accurate errors, an approach similar to that taken by Typed Racket~\cite{Tob10} when
+interfacing with untyped Racket code.
 
-\section{Clojure Class Hierarchy}
+\section{Clojure Hierarchy}
+
+The Clojure hierarchy is a set of Java classes and interfaces, mostly in the
+\emph{clojure.lang} package, that define Clojure's core 
+interfaces and data structures.
+Typed Clojure parameterises some of these classes in a way that resembles
+Java or Scala generics.
+
+Clojure's hierarchy was accommodating to this process.
+For example, \lstinline{clojure.lang.Seqable} is the main interface behind
+Clojure's sequence abstraction. Sequences are immutable collections,
+so it was natural to parameterise \lstinline{Seqable} with one covariant
+argument (covariant means \lstinline|(Seqable Integer)| is
+a subtype of \lstinline|(Seqable Number)| because \lstinline|Integer|
+is a subtype of \lstinline|Number|).
+All ``seqable'' classes in the Clojure hierarchy implement \lstinline|Seqable|,
+so updating them to use the parameterised \lstinline|Seqable| was a matter of
+searching for classes that had \lstinline|Seqable| as an ancestor and replacing
+the unparameterised \lstinline|Seqable| with the corresponding parameterised 
+version.
+
+Defining new ``parameterised'' versions of existing classes and interfaces do 
+not affect anything outside Typed Clojure.
+They are only for use by Typed Clojure.
+
 \section{Protocols and Datatypes}
-\section{Optional Type Checking}
+
+Protocols and datatypes are two of Clojure's main means of abstraction.
+
+
+%section \ref{sec:datatypes}
+
 \section{Local Type Inference}
+
+Typed Clojure takes a
 
 Similar to Typed Racket, type inference is based on Local Type Inference
 by Pierce and Turner~\cite{PT00}.
@@ -128,149 +253,6 @@ As a key idiomatic feature of Clojure, we treat heterogeneous maps more formally
 This also serves as a prototype for formalising other aspects.
 Here we give a formal syntax, operational semantics and type system using inference
 rules, as is standard in the programming language community (see, eg., Pierce~\cite{Pie02}). 
-
-% Operational semantics
-
-\subsection{Operational Semantics}
- 
-%$$
-%\begin{tdisplay}{Test1}
-%\begin{altgrammar}
-%  \s{},\t{} &::= & \int \alt \bool \alt {\proctype {\s{}} {\t{}}} 
-%  &\mbox{Types}\\
-%  \M{}, \N{}, \P{}, \dots &::=& \x{} \alt \abs{\x{}}{\M{}} \alt
-%  \comb{\M1}{\M2}  &\mbox{Raw Terms} \\
-%\end{altgrammar}
-%\end{tdisplay} 
-%$$
-
- 
-$$
-\begin{tdisplay}{Syntax of Terms}
-\begin{altgrammar}
-  \exp{} &::=& (\c{} \overrightarrow{\exp{}})         % function application, multiple arguments
-             \alt \{ \overrightarrow{\exp{}\ \exp{}} \} % map literal
-             &\mbox{Expressions} \\ 
-  \v{} &::=& \k{} \alt \nil{}
-              \alt \{ \overrightarrow{\v{}\ \v{}} \}   % map literal
-              &\mbox{Values} \\
-  \c{} &::=& \assoc{} \alt \dissoc{} \alt \get{}
-              &\mbox{Constants}
-\end{altgrammar}
-\end{tdisplay}
-$$
-
-$$
-\begin{tdisplay}{Evaluation Contexts}
-  \begin{altgrammar}
-    \E{} &::=& [ ] % application rules
-              \alt (\c{}\ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}}) % eval arguments left-to-right
-              % map rules
-              \alt \{\overrightarrow{\v{}\ \v{}}\ \E{}\ \exp{}\ \overrightarrow{\exp{}\ \exp{}} \} % key first
-              \alt \{\overrightarrow{\v{}\ \v{}}\ \v{}\ \E{}\ \overrightarrow{\exp{}\ \exp{}} \}   % value next
-              &\mbox{Evaluation Contexts}
-  \end{altgrammar}
-\end{tdisplay}
-$$ 
- 
-% \mapsto for updating maps
-$$
-\begin{tdisplay}{Operational Semantics}
-\begin{array}{c}
-{\inferrule[E-Assoc]
-  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
-    {v_4 = v_1\ with\ entry\ v_2\ to\ v_3} }
-    {{(\assoc{}\ v_1\ v_2\ v_3) \hookrightarrow v_4} }} \\
-\\
-{\inferrule[E-Dissoc]
-  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
-    {v_3 = v_1\ without\ entry\ indexed\ by\ v_2} }
-  {(dissoc\ v_1\ v_2) \hookrightarrow v_3} } \\
-\\
-{\inferrule[E-GetMapExist]
-  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
-    {v_2\ v_3\ in\ v_1} }
-%    {v_1\ has\ entry\ with\ key\ v_2} \\
-%    {v_3 = corresponding\ value\ in\ entry\ with\ key\ v_2\ in\ v_1}
-  { {(get\ v_1\ v_2) \hookrightarrow v_3} }} \\
-\\
-{\inferrule[E-GetMapNotExist]
-  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
-    {v_1\ has\ no\ entry\ with\ key\ v_2} \\
-    {v_3 = \nil{}} }
-  { {(get\ v_1\ v_2) \hookrightarrow v_3} }}
-\end{array} 
-\end{tdisplay} 
-$$
-
-$$
-\begin{tdisplay}{Type Syntax}
-\begin{altgrammar}
-  \T{} &::=& \Top \alt \Bottom \alt \Nil \alt \k{} \alt \{ \overrightarrow{\k{}\ \T{}} \}
-             \alt {\IPersistentMap {\T{}} {\T{}}} \alt ( \vee\ \overrightarrow{\T{}} )
-             \alt ( \wedge\ \overrightarrow{\T{}} )
-\end{altgrammar}
-\end{tdisplay}
-$$
-
-% what about get? Core Type Rules
-
-$$
-\begin{tdisplay}{Core Type Rules}
-\begin{array}{c}
-{\inferrule[T-AssocHMap]
-  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
-    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\k{}}}} } \\
-    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
-    {\vdash {\issubtype {{\T{}}_{m}} {\TopHMap} }} }
-  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} 
-        {(update\_hmap\ {{\T{}}_{m}}\ {{\k{}}}\ {{\T{}}_{v}})}}}}} \\
-\\
-{\inferrule[T-AssocPromote]
-  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
-    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\T{}}_{k}}} } \\
-    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
-    {\vdash {\issubtype {{\T{}}_{m}} {\TopIPersistentMap}}} \\
-    {\T{} = (promote\_hmap\ {\T{}}_{m}\ {\T{}}_{k}\ {\T{}}_{v})} }
-  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {\T{}}}}}} \\
-\end{array}
-\end{tdisplay}
-$$
-
-$$
-\begin{tdisplay}{Type Metafunctions}
-\begingroup
-\fontsize{10pt}{12pt}
-\begin{altgrammar}
-  (update\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\k{}}_1\ {\T{}}_1) = 
-                 \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}}\ {\k{}}_1\ {\T{}}_1 \}\ \\
-  (update\_hmap\ (\wedge\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v}) = 
-                               (\wedge\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})}) \\
-  (update\_hmap\ (\vee\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v}) = 
-                               (\vee\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})})
-  \\ \\
-  (promote\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\T{}}_{kn}\ {\T{}}_{vn})
-                                    = {\IPersistentMap {(\vee\ \overrightarrow{{\T{}}_{k}}\ {\T{}}_{kn})}
-                                                       {(\vee\ \overrightarrow{{\T{}}_{v}}\ {\T{}}_{vn})}} \\
-  (promote\_hmap\ {\IPersistentMap {{\T{}}_{k}} {{\T{}}_{v}}} \ {\T{}}_{kn}\ {\T{}}_{vn})
-                                    = {\IPersistentMap {(\vee\ {\T{}}_{k}\ {\T{}}_{kn})}
-                                                       {(\vee\ {\T{}}_{v}\ {\T{}}_{vn})}}
-\end{altgrammar}
-\endgroup
-\end{tdisplay}
-$$
-
-$$
-\begin{tdisplay}{Subtyping}
-\begin{array}{c}
-\inferrule[S-Refl] { } {\vdash {\issubtype {\T{}} {\T{}}}} \\
-\inferrule[S-Any] { } {\vdash {\issubtype {\T{}} {\Top}}}
-\inferrule[S-UnionSuper] 
-  {\ } 
-  {\vdash {\issubtype {\T{}} {\Top}}}
-\end{array}
-\end{tdisplay}
-$$
 
 %\subsection{Higher-order Variable-arity Polymorphism (SKETCH)}
 %

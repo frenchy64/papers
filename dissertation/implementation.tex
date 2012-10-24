@@ -212,10 +212,13 @@ features extra kinds of constraints for dotted variables.
 Strickland, Tobin-Hochstadt, and Felleisen elaborate on the particular changes
 required for the Typed Racket implementation~\cite{STF09}.
 
-\begin{verbatim}
-  Say more about the changes and why so much work was involved. Or at least
-  the remaining changes were more tedious than anything.
-\end{verbatim}
+Porting Typed Racket's variable-arity polymorphism implementation was
+tedious because some of the relevant internal functions interact
+in strange ways with the rest of Typed Racket. My reaction was that Typed Racket
+was initially designed without variable-arity polymorphism and was added
+without major changes to other components. Typed Clojure was
+developed with the same design so full variable-arity polymorphism
+implementation could be ported without change.
 
 \section{Portability to other Clojure Dialects}
 
@@ -310,7 +313,14 @@ is equivalent to \lstinline|(fn [a] (not (nil? a)))|}
 has the filter set \lstinline|{:then (& (! nil 0) (is x 0)) :else (is nil 0)}|
 which is good enough to infer the \lstinline|filter|ed result as \lstinline|(Seqable x)|.
 
-\section{Non-hygienic Macro Expansion and Filters}
+Further work in this area is needed when filtering on a non-anonymous function.
+For example, it is not clear how to infer the common idiom \lstinline|(filter identity coll)|
+as returning a sequence of non-nil elements, for any sequence \lstinline|coll|.
+Inferring new propositions for already existing functions like \lstinline|identity|
+does not fit with Tobin-Hochstadt and Felleisen's calculus~\cite{TF10},
+confirmed by Tobin-Hochstadt~\cite{Tob12} as future work in this area.
+
+%\section{Non-hygienic Macro Expansion and Filters}
 
 
 % need to remove bindings as they fall out of scope

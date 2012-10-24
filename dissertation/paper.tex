@@ -3,6 +3,7 @@
 \usepackage{mmm}
 \usepackage{mathpartir}
 \usepackage{clj-grammar}
+\usepackage{url}
 \usepackage[style=alphabetic]{biblatex}
 \addbibresource{bibliography.bib}
 
@@ -42,20 +43,24 @@
 
 Traditionally there has been a clear distinction between 
 programming languages that perform type checking at compile-time, and those that do not.
-In particular, the early wide-spread programming languages ALGOL and LISP
+In particular, the early wide-spread programming languages ALGOL and Lisp
 could be divided this way: ALGOL performs compile-time (or static) type checking,
-and LISP does not.
+and Lisp does not, and most recent languages can be similarly classified.
 Static type checking eliminates many common user errors that are otherwise unnoticed or are caught 
 when the program is run.
 On the other hand, a language without static type checking can often be designed 
-to be more flexible and forgiving.
+to be more flexible and forgiving, making it easy, for example, to have a \emph{map} function that can map functions
+with any number of arguments (as in most Lisp dialects).
 
-A recent trend is to combine the advantages of both kinds of languages by adding optional static 
+A recent trend is to aim to combine the advantages of both kinds of languages by adding optional static 
 type systems to languages without static type checking. 
 A major challenge in these combinations is continuing to support the idiomatic style of the original 
-language, and some recent attempts appear to have finally produced type systems that have overcome this obstacle.  
-Most notably Typed Racket, a typed sister language of the Lisp dialect Racket, is able to statically type 
+language while performing accurate enough checking to catch similar errors to standard statically
+typed languages. Some recent attempts appear to have finally produced type systems that have overcome this obstacle.
+Notably Typed Racket, a typed sister language of the Lisp dialect Racket, is able to statically type 
 check most idiomatic Racket code.
+These optional type systems have some important differences from standard static
+type systems, for example they often include \emph{union} types.
 
 Clojure is a recent and increasingly popular programming language that is designed to support 
 functional programming and immutability by default. Implementations of Clojure are hosted 
@@ -63,16 +68,16 @@ on popular platforms and provide direct interoperability with the host platform.
 There are several implementations of Clojure, each targeting different runtimes including
 the Java Virtual Machine, the Common Language Runtime, and Javascript virtual machines.
 
-This paper describes my work on designing an optional static type system for Clojure based on
+This dissertation describes my work on designing an optional static type system for Clojure based on
 the lessons learnt from several projects, primarily Typed Racket.
-A prototype type system is developed for Clojure running on the Java Virtual Machine.
+This work includes designing and building a type checker for Clojure running on the Java Virtual Machine.
 Several experiments are conducted using this prototype, particularly involving
-sufficiently complicated existing Clojure code where type checking increases confidence that the code correct.
-For example, a significant portion of algo.monads, a Clojure Contrib library for monadic programming, 
-is able to be type checked. 
-On the positive side, most monad, monad transformer, and monadic function definitions can be type checked,
+existing Clojure code that is sufficiently complicated that
+type checking increases confidence that the code is correct.
+For example, nearly all of \emph{algo.monads}, a Clojure Contrib library for monadic programming, 
+is able to be type checked.
+Most monad, monad transformer, and monadic function definitions can be type checked,
 usually by adding type annotations in natural places like function definitions.
-Negatively, simple monad comprehensions can be type checked, but require awkward type annotations.
 
 There is significant future work to fully type check all Clojure features and idioms.
 For example, multimethod definitions and functions accepting an even number of variable arguments
@@ -80,7 +85,8 @@ are troublesome.
 Also, there are desirable features from the Typed Racket project that are missing, such
 as automatic runtime contract generation and a sophisticated blame system, 
 both which are designed to improve error messages when mixing typed and untyped code in similar systems.
-I conclude that it appears to be both practical and useful to design and implement an optional static type system for the
+Overall, the work described in this dissertation leads to the conclusion that it appears to 
+be both practical and useful to design and implement an optional static type system for the
 Clojure programming language.
 
 \end{abstract}
@@ -105,38 +111,18 @@ Clojure programming language.
 
 \include{implementation}
 
-% Evaluation
-% - successes
-% - future work identified
-
 \include{experiments}
 
 \include{future-work}
 
-%
-%\begin{mathpar}
-%\inferrule*[right=B-Var]
-%  {\rho(x) = v}
-%  {\rho \vdash x \downarrow v}
-%
-%\inferrule*[right=B-Assoc]
-%  {\rho \vdash e_m \downarrow mi \\
-%   \rho \vdash e_k \downarrow k \\
-%   \rho \vdash e_v \downarrow v \\
-%   \rho \vdash \overrightarrow{e_j}^n \downarrow \overrightarrow{k_j}^n \\
-%   \rho \vdash \overrightarrow{e_m}^n \downarrow \overrightarrow{k_m}^n \\
-%   \delta(add\_entry, mi, k, v, \overrightarrow{k_j, k_m}^n) = mo}
-%  {\rho \vdash (assoc\ e_m\ e_k\ e_v\ \overrightarrow{e_j\ e_m}^n) \downarrow mo}
-
-%\infrule[B-Var]
-%  {\rho(x) = v}
-%  {\rho \vdash x \downarrow v}
-%
-%\infrule[B-Assoc]
-
-%\end{mathpar}
-
 \chapter{Conclusion}
+
+Whether a language is dynamically typed or statically typed is starting to
+blur. Recent languages have managed to support the advantages of both styles:
+the safety of a statically typed language while retaining the idioms found in
+dynamically typed languages.
+
+Extensions like Typed Clojure 
 
 \begin{verbatim}
   Programming is an error-prone task, and verification tools are important.

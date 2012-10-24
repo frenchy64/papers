@@ -3,28 +3,51 @@
 \section{Contracts and Blame}
 \label{sec:contractsblame}
 
+A key part of Typed Racket~\cite{Tob10} is its contract and blame system.
+They enable safe interoperability with untyped Racket by generating runtime
+contracts in key places based on static types. Typed Racket also 
+includes a sophisticated blame system based on Wadler\cite{WF09}
+to provide more accurate error reporting that ensures typed modules
+``can't be blamed''.
+
+There are two kinds of interoperability in Typed Clojure
+that could utilize these features. First, the set of ``assumptions''
+given by the programmer about Java interoperability like those introduced by \lstinline|non-nil-return| 
+and \lstinline|nilable-param| (see section \ref{sec:experimentinterop})
+could be checked by adding runtime contracts.
+Secondly, when typed namespaces import untyped functions, the static type
+assigned to the untyped function could be enforced by wrapping the
+function in a runtime contract. Typed Racket uses this second approach
+when importing untyped Racket functions, and it results in better error messages.
+
 \section{Multimethods}
 \label{sec:mmfuture}
 
-\begin{verbatim}
 Multimethods in Clojure are an idiomatic and often used feature.
-It would be essential for an optional static type system for
-Clojure to support
-There are at least two hurdles to supporting multimethods.
-\end{verbatim}
+It would be essential for an optional static type system for Clojure to support
+The major hurdle for type checking multimethod definitions is the
+interaction between the multimethod dispatch mechanism and occurrence typing.
 
-% Problem - typing isa?
-% - probably impossible to type higher order usages of isa?.
-% Dispatch function must infer latent filters for multi-arity functions. (Typed Racket only infers single arg I think)
-% Statically proving at least one relevant dispatch method is present.
-% Warn potential method conflicts.
-% Suppress warnings, similar to prefer-method syntax
+\lstinline|clojure.core/isa?| is the core of multimethod dispatch.
+It is a function that takes two arguments and is \lstinline|true| if
+the first argument is a member of the second argument, otherwise \lstinline|false|.
+It gets quite complicated quickly even with common usages of \lstinline|isa?|.
+Simple calls involving only \emph{Class} objects return true if the left class
+includes the right class in a Java type relationship, eg. \lstinline|(isa? Integer Number)| is \lstinline|true|.
+For example, \lstinline|(isa? [Integer Double] [Number Number])| is \lstinline|true|
+because the left and right arguments are vectors of classes of the same length
+that are subtypes by \lstinline|isa?| pairwise.
+
+It is also unclear whether it is feasible to perform comprehensiveness and
+ambiguity prediction tests on multimethod usages. I predict that they will be
+very difficult to pull off satisfactorily because of the ``openess'' of multimethods,
+and we will fall back on the runtime errors that multimethods already throw.
 
 \section{Records}
 
 A Clojure record is a composite of datatypes and maps; it is a datatype
-with fields that can be treated like a map (records support map operations like \lstinline|get| (lookup),
-\lstinline|assoc| (add entries), and \lstinline|dissoc| (remove entries)).
+with fields that can be treated like a map: records support map operations like \lstinline|get| (lookup),
+\lstinline|assoc| (add entries), and \lstinline|dissoc| (remove entries).
 One interesting property from the perspective of static typing is that if
 a entry corresponding to a field of the underlying datatype is removed
 with \lstinline|dissoc|, then the resulting type is a plain map: it loses
@@ -35,20 +58,15 @@ Records are used frequently in Clojure code, so it is desirable
 to support them to some degree. Future work is planned to investigate solutions
 to satisfactorily capture their subtle semantics in a practical way.
 
-\subsection{Other Clojure Dialects}
-% unify ASTs for easier porting
+\subsection{Porting to other Clojure implementations}
 
-\begin{verbatim}
-Other Clojure implementations
-\end{verbatim}
+It would be desirable to port Typed Clojure to other Clojure implementations.
+Each implementation would bring its own set of challenges in
 
-\subsection{Java Generics}
+\subsection{Extensions to heterogeneous map types}
 
-\begin{verbatim}
-Currently, Typed Clojure does not interact with Java generics,
-which provide
-instead 
-It may be desirable to 
-\end{verbatim}
+\subsection{Length information and intersection types}
+
+%\subsection{Java Generics}
 
 \subsection{Linter}

@@ -10,14 +10,14 @@ using idioms and style found in current Clojure code.}
 
 In the last decade it has become increasingly common to enhance
 dynamically typed languages with static type systems. 
-This is idea not new, but recent attempts are noteworthy for 
-their broad success in matching many of the advantages of statically typed
-languages, notably due to the use of \emph{bidirectional checking}.
+This is idea not new~\cite{Fag91,CF91,AM91}, but recent attempts~\cite{Tob10}
+are noteworthy for their broad success in matching many of the advantages of statically typed
+languages, notably due to the use of bidirectional checking~\cite{PT00}.
 Instead of always attempting to infer types, this algorithm relies on programmer annotations
 appearing in some natural places such as giving the type of each top-level function.
 
 The Clojure programming language is a dynamically typed dialect of Lisp invented
-by Hickey, designed to run on popular platforms\footnote{http://clojure.org/}.
+by Hickey \footnote{\url{http://clojure.org/}}, designed to run on popular platforms.
 It emphasises functional programming with immutable data structures
 and provides direct interoperability with its host platform.
 Notable implementations of Clojure exist for the Java Virtual Machine (JVM),
@@ -64,9 +64,8 @@ especially in more complicated situations like combining monads via monad transf
 The initial motivation for implementing an optional type system
 for Clojure was an anecdotal account of the struggles
 of a Clojure programmer. In an apparently heroic effort, he managed to 
-implement a Clojure library for conduits, an advanced form of ``pipes'',
-using arrows, a generalisation of monads.
-\footnote{CONDUIT REFERENCE TODO}
+implement a Clojure library for conduits~\footnote{\url{http://www.yesodweb.com/book/conduits}}, 
+an advanced form of ``pipes'', using arrows, a generalisation of monads.
 Conduits also significantly surpass monads in complexity and are usually reserved
 for languages with advanced type systems like Haskell.
 
@@ -80,16 +79,12 @@ Secondly, to aid him while writing the library.
 Since then, the Clojure community has shown significant interest in this work.
 I also developed this project as a Google Summer of Code 2012 project,
 after it was selected by the Clojure community as a Clojure Google Summer of Code
-project for 2012.
-\footnote{CITE GSOC, or FOOTNOTE}
+project for 2012~\footnote{\url{http://www.google-melange.com/gsoc/project/google/gsoc2012/ambrosebs/10001}}.
 I have also been invited to speak on this project at the Clojure Conj
 2012 conference in November, the main international conference related to Clojure.
 
 \subsection{What kind of type system does Typed Clojure provide?}
 
-% refinements check invariants of programs
-% while ordinary static types check whether programs
-% are basically meaningful - Rowan + Frank P
 % Page 1 Rowan's PhD
 
 There are many concepts associated with \emph{types} and \emph{type systems} in both the
@@ -102,7 +97,7 @@ follow the terminology of Pfenning~\cite{Pfe08} and Reynolds~\cite{Rey01},
 where such optional type systems are \emph{extrinsic} type systems, and more
 traditional type systems are \emph{intrinsic} type systems.
 This distinction has a long history, originating in work in the $\lambda$-calculus 
-by Church \footnote{CHURCH FROM ROWANS DISSERTATION} and Curry \footnote{CURRY FROM ROWANS DISSERTATION},
+by Church~\cite{Chu40} and Curry~\cite{Cur34},
 leading to intrinsic types and extrinsic types also being called Church types and
 Curry types often in the literature.
 
@@ -119,6 +114,54 @@ is not essential to running programs. A dynamically typed language can be viewed
 as having a trivial static type system that supports exactly one type,
 a view advocated by Harper~\cite{Har12}
 and common in the literature on static types (for example, Pierce~\cite{Pie02}).
+
+\section{Contributions}
+
+In this dissertation we develop an optional type system for Clojure.
+We focus on the features needed to make a practical type system that
+existing Clojure programmers can use.
+We also developed a prototype based on Typed Racket~\cite{Tob10}.
+
+The contributions of the work described in this dissertation are as follows:
+
+\begin{itemize}
+  \item We describe a novel use of occurrence typing~\cite{TF10} for eliminating
+        occurrences of Java's \emph{null}. We make \emph{null} directly expressible
+        in Typed Clojure's type system as \lstinline|nil|. This makes it reasonable for it to be a
+        static type error if \emph{null} is potentially misused, an improvement over Java's static type system
+        where \emph{null} cannot be expressed.
+
+  \item We show how a combination of intersection types and occurrence typing enables us to accurately type check
+        the most common usages of Clojure's sequence abstraction. This was particularly subtle, as 
+        many base operations in the sequence abstraction take and/or return \lstinline|nil|, and
+        each case could imply different information about a sequence.
+
+  \item We develop a prototype type checker for Clojure running on the Java Virtual Machine
+        which is able to type check many common Clojure idioms.
+        We show how this type checker can be used to aid Clojure programmers use sophisticated
+        programming styles by porting most of an existing library for monadic programming.
+
+  \item This prototype is extended to support several features that are not present in Typed Racket.
+        We support filtering sequences on anonymous functions that convey only negative type information
+        (eg. non-nil), capturing a common Clojure idiom.
+
+  \item We capture the Clojure idiom of using maps with known keyword fields by using heterogeneous map types.
+        These types are sufficient for accurately associating and dissociating known keyword keys,
+        and accurately looking up values associated with keyword keys in heterogeneous map types that have
+        that keyword key present.
+        This is sufficient for type checking many common idioms involving maps.
+
+  \item We identify major future issues in typing Clojure code. Multimethod definitions are problematic
+        to type check accurately because of the interaction of its dispatch mechanism and occurrence typing.
+        Records have subtle semantics for dissociating keys, like dissociating a base key of a record returns
+        a plain map.
+%        Heterogeneous map types 
+\end{itemize}
+
+Together, 
+
+These contributions support my thesis by using the prototype to check practical code
+and 
 
 \section{Typed Clojure through Examples}
 
@@ -212,11 +255,12 @@ due to every Clojure namespace implicitly importing all Classes in the \lstinlin
 the equivalent of Java's \lstinline|import java.lang.*;|).
 
 \subsection{Datatypes and Protocols}
+\label{sec:datatypes}
 
 As well as \lstinline|def| and \lstinline|defn| definitions,
 Clojure programmers typically include datatype and protocol
 definitions. 
-Protocols are similar to Java interfaces\footnote{JAVA INTERFACE REFERENCE} and datatypes to classes implementing interfaces.
+Protocols are similar to Java interfaces~\cite{InterfaceTutorial} and datatypes are similar to classes implementing interfaces.
 We can annotate datatype and protocol definitions similarly.
 
 \begin{lstlisting}[caption=Annotating protocols and datatypes in Typed Clojure]

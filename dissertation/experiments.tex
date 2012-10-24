@@ -6,6 +6,7 @@ We intentially chose examples that could be challenging to type check
 or were particularly useful to the everyday Clojure programmer.
 
 \section{Java Interoperability}
+\label{sec:experimentinterop}
 
 As Typed Clojure is intended to be useful for practical purposes, it was important
 to port existing code that utilized Java interoperability.
@@ -109,10 +110,9 @@ of \lstinline|invoke| may be nil, for the arity of two parameters.
 (nilable-param java.lang.reflect.Method/invoke {2 #{0}})
 \end{lstlisting}
 
-Here is the final successfully type checked code.
-\begin{verbatim}Is this a reasonable result?\end{verbatim}
+The final successfully type checked code is presented in listing \ref{lst:callmethodfinal}.
 
-\begin{lstlisting}
+\begin{lstlisting}[caption=Type Annotated code for call-method, label=lst:callmethodfinal]
 (non-nil-return java.lang.Class/getDeclaredMethod :all)
 (nilable-param java.lang.reflect.Method/invoke {2 #{0}})
 
@@ -136,7 +136,33 @@ Here is the final successfully type checked code.
     (.invoke method obj (into-array> Object (U nil Object) args))))
 \end{lstlisting}
 
-\section{Red-Black Tree}
+\section{Red-black trees}
+
+This experiment involved porting an implementation of red-black trees
+used as an experiment for SML CIDRE by Davies~\cite{Dav05}.
+SML CIDRE is a sort-checker for Standard ML that supports refinement
+types.
+The red-black tree implementation was ported to work with SML CIDRE
+to statically check red-black tree invariants.
+It is a particularly good experiment for SML CIDRE because it generates an unusually large
+amount of intersection types.
+
+Intersection types in SML CIDRE are heavily optimised via memoisation.
+Because of this, SML CIDRE is able to check this experiment with little trouble.
+The current Typed Clojure prototype is not as successful, and appears to hang
+during type checking.
+The reasons are not entirely clear, but it is likely the number of intersection types
+are too large for the current prototype to handle, which has no optimisations
+around intersection types.
+
+This experiment was intended to stress test Typed Clojure to an extreme, and
+it is unsurprising that Typed Clojure was not up to the task.
+One interesting point was noticed when porting it.
+The SML CIDRE version of the red-black tree experiment
+uses SML CIDRE datasorts to represent the red-black tree invariants.
+The Typed Clojure version entirely uses plain hash-maps, a common Clojure idiom.
+It was noticed that the heterogeneous map types that Typed Clojure provides would be sufficient to
+represent the red-black tree invariants.
 
 \section{Monads}
 \label{sec:monads}
@@ -279,5 +305,68 @@ Monad transformers are always parameterised by a monad type constructor, and sho
 monad type constructors. Keeping the monad type constructor abstract allows us to determine
 whether a monad transformer works \emph{for any} monads.
 
+Listing \ref{lst:maybet} shows the full code for type checking the definition
+of the maybe monad transformer.
+Typing this example was a matter of assigning types to anonymous functions
+(similar to standard monad definitions) and manually instantiating 
+polymorphic types with \lstinline|inst|
+that parameterise over higher kinds, which cannot be inferred by Typed Clojure.
+
+\begin{lstlisting}[caption={Maybe monad transformer in Typed Clojure}, label=lst:maybet]
+(ann maybe-t
+     (All [[m :kind (TFn [[x :variance :covariant]] Any)]]
+       (Fn 
+         [(AnyMonad m) -> (MonadPlusZero (TFn [[y :variance :covariant]]
+                                           (m (U nil y))))]
+         [(AnyMonad m) nil -> (MonadPlusZero (TFn [[y :variance :covariant]]
+                                               (m (U nil y))))]
+         [(AnyMonad m) nil (U ':m-plus-default ':m-plus-from-base)
+          -> (MonadPlusZero (TFn [[y :variance :covariant]]
+                              (m (U nil y))))])))
+(defn maybe-t
+  "Monad transformer that transforms a monad m into a monad in which
+   the base values can be invalid (represented by nothing, which defaults
+   to nil). The third argument chooses if m-zero and m-plus are inherited
+   from the base monad (use :m-plus-from-base) or adopt maybe-like
+   behaviour (use :m-plus-from-transformer). The default is :m-plus-from-base
+   if the base monad m has a definition for m-plus, and
+   :m-plus-from-transformer otherwise."
+  ([m] ((inst maybe-t m) m nil :m-plus-default))
+  ([m nothing] ((inst maybe-t m) m nothing :m-plus-default))
+  ([m nothing which-m-plus]
+   (monad-transformer m which-m-plus
+     [m-result (with-monad m m-result)
+      m-bind   (with-monad m
+                 (ann-form
+                   (fn m-bind-maybe-t [mv f]
+                     (m-bind
+                       mv
+                       (ann-form
+                         (fn [x]
+                           (if (nil? x)
+                             (m-result nothing) 
+                             (f x)))
+                         [(U nil a) -> (m (U nil b))])))
+                   (All [a b]
+                     [(m (U nil a)) [a -> (m (U nil b))] -> (m (U nil b))])))
+      m-zero   (with-monad m (m-result nothing))
+      m-plus   (with-monad m
+                 (ann-form
+                   (fn m-plus-maybe-t [& mvs]
+                     (if (empty? mvs)
+                       (m-result nothing)
+                       (m-bind (first mvs)
+                               (ann-form
+                                 (fn [v]
+                                   (if (= v nothing)
+                                     (apply m-plus-maybe-t (rest mvs))
+                                     (m-result v)))
+                                 [(U x nil) -> (m (U x nil))]))))
+                   (All [x] [(m (U x nil)) * -> (m (U x nil))])))
+      ])))
+
+\end{lstlisting}
 
 \section{Conduit}
+
+
