@@ -21,19 +21,21 @@ where there is some relevance or influence.
 \section{Dynamic Typing in Typed Languages}
 
 Typed Clojure adds static type checking to an existing untyped language.
-Coming from the other direction, Albardi, Cardelli, Pierce and Didier~\cite{ACPR94}
+Coming from the other direction, Abadi, Cardelli, Pierce and R\'{e}my~\cite{ACPR94}
 extend a static language to be more dynamic.
-This work centres around the type \emph{Dynamic}, which represents
-a static type in a dynamically typed languages.
+This work centres around adding a type \emph{Dynamic}, which represents
+a dynamic type in a statically typed language.
 
 Rossberg~\cite{Ros07} describes the advantages of having a type
 \emph{Dynamic} over other approaches to making statically typed languages
-more like dynamic ones. He says that type \emph{Dynamic} models
+more like dynamic ones and surveys work in this area. 
+He says that type \emph{Dynamic}
 allows aspects of dynamic style to be represented in statically
 typed languages without compromising the type system.
 However, he claims type \emph{Dynamic} is rarely used in practical languages
-because they are too inconvenient for many cases and they destroy
-a valuable property of polymorphic, statically typed languages.
+because it is too inconvenient in real programs.
+He claims to have fixed these issues, but a practical language has yet to integrated 
+his changes.
 
 % cite: Dynamic Typing in Polymorphic languages (1994)
 % - coming from the other direction
@@ -58,7 +60,7 @@ the soft type checker inserts a check that throws a runtime error upon unsafe us
 Thus, soft type systems differ from traditional type systems in that type inference 
 never fails and an inconsistency always results in a runtime check.
 
-Wright and Cartwright~\cite{WC97} developed Soft Scheme, a practical
+Wright and Cartwright~\cite{WC97} developed Soft Scheme, a
 soft type system for Scheme. 
 It extended earlier work by Cartwright and Fagan~\cite{CF91}
 and Fagan~\cite{Fag91}, adding support for practical features such as
@@ -66,10 +68,10 @@ first-class continuations and variable-arity functions.
 Soft Scheme does not require any extra type annotations.
 
 Type systems for Scheme have since moved away from soft typing.
-Alas, the only reasonably complete reference for commentary on this transition 
+Alas, the only reasonably complete account of this transition 
 appears to be slides from a talk by Felleisen~\cite{Fell09},
 a leader in this area of research for over 20 years.
-Felleisen says that while Soft Scheme discovered type problems, 
+Felleisen comments that while Soft Scheme discovered type problems, 
 it suffers from incomprehensible
 error reporting that required PhD-level expertise to decipher. 
 
@@ -149,7 +151,7 @@ or \lstinline|b|.
 For example, \lstinline|(U Number Integer)| cannot be used in positions expecting \lstinline|Integer|,
 but \lstinline|(I Number Integer)| can be used in positions expecting \lstinline|Integer|.
 
-Intersection, union, and singleton types fit best as extrinsic types.
+Intersection, union, and singleton types are best considered as extrinsic types.
 Hayashi~\cite{Hay91} describes two type theories, ATT which includes
 intersection, union, and singleton types, and ATTT which further extends ATT
 to include refinement types, which can be classified as extrinsic types.
@@ -161,8 +163,9 @@ which offers only singleton types for values like \lstinline|:a| and \lstinline|
 and, unlike ATTT, no way to parameterise over singletons.
 
 Several interesting projects have used intersection or union types.
-Intersection types were originally introduced by Coppo, Dezani-Ciancaglini, and Venneri~\cite{CDV81}.
-The use union types to type check dynamically typed languages with soft typing systems
+Intersection types were originally introduced by Coppo, Dezani-Ciancaglini, and Venneri~\cite{CDV81}
+for the $\lambda$-calculus.
+The use of union types to type check dynamically typed languages with soft typing systems
 dates back to Cartwright and Fagan~\cite{CF91}.
 
 Forsythe, a modern ALGOL dialect by Reynolds~\cite{Rey81,Rey96} was the first wide-spread 
@@ -170,11 +173,11 @@ programming language to use intersection types.
 Uses of intersections in Forsythe include representing extensible record types
 and function overloading.
 
-Refinement types add a level of types refining an existing type system
+Refinement types add a level of extrinsic types refining an existing intrinsic type system
 in order to type check more detailed properties and invariants than standard static type systems
 (described by Freeman and Pfenning~\cite{FP91}).
-Refinement types are reminiscent of Typed Clojure, in that Typed Clojure
-adds a level of types on top of Clojure.
+Refinement types have similarities with Typed Clojure, in that Typed Clojure
+adds a level of extrinsic types on top of Clojure.
 Intersection types are critical here to allow more than one property or invariant
 to be expressed for a function.
 SML CIDRE is a refinement type checker for Standard ML by Davies~\cite{Dav05}.
@@ -183,7 +186,8 @@ St-Amour, Tobin-Hochstadt, Flatt, and Felleisen
 describe the \emph{ordered intersection types} used in Typed Racket~\cite{St12}
 that provide a kind of function overloading.
 Typed Clojure takes a similar approach for its representation of functions.
-Typed Racket uses (disjoint) union types.
+Typed Racket uses union types which are used in Typed Clojure in very similar ways,
+like for creating ML-like ``datatypes''.
 
 \section{Java Interoperability in Statically Typed Languages}
 
@@ -373,15 +377,15 @@ Typed Racket is a statically typed sister language of Racket. It
 attempts to preserve existing Racket idioms and aims type check
 existing Racket code by simply adding top level type annotations~\cite{Tob10}.
 
-Typed Racket fully expands all macro calls before type checking~\cite{Tob10} to
-avoid the complex semantics of type checking macro definitions, an ongoing research area summarised
+Typed Racket fully expands all macro calls before type checking~\cite{Tob10},
+avoiding the complex semantics of type checking macro definitions, an ongoing research area summarised
  by Herman~\cite{Her10}.
-The design of my Clojure type system will follow a similar strategy; only the fully macro-expanded form
-will be type checked. Type checking macro definitions are outside the scope of this project, and would
-be exceptionally hard.
+Typed Clojure follows a similar strategy; only the fully macro-expanded form
+will be type checked. Type checking macro definitions are outside the scope of this project.
 
 Along with a full static type system, Typed Racket 
-also uses runtime contracts to enforce type invariants at runtime~\cite{TF08}.
+also uses runtime contracts to enforce type invariants at runtime
+at the interface with untyped code ~\cite{TF08}.
 Utilising runtime contracts to aid type checking is outside the scope of this project, but would be 
 considered desirable and accessible future work.
 
@@ -463,7 +467,7 @@ multimethods: ``it is possible for two modules containing arbitrary multimethods
 successfully in isolation but generate type errors when linked together.''~\cite{MS02}
 
 After some investigation, typing multimethods with Typed Clojure is assigned as future work
-(see section \label{sec:mmfuture}).
+(see section \ref{sec:mmfuture}).
 
 \section{Higher Kinded Programming}
 
@@ -473,7 +477,7 @@ For example, a type \lstinline|Number| is distinguished from a
 \emph{type constructor} \lstinline|Monad| (see section \ref{sec:monads}), which is a type level function
 (similar to the difference between values and functions on the value level, but on the type level).
 
-F-$\omega$ is a typed $\lambda$-calculus with support for higher kinds,
+F$_\omega$ is a typed $\lambda$-calculus with support for higher kinds,
 specifically type constructors (see Pierce~\cite{Pie02}).
 Haskell~\cite{Mar10} distinguishes between types and type constructors,
 the latter of which is an essential part of its monad library 

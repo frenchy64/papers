@@ -190,7 +190,7 @@ Occurrence typing~\cite{TF10} also plays a crucial role in Typed Clojure's
 treatment of \lstinline|nil|.
 It allows us to track whether particular bindings are possibly \lstinline|nil|
 down conditional branches, and makes it practical to throw type errors 
-where \lstinline|nil| is not allowed (see section \label{sec:OccurrenceTyping} for examples).
+where \lstinline|nil| is not allowed (see section \ref{sec:OccurrenceTyping} for examples).
 This is not practical in Java's type system because \emph{null} is not directly
 expressible, which makes it impractical to error when a \emph{NullPointerException}
 exception is possible: according to the type system, almost every operation
@@ -208,7 +208,7 @@ as returning a sequence of non-nil elements, for any sequence \lstinline|coll|.
 (see section \ref{sec:filterneg}).
 It is also possible for code interacting with Java to introduce unexpected \emph{null}
 values. Currently, we let the programmer define a set of unenforced \emph{assumptions}
-where \emph{null} is allowed in Java fields and methods (see section \label{sec:javainterop}).
+where \emph{null} is allowed in Java fields and methods (see section \ref{sec:javainterop}).
 Adding runtime assertions that enforce these assumptions would allow more
 accurate errors, an approach similar to that taken by Typed Racket~\cite{Tob10} when
 interfacing with untyped Racket code.

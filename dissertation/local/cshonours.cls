@@ -509,7 +509,7 @@ class report.cls by Cara MacNish August 1999/September 2000]
 	{\vfill					%ckm
 	\noindent				%ckm
 	{\bf Keywords:} \@keywords \\		%ckm	
-	{\bf CR Categories:} \@categories	%ckm
+	%{\bf CR Categories:} \@categories	%ckm
 	\addcontentsline{toc}{chapter}{Abstract}
 	}
 

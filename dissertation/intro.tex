@@ -10,9 +10,10 @@ using idioms and style found in current Clojure code.}
 
 In the last decade it has become increasingly common to enhance
 dynamically typed languages with static type systems. 
-This is idea not new~\cite{Fag91,CF91,AM91}, but recent attempts~\cite{Tob10}
+This is idea not new (see work by Fagan, Cartwright, Aiken and Murphy~\cite{Fag91,CF91,AM91}), but recent attempts
 are noteworthy for their broad success in matching many of the advantages of statically typed
-languages, notably due to the use of bidirectional checking~\cite{PT00}.
+languages (see work by Tobin-Hochstadt~\cite{Tob10}), 
+notably due to the use of bidirectional checking (like work by Pierce and Turner~\cite{PT00}).
 Instead of always attempting to infer types, this algorithm relies on programmer annotations
 appearing in some natural places such as giving the type of each top-level function.
 
@@ -125,6 +126,15 @@ We also developed a prototype based on Typed Racket~\cite{Tob10}.
 The contributions of the work described in this dissertation are as follows:
 
 \begin{itemize}
+  \item We develop a prototype type checker for Clojure running on the Java Virtual Machine
+        which is able to type check many common Clojure idioms.
+        We show how this type checker can be used to aid Clojure programmers use sophisticated
+        programming styles by porting most of an existing library for monadic programming.
+
+  \item This prototype is extended to support several features that are not present in Typed Racket.
+        We support filtering sequences on anonymous functions that convey only negative type information
+        (eg. non-nil), capturing a common Clojure idiom.
+
   \item We describe a novel use of occurrence typing~\cite{TF10} for eliminating
         occurrences of Java's \emph{null}. We make \emph{null} directly expressible
         in Typed Clojure's type system as \lstinline|nil|. This makes it reasonable for it to be a
@@ -136,32 +146,19 @@ The contributions of the work described in this dissertation are as follows:
         many base operations in the sequence abstraction take and/or return \lstinline|nil|, and
         each case could imply different information about a sequence.
 
-  \item We develop a prototype type checker for Clojure running on the Java Virtual Machine
-        which is able to type check many common Clojure idioms.
-        We show how this type checker can be used to aid Clojure programmers use sophisticated
-        programming styles by porting most of an existing library for monadic programming.
-
-  \item This prototype is extended to support several features that are not present in Typed Racket.
-        We support filtering sequences on anonymous functions that convey only negative type information
-        (eg. non-nil), capturing a common Clojure idiom.
-
   \item We capture the Clojure idiom of using maps with known keyword fields by using heterogeneous map types.
         These types are sufficient for accurately associating and dissociating known keyword keys,
         and accurately looking up values associated with keyword keys in heterogeneous map types that have
         that keyword key present.
         This is sufficient for type checking many common idioms involving maps.
 
-  \item We identify major future issues in typing Clojure code. Multimethod definitions are problematic
+  \item We identify the main future issues in typing Clojure code. Multimethod definitions are problematic
         to type check accurately because of the interaction of its dispatch mechanism and occurrence typing.
         Records have subtle semantics for dissociating keys, like dissociating a base key of a record returns
         a plain map.
-%        Heterogeneous map types 
 \end{itemize}
 
-Together, 
-
-These contributions support my thesis by using the prototype to check practical code
-and 
+Together these contributions support my thesis and motivate further work in this area.
 
 \section{Typed Clojure through Examples}
 
@@ -327,7 +324,8 @@ F-bounded polymorphism is an extension of bounded polymorphism, where polymorphi
 can be restricted by \emph{bounds}.
 In particular, F-bounded polymorphism allows type variable bounds to recursively refer to the
 variable being bounded. Typed Clojure supports upper and lower type variable bounds.
-\footnote{F-BOUND EXAMPLE NEEDED}
+This would be required mainly for future work involving Java Generics, like typing
+invocations of \emph{java.util.Collection/max}\footnote{\url{http://docs.oracle.com/javase/1.5.0/docs/api/java/util/Collections.html#max(java.util.Collection)}}.
 
 For accurate type checking, Typed Clojure parameterises some of Clojure's data structures. For example,
 the interface behind Clojure's \emph{seq} abstraction for sequences \lstinline|clojure.lang.Seqable| has one 
