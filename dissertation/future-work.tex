@@ -1,5 +1,18 @@
 \chapter{Future Work}
 
+\section{Paired Arguments}
+
+It is not clear how to handle several key Clojure functions
+that accept an even number of arguments.
+For example, valid usages of \lstinline|assoc| are
+\lstinline[mathescape]{(assoc m k v $\overrightarrow{k v}$)},
+which takes three arguments and any number of paired arguments.
+
+Strickland, Tobin-Hochstadt, and Felleisen's calculus~\cite{STF09}
+is insufficient to express this pattern.
+Devising and integrating types that can express this pattern 
+is set as future work.
+
 \section{Contracts and Blame}
 \label{sec:contractsblame}
 
@@ -61,12 +74,14 @@ to satisfactorily capture their subtle semantics in a practical way.
 \subsection{Porting to other Clojure implementations}
 
 It would be desirable to port Typed Clojure to other Clojure implementations.
-Each implementation would bring its own set of challenges in
+Each implementation would bring its own set of challenges with interoperability.
+The core of Typed Clojure would preserved with each port changing at least 
+its interoperability with its host platform. Section \label{sec:portability}
+discusses potential problems with the porting process, and how
+they might be solved.
 
-\subsection{Extensions to heterogeneous map types}
-
-\subsection{Length information and intersection types}
+%\subsection{Extensions to heterogeneous map types}
 
 %\subsection{Java Generics}
 
-\subsection{Linter}
+%\subsection{Linter}

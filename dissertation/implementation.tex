@@ -4,7 +4,8 @@ This chapter discusses the implementation of the Typed Clojure prototype type
 system (we refer to this implementation as \emph{Typed Clojure} for the remainder of this chapter)
 in some detail concentrating on significant challenges that were identified and overcome.
 Many aspects of Typed Clojure's design follow the implementation of Typed Racket,
-which is reflected in this chapter.
+which is reflected in this chapter. 
+(The code is available on Github at \url{https://github.com/frenchy64/typed-clojure}).
 
 \section{Type Checking Procedure}
 
@@ -221,6 +222,7 @@ developed with the same design so full variable-arity polymorphism
 implementation could be ported without change.
 
 \section{Portability to other Clojure Dialects}
+\label{sec:portability}
 
 Typed Clojure was built for the Clojure programming language, whose compiler
 and data structures are implementated in Java. Clojurescript is the first major Clojure dialect

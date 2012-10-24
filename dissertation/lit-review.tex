@@ -20,8 +20,20 @@ where there is some relevance or influence.
 
 \section{Dynamic Typing in Typed Languages}
 
-This section 
-\cite{ACPR94}
+Typed Clojure adds static type checking to an existing untyped language.
+Coming from the other direction, Albardi, Cardelli, Pierce and Didier~\cite{ACPR94}
+extend a static language to be more dynamic.
+This work centres around the type \emph{Dynamic}, which represents
+a static type in a dynamically typed languages.
+
+Rossberg~\cite{Ros07} describes the advantages of having a type
+\emph{Dynamic} over other approaches to making statically typed languages
+more like dynamic ones. He says that type \emph{Dynamic} models
+allows aspects of dynamic style to be represented in statically
+typed languages without compromising the type system.
+However, he claims type \emph{Dynamic} is rarely used in practical languages
+because they are too inconvenient for many cases and they destroy
+a valuable property of polymorphic, statically typed languages.
 
 % cite: Dynamic Typing in Polymorphic languages (1994)
 % - coming from the other direction
@@ -53,15 +65,7 @@ and Fagan~\cite{Fag91}, adding support for practical features such as
 first-class continuations and variable-arity functions.
 Soft Scheme does not require any extra type annotations.
 
-% Rowan
-% You've missed some of the steps. Most importantly the move to program analysis
-% techniques like Set Based Analysis (SBA) - which suffered from modularity issues
-% due to the lack of declared intended types.
-% Maybe quote Felleisen - "problem: Mr Spidey and friends infer brittle and large
-% types; errors remain difficult to explain and fix"
-
-Type systems for Scheme have since moved away from soft typing
-to to other approaches like gradual typing.
+Type systems for Scheme have since moved away from soft typing.
 Alas, the only reasonably complete reference for commentary on this transition 
 appears to be slides from a talk by Felleisen~\cite{Fell09},
 a leader in this area of research for over 20 years.
@@ -69,23 +73,33 @@ Felleisen says that while Soft Scheme discovered type problems,
 it suffers from incomprehensible
 error reporting that required PhD-level expertise to decipher. 
 
-\begin{verbatim}
-  Bidirectionality
-\end{verbatim}
+\subsection{Program Analysis}
+
+Scheme then moved to program analysis techniques like Set Based Analysis (SBA).
+They, however, suffered from modularity issues due to the lack of declared intended types.
+MrSpidey\footnote{\url{http://www.plt-scheme.org/software/mrspidey/}}
+is a static type checker for Racket that uses uses SBA.
+Felleisen states the main problem with these kinds of systems: ``Mr Spidey and friends infer brittle and large
+types; errors remain difficult to explain and fix''~\cite{Fell09}.
 
 \subsection{Gradual Typing}
 
 Gradual typing combines static and runtime type checking so programmers
 can the most appropriate one for the situation.
+A key feature of gradual type systems is its use of \emph{bidirectional checking}
+like~\cite{PT00}, which requires type annotations in natural places like functions.
+Type errors in gradual type systems are often more manageable than in Soft Typing and SBA,
+often more comparable to type errors in statically typed languages.
 
+Gradually typed languages have different degrees of runtime checking.
 Typed Racket was developed as a path for module-by-module
 porting of existing untyped Racket modules to a typed sister language~\cite{Tob10}.
 Once a module is ported and type checked, it is protected from untyped modules
 by inserting runtime checks.
-
-\begin{verbatim}
-  Different levels of Gradual Typing discussed by Siek..
-\end{verbatim}
+Typescript~\cite{TypeS2012}, a gradual type system for Javascript, 
+does not add runtime checks to untyped interactions.
+Runtime checks affect performance, but give better errors and ensure
+type errors result in the program failing quicker.
 
 \section{Interlanguage Interoperability}
 
@@ -105,14 +119,15 @@ Java Generics are also fully supported by Scala, accounting for Scala support ex
 Typed Racket includes safe interoperability between any combination of typed and untyped 
 Racket modules~\cite{Tob10,TF08}. 
 Interactions with untyped modules are protected by adding runtime checks based on expected types.
-Typed Racket implements a sophisticated blame calculus. It ensures 
+Typed Racket implements a sophisticated blame calculus, based on Wadler~\cite{WF09}. It ensures 
 error messages correctly \emph{blame} the source of type errors,
 which can be difficult to determine in the presence of higher-order functions. 
-\begin{verbatim}references, Walder etc.\end{verbatim}
 
 \section{Record Types}
+\label{sec:recordtypes}
 
-OCaml-style extensible record types has been the subject of extensive research~\cite{Wan89,CM91,HP91}.
+O'Caml-style extensible record types has been the subject of extensive research 
+(eg. Wand~\cite{Wan89}, Cardelli and Mitchell~\cite{CM91}, Harper and Pierce~\cite{HP91}).
 Typed Clojure's heterogeneous map types show some resemblance to extensible
 record types, but a survey of the literature did not reveal research flexible
 enough to capture common usages of maps in Clojure.
@@ -121,15 +136,6 @@ For this reason, heterogeneous map types are kept as simple as possible while st
 
 \section{Intersection, Union, and Singleton Types}
 \label{sec:intersectionunion}
-
-% Hayashi Singleton types
-% Intersection types - CDV81
-% Unions in soft typing CF91
-% - Static Type Inference in a Dynamically Typed Lanugage
-%  - cited by CF91, which has unions
-
-% Unions, intersections, and singletons all fit best with extrinsic types
-% - this is one reason why they are similar
 
 Intersection and union types are interesting type constructs relevant to capturing the complicated
 types common in dynamic languages.
