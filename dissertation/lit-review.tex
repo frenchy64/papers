@@ -185,12 +185,24 @@ that provide a kind of function overloading.
 Typed Clojure takes a similar approach for its representation of functions.
 Typed Racket uses (disjoint) union types.
 
-\section{Java Interoperability}
+\section{Java Interoperability in Statically Typed Languages}
 
-Scala and Clojure are both languages with a focus on host interoperability, specifically
-to the Java Virtual Machine. Their differing treatment of the Java Virtual Machine's \lstinline|null| is
-relevant, particularly considering the potential of using occurrence typing~\cite{TF10}
-to prevent erroneous usage of \lstinline|null|.
+Typed Clojure features integration with Java's static type system
+to help verify interoperability with Java as correct.
+Section \ref{sec:interactionnull} presents Typed Clojure's treatment of
+Java's \emph{null} pointer. 
+Section \ref{designarrays} shows how Typed Clojure deals with shortcomings
+of Java's static type system relating to primitive arrays.
+
+Other statically typed languages support Java interoperability with
+similar goals, most completely, Scala.
+Scala~\cite{OCD+} is tightly integrated with Java. It manages interactions
+with Java's \emph{null} pointer by using an \emph{Option} type, which (if
+used correctly) provides strong elimination for \emph{null}.
+\emph{null} is still not expressible as a type in Scala, however.
+Arrays are parameterised by a non-variant (or invariant) parameter,
+which are checked using \emph{conservative approximation}~\cite{OSV08}. For example,
+this checks that covariant parameters are only used in covariant positions.
 
 \section{Function Types}
 
@@ -276,7 +288,7 @@ synthesise the type of listing \ref{lst:bidir} to be \lstinline|(List Float)|.
 Pierce and Turner split \emph{local type argument synthesis} into two further
 algorithms: bounded, and unbounded quantification~\cite{PT00}. 
 Typed Racket 
-supports unbounded polymorphism~\cite{Tob10}, implementing the latter algorithm by Piece et al.\ .
+supports unbounded polymorphism~\cite{Tob10}, implementing the latter algorithm by Pierce and Turner.
 Scala supports bounded quantification with F-bounded polymorphism~\cite{CCHOM89},
 basing its type argument synthesis on the bounded quantification algorithm.
 
@@ -311,7 +323,7 @@ fails.
 Scala's type checking uses Colored Local Type Inference~\cite{OZZ01},
 a variant of Local Type Inference~\cite{PT00} specifically designed to
 improve inference with certain kinds of Scala pattern matching expressions. It allows
-\emph{partial} type information to propagate down the syntax tree, instead of only full type information
+ \emph{partial} type information to propagate down the syntax tree, instead of only full type information
 as required by Local Type Inference.
 
 \emph{Colored} types contain extra contextual information, including the propagation direction

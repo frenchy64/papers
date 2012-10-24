@@ -117,18 +117,27 @@ Clojure programming language.
 
 \chapter{Conclusion}
 
-Whether a language is dynamically typed or statically typed is starting to
-blur. Recent languages have managed to support the advantages of both styles:
+Whether a language is dynamically typed or statically typed is not always a
+dividing classification. Recent languages have managed to support the advantages of both styles:
 the safety of a statically typed language while retaining the idioms found in
 dynamically typed languages.
 
-Extensions like Typed Clojure 
+This dissertation describes an optional static typing system
+that attempts to bring the advantages of static typing to the dynamically type language
+Clojure, running on the Java Virtual Machine. 
+By reusing many of the design choices made in similar projects
+like Typed Racket, we are able to design and implement a prototype type system
+\emph{Typed Clojure} that can statically check many Clojure idioms.
 
-\begin{verbatim}
-  Programming is an error-prone task, and verification tools are important.
-  Dynamic languages rely on several techniques for verification, but static
-  type checking is not often supported.
-\end{verbatim}
+Typed Clojure is intended to be of practical use to Clojure programmers.
+We show that Typed Clojure help verify Clojure code written in sophisticated
+programming styles is correct by porting most of a wide-spread Clojure library for monadic programming.
+Similarly, we show that Typed Clojure helps verify code using Java interoperability is correct, and is
+a useful tool when code involves usages of Java's \emph{null}.
+
+There is still significant future work in order to type check all Clojure idioms,
+but the work already carried out suggests that an optional type system for Clojure
+like Typed Clojure is both practical and useful tool.
 
 \printbibliography[title=References]
 

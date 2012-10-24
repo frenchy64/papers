@@ -369,4 +369,63 @@ that parameterise over higher kinds, which cannot be inferred by Typed Clojure.
 
 \section{Conduit}
 
+Conduits are an advanced form of ``pipes'' using arrows, and a generalisation of monads~\cite{ConduitRef}.
+\emph{Conduit} is a Clojure library developed by Duey and 
+contributors~\footnote{Github home of Conduit: \url{https://github.com/jduey/conduit}} 
+that supports programming with conduits.
 
+The library had to be modified and simplified considerably to be able to type check.
+Many existing conduits had troublesome variable-parameters, reminiscent of the
+issues of assigning types to \lstinline|assoc| and \lstinline|partial|
+(which is future work, see section \label{sec:futurearity}).
+In these cases, simplified versions of the conduits were created that 
+took fixed arguments.
+
+An interesting property of the types assigned to conduits (which
+are internally functions of a single argument) is that it is
+a recursive type. This is not in itself interesting, but Typed Clojure
+implements conduit types as \emph{type functions} with variance,
+which required the variance of the conduit types to be known in advance.
+
+Listing \ref{lst:conduittypes} shows the type constructor for conduit,
+\lstinline|==>|. Notice the body of \lstinline|==>| includes a reference
+to itself in a position where variance must be known in advance.
+\lstinline|declare-alias-kind| is used to declare the kind of an alias.
+Once an alias with an already declared kind is defined with \lstinline|def-alias|,
+the defined kind must match the declared kind, otherwise a type error is thrown.
+(The specifics of the types in listing \ref{lst:conduittypes} are not relevant to the rest of this discussion,
+so they are not explained).
+
+\begin{lstlisting}[caption=Types for Conduits, label=lst:conduittypes]
+...
+
+(def-alias Result
+  (TFn [[x :variance :covariant]]
+    (U nil ;stream is closed
+       '[] ;abort/skip
+       '[x];consume/continue
+       )))
+
+(def-alias Cont
+  (TFn [[in :variance :covariant]
+        [out :variance :invariant]]
+    [(U nil [(Result in) -> (Result out)]) -> (Result out)]))
+
+
+(declare-alias-kind ==> (TFn [[in :variance :contravariant]
+                              [out :variance :invariant]] Any))
+
+(def-alias ==>
+  (TFn [[in :variance :contravariant] 
+        [out :variance :invariant]]
+    [in -> '[(U nil (==> in out)) (Cont out out)]]))
+
+...
+\end{lstlisting}
+
+
+The resulting port of \emph{Conduit} was unsatisfying for real world use.
+The simplifications made in order to type check the library reversed
+any effort \emph{Conduit} made to conform to common Clojure idioms.
+The future work on improving variable-argument types should reveal whether
+this library can be ported satisfactorily.

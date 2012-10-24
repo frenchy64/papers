@@ -93,11 +93,16 @@ always avoiding a \emph{NullPointerException}.
 
 \subsection{Variable-arity Polymorphism}
 
-%Tobin-Hochstadt 
+Strickland, Tobin-Hochstadt, and Felleisen's describe variable-arity polymorphism~\cite{STF09},
+which has been implemented in Typed Racket.
+Typed Clojure directly ports most of Typed Racket implementation of variable-arity polymorphism,
+as described in section \ref{sec:impvariablearity}
 
-% Problematic areas
-% - flattened paired arguments. assoc, hash-maps, array-map
-% - complex argument dependencies. comp, partial
+Some common idiomatic Clojure functions like \lstinline|assoc|, \lstinline|hash-map|,
+and \lstinline|partial| cannot be typed by Strickland et al./ .
+Instead, Typed Clojure hard-codes some of these functions as primitives that cannot
+be used in a higher-order context.
+Expressing the types of these functions is set as future work (section \ref{sec:futurearity}).
 
 \section{Safer Host Interoperability}
 % Args non-nil, return nilable
@@ -147,10 +152,28 @@ where \lstinline|null| might occur. This approach is not appropriate for Typed C
 as pattern matching is not idiomatic in Clojure.
 
 \subsection{Primitive Arrays}
+\label{designarrays}
 
-% Primitive arrays are covariant, which is well-known to be statically unsound.
-% We cannot trust the type signature of any Java method or field.
-% Separate read and write types into two parameters.
+Primitive arrays in Java are covariant, which is well-known to be statically unsound~\cite{OW97,BK99}.
+This mean that at compile time we cannot completely trust the type signature of any Java method or field that involves 
+an array.
+
+We handle this by introducing a type \lstinline|(Array c t)|, which is an array has the Java component type \lstinline|c| 
+array that can read and write values of type \lstinline|t|.
+Internally, \lstinline|Array| types expand to \lstinline|(Array3 c w r)|,
+which is an array has the Java component type \lstinline|c|,
+that can write type \lstinline|w| (which is contravariant in \lstinline|Array|) and read type \lstinline|r| 
+(which is covariant in \lstinline|Array|).
+\lstinline|(Array c t)| expands to \lstinline|(Array3 c t t)|.
+
+\lstinline|Array3| is useful when an array is passed to/from Java or some untyped Clojure code.
+As soon as an array leaves the safety of Typed Clojure, it can be considered to have type
+\lstinline|(Array3 c Nothing t)|. It is illegal to write to an array of this type in Typed Clojure
+without first checking its component type, but reads remain legal.
+
+This scheme should be considered experimental, and is not completely fleshed out or implemented.
+Notably, the component type \lstinline|c| seems redundant, and Typed Clojure currently
+does not provide syntax to ``cast'' an unwriteable array to a be writeable.
 
 \subsection{Interaction with null}
 \label{sec:interactionnull}
@@ -218,32 +241,40 @@ They are only for use by Typed Clojure.
 \section{Protocols and Datatypes}
 
 Protocols and datatypes are two of Clojure's main means of abstraction.
+Protocols, have a set of unimplemented methods, are typed by
+giving the type for each method.
+Datatype definitions are type checked by ensuring the methods it
+implements match the types defined by the Java interface or protocol
+it is extending.
 
-
-%section \ref{sec:datatypes}
+Common usages of datatypes are checkable, like datatype
+constructors, field accesses, and protocol method invocation.
+These are described in section \ref{sec:datatypes}.
+Mutable fields in datatypes are not yet supported, but is
+also a rarely used feature.
 
 \section{Local Type Inference}
 
-Typed Clojure takes a
-
-Similar to Typed Racket, type inference is based on Local Type Inference
+Type inference in Typed Clojure is based on Local Type Inference
 by Pierce and Turner~\cite{PT00}.
+The main extension to Local Type Inference in Typed Clojure
+is support for \emph{dotted variables} for variable-arity polymorphism.
+This implementation is lifted directly from Typed Racket.
 
 \section{F-bounded Polymorphism}
 
 Typed Clojure includes support for F-bounds on type variables\cite{CCHOM89}, as an extension
 to Local Type Inference. 
-
-An extra environment from type variables to bounds is kept until after inference,
-after which each unground bound is substituted with the inferred types and the
-subtyping relationships are checked.
+Type variables can have upper and lower bounds, and F-bounds allow type variable bounds
+to recursively refer to the type variable being bounded.
+This is similar to Java and Scala, which both support F-bounded polymorphism.
 
 \section{Heterogeneous Maps}
 \label{ref:designhmap}
 % keyword keys for now, generally encouraged, fast
 % Some heterogeneous maps have string args, eg. from web frameworks
 
-Heterogeneous maps in Typed Clojure are simple enough to avoid
+Heterogeneous maps types in Typed Clojure are simple enough to avoid
 the complications associated with concatenable records (section \ref{sec:recordtypes})
 while still supporting many Clojure idioms.
 They support adding new entries with keyword keys, removing entries,
@@ -251,11 +282,11 @@ and lookup of keyword keys.
 When using these operations with non-keyword keys, heterogeneous maps
 are treated like plain hash-maps.
 
-They do not support concatenation (merging), as heterogeneous maps
+Heterogeneous map types do not support concatenation (merging), as they
 only hold positive information on the keys with entries, not
 which keys are \emph{absent}.
 This makes concatenation unsafe, as keys to the right of a
-concatentation can ``overwrite'' keys to the left. With no information
+concatenation can ``overwrite'' keys to the left. With no information
 on the absence of keys, concatenation becomes an unsound operation.
 
 We formalised some aspects of the behaviour of heterogeneous map types in Appendix~\ref{sec:hmaptheory}.
