@@ -590,11 +590,11 @@ return \emph{null}, so Typed Clojure assigns the return type to be \lstinline|Fi
 This constructor is equivalent to \lstinline|[String -> File]| in Typed Clojure.
 
 Next, we see how Typed Clojure's default behaviour treats method return positions as nullable.
-The \emph{java.io.File} instance method \emph{getParent}
-is equivalent to \lstinline|[-> (U nil String]| in Typed Clojure. This happens to be
+By default, the \emph{java.io.File} instance method \emph{getParent}
+is assigned the type \lstinline|[-> (U nil String)]| in Typed Clojure. This happens to be
 a valid approximation of the method as \emph{getParent} returns \emph{null} 
 ``if the pathname does not name a parent directory''\footnote{See Javadoc for \emph{java.io.File}: http://docs.oracle.com/javase/1.4.2/docs/api/java/io/File.html}.
-On the other hand, the instance method \emph{getName} always returns an
+On the other hand, the \emph{java.io.File} instance method \emph{getName} always returns an
 instance of \emph{java.lang.String}, so we set the return position of
 \emph{getName} to non-nil with \lstinline|typed.core/non-nil-return|
 (the second parameter to \lstinline|non-nil-return| specifies which arities to assume non-nil 
