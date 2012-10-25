@@ -1,0 +1,284 @@
+\appendix
+\chapter{Heterogeous map type theory prototype}
+\label{sec:hmaptheory}
+
+\section{Operational Semantics}
+ 
+%$$
+%\begin{tdisplay}{Test1}
+%\begin{altgrammar}
+%  \s{},\t{} &::= & \int \alt \bool \alt {\proctype {\s{}} {\t{}}} 
+%  &\mbox{Types}\\
+%  \M{}, \N{}, \P{}, \dots &::=& \x{} \alt \abs{\x{}}{\M{}} \alt
+%  \comb{\M1}{\M2}  &\mbox{Raw Terms} \\
+%\end{altgrammar}
+%\end{tdisplay} 
+%$$
+
+ 
+$$
+\begin{tdisplay}{Syntax of Terms}
+\begin{altgrammar}
+  \exp{} &::=& (\c{} \overrightarrow{\exp{}})         % function application, multiple arguments
+             \alt \{ \overrightarrow{\exp{}\ \exp{}} \} % map literal
+             &\mbox{Expressions} \\ 
+  \v{} &::=& \k{} \alt \nil{}
+              \alt \{ \overrightarrow{\v{}\ \v{}} \}   % map literal
+              &\mbox{Values} \\
+  \c{} &::=& \assoc{} \alt \dissoc{} \alt \get{}
+              &\mbox{Constants}
+\end{altgrammar}
+\end{tdisplay}
+$$
+
+$$
+\begin{tdisplay}{Evaluation Contexts}
+  \begin{altgrammar}
+    \E{} &::=& [ ] % application rules
+              \alt (\c{}\ \overrightarrow{\v{}}\ \E{}\ \overrightarrow{\exp{}}) % eval arguments left-to-right
+              % map rules
+              \alt \{\overrightarrow{\v{}\ \v{}}\ \E{}\ \exp{}\ \overrightarrow{\exp{}\ \exp{}} \} % key first
+              \alt \{\overrightarrow{\v{}\ \v{}}\ \v{}\ \E{}\ \overrightarrow{\exp{}\ \exp{}} \}   % value next
+              &\mbox{Evaluation Contexts}
+  \end{altgrammar}
+\end{tdisplay}
+$$ 
+ 
+% \mapsto for updating maps
+$$
+\begin{tdisplay}{Operational Semantics}
+\begin{array}{c}
+{\inferrule[E-Assoc]
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
+    {v_4 = v_1\ with\ entry\ v_2\ to\ v_3} }
+    {{(\assoc{}\ v_1\ v_2\ v_3) \hookrightarrow v_4} }} \\
+\\
+{\inferrule[E-Dissoc]
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
+    {v_3 = v_1\ without\ entry\ indexed\ by\ v_2} }
+  {(dissoc\ v_1\ v_2) \hookrightarrow v_3} } \\
+\\
+{\inferrule[E-GetMapExist]
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
+    {v_2\ v_3\ in\ v_1} }
+%    {v_1\ has\ entry\ with\ key\ v_2} \\
+%    {v_3 = corresponding\ value\ in\ entry\ with\ key\ v_2\ in\ v_1}
+  { {(get\ v_1\ v_2) \hookrightarrow v_3} }} \\
+\\
+{\inferrule[E-GetMapNotExist]
+  { {v_1 = \{ \overrightarrow{\v{}\ \v{}} \} } \\
+    {v_1\ has\ no\ entry\ with\ key\ v_2} \\
+    {v_3 = \nil{}} }
+  { {(get\ v_1\ v_2) \hookrightarrow v_3} }}
+\end{array} 
+\end{tdisplay} 
+$$
+
+$$
+\begin{tdisplay}{Type Syntax}
+\begin{altgrammar}
+  \T{} &::=& \quad \Top \alt \Bottom \alt \Nil \alt \k{} \alt \{ \overrightarrow{\k{}\ \T{}} \} 
+             \alt {\IPersistentMap {\T{}} {\T{}}} \\
+             && \alt ( \vee\ \overrightarrow{\T{}} )
+                \alt ( \wedge\ \overrightarrow{\T{}} )
+\end{altgrammar}
+\end{tdisplay}
+$$
+
+% what about get? Core Type Rules
+
+$$
+\begin{tdisplay}{Core Type Rules}
+\begin{array}{c}
+{\inferrule[T-AssocHMap]
+  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\k{}}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
+    {\vdash {\issubtype {{\T{}}_{m}} {\TopHMap} }} }
+  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} 
+        {(update\_hmap\ {{\T{}}_{m}}\ {{\k{}}}\ {{\T{}}_{v}})}}}}} \\
+\\
+{\inferrule[T-AssocPromote]
+  { {\Gamma \vdash {\hastype {{\exp{}}_{m}} {{\T{}}_{m}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{k}} {{\T{}}_{k}}} } \\
+    {\Gamma \vdash {\hastype {{\exp{}}_{v}} {{\T{}}_{v}}} } \\
+    {\vdash {\issubtype {{\T{}}_{m}} {\TopIPersistentMap}}} \\
+    {\T{} = (promote\_hmap\ {\T{}}_{m}\ {\T{}}_{k}\ {\T{}}_{v})} }
+  { {\Gamma \vdash {\hastype {( \assoc{}\ {\exp{}}_{m}\ {\exp{}}_{k}\ {\exp{}}_{v})} {\T{}}}}}} \\
+\end{array}
+\end{tdisplay}
+$$
+
+$$
+\begin{tdisplay}{Type Metafunctions}
+\begingroup
+\fontsize{10pt}{12pt}
+\begin{altgrammar}
+  (update\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\k{}}_1\ {\T{}}_1) = 
+                 \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}}\ {\k{}}_1\ {\T{}}_1 \}\ \\
+  (update\_hmap\ (\wedge\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v}) = 
+                               (\wedge\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})}) \\
+  (update\_hmap\ (\vee\ \overrightarrow{{\T{}}})\ {\T{}}_{k}\ {\T{}}_{v}) = 
+                               (\vee\ \overrightarrow{(update\_hmap\ {\T{}}\ {\T{}}_{k}\ {\T{}}_{v})})
+  \\ \\
+  (promote\_hmap\ \{ \overrightarrow{{\T{}}_{k}\ {\T{}}_{v}} \}\ {\T{}}_{kn}\ {\T{}}_{vn})
+                                    = {\IPersistentMap {(\vee\ \overrightarrow{{\T{}}_{k}}\ {\T{}}_{kn})}
+                                                       {(\vee\ \overrightarrow{{\T{}}_{v}}\ {\T{}}_{vn})}} \\
+  (promote\_hmap\ {\IPersistentMap {{\T{}}_{k}} {{\T{}}_{v}}} \ {\T{}}_{kn}\ {\T{}}_{vn})
+                                    = {\IPersistentMap {(\vee\ {\T{}}_{k}\ {\T{}}_{kn})}
+                                                       {(\vee\ {\T{}}_{v}\ {\T{}}_{vn})}}
+\end{altgrammar}
+\endgroup
+\end{tdisplay}
+$$
+
+%$$
+%\begin{tdisplay}{Subtyping}
+%\begin{array}{c}
+%\inferrule[S-Refl] { } {\vdash {\issubtype {\T{}} {\T{}}}} \\
+%\inferrule[S-Any] { } {\vdash {\issubtype {\T{}} {\Top}}}
+%\inferrule[S-UnionSuper] 
+%  {\ } 
+%  {\vdash {\issubtype {\T{}} {\Top}}}
+%\end{array}
+%\end{tdisplay}
+%$$
+
+\chapter{Dissertation Proposal}
+
+\section*{Background} 
+
+% In this section you should give some background to your
+% research area. What is the problem you are tackling, and why is it
+% worthwhile solving? Who has already done some work in this area,
+% and what have they achieved?
+
+Dynamically typed languages (also known as monotyped) are designed to be convenient for
+writing programs quickly, and aspire to get out of the programmer's
+way as much as possible. When programs grow large and stabilize,
+some features of static languages are missed, specifically static
+type checking. 
+
+Tobin-Hochstadt notes that ``untyped scripts are difficult to 
+maintain over the long run''~\cite{Tob10} because types
+contain valuable design information.
+He developed Typed Scheme~\cite{Tob10} 
+to safely and incrementally port existing Scheme code, a dynamic language, to
+Typed Scheme, a static language.
+
+Clojure is a dynamically typed, functional language with implementations for the Java Virtual
+Machine and Common Language Runtime, and compiling to Javascript. Clojure
+is also a Lisp, which makes it a good candidate to test the generality of
+ideas developed for Typed Scheme~\cite{Tob10}.
+
+\section*{Aim} 
+
+% Now state explicitly the hypothesis you aim to
+% test. Make references to the items listed in the Reference section
+% that back up your arguments for why this is a reasonable
+% hypothesis to test, for example the work of Knuth~\cite{knuth}.
+% Explain what you expect will be accomplished by undertaking this
+% particular project.  Moreover, is it likely to have any other
+% applications?
+
+My goal is to develop a prototype optional static type system for Clojure, 
+eventually intended for practical use.
+
+It will be based on the lessons learnt throught the development
+of Typed Scheme, and as a response to Tobin-Hochstadt's~\cite{Tob10}
+suggestion to add type systems to other existing dynamic languages.
+
+There are several challenges to creating a satisfactory type system for Clojure.
+
+Multimethods play a significant role in Clojure, and a satisfactory
+type system for Clojure should understand them to some degree.
+There is some experience statically typing multimethods~\cite{MS02}, 
+but this is a challenge and may not be addressed in the
+timeframe proposed, beyond initial consideration of how it would
+fit with the rest of the system.
+
+Clojure's core library includes variable-arity functions which
+are not easily typed with current static type systems. 
+Providing satisfactory types for functions 
+like Clojure's 'map', 'filter', and 'reduce' require
+support for non-uniform variable arity polymorphism. 
+Strickland, Tobin-Hochstadt and Felleisen~\cite{STF09}.
+describe their approach for non-uniform variable arity polymorphism, as used
+in Typed Racket. 
+At a minimum, the proposed project will include broadly identifiying 
+what new issues arise when adapting this approach to Clojure, 
+with a prototype design if these issues are not too major.
+
+Occurence typing is type checking technique developed for Typed Scheme~\cite{TF08}
+and improved for Typed Racket~\cite{TF10}.
+It helps the type checker understand common programming idioms 
+with minimal type annotations.
+The proposed project will include a comparison of these approaches in
+the context of Clojure, and a prototype design if a satisfactory approach 
+is designed and no major issues are identifed.
+
+Ensuring vigorous type safety is an important aspect of Typed Scheme~\cite{Tob10},
+especially when interacting between untyped and typed modules.
+I do not expect to concentrate on every combination of cross-module
+interaction. In particular, safely using typed code from untyped code
+will not be designed. Safe interaction between typed modules
+however is needed for a practical type checker. I
+will attempt to design a viable strategy or identify issues that
+require further consideration.
+
+\section*{Method}
+
+% In this section you should outline how you intend to go
+% about accomplishing the aims you have set in the previous
+% section. Try to break your grand aims down into small,
+% achievable tasks. Try to estimate how long you will
+% spend on each task, and draw up a timetable for each
+% sub-task.
+
+The milestones for this project are broken into release milestones
+for the prototype library.
+
+My goal is to finish all features listed in releases below
+and to begin work on the challenges, listed last.
+
+For each of these it's not yet fully clear what novel issues may 
+arise in adapting existing techniques to Clojure.  For each item 
+below the project will involve either implemention or identification 
+of the novel issues that make implementation difficult.  
+The classification below reflects the level of uncertainity 
+regarding such issues.
+
+\begin{description}
+\item[0.1]
+  \begin{itemize}
+  \item Union types
+  \item Basic Local Type Inference algorithm
+  \item Fixed arity function types
+  \item Typed deftype (class definitions)
+  \item Uniform variable-arity function types
+  \item Enough functions annotated from clojure.core for proof-of-concept
+  \item Bounded Type variables
+  \end{itemize}
+\item[Challenges]
+  \begin{itemize}
+  \item Devise strategy for type inference (eg. occurence typing)
+  \item Manage interactions between typed namespaces
+  \item Mutable reference types
+  \item Non-uniform variable arity polymorphism
+  \item Typing Multimethods
+  \item Fine Grained Hash-Map Types
+  \end{itemize}
+
+\end{description}
+\section*{Software and Hardware Requirements}
+% Outline what your specific requirements will be with regard
+% to software and hardware, but note that any special requests
+% might need to be approved by your supervisor and the Head of
+% Department.
+
+Linux environment with Java, git, and maven installed.
+No issues are anticipated with regards to access to these.
+
+% Overall, you should aim to produce roughly a two page document
+% (and certainly no more than four pages)
+% outlining your plan for the year.
