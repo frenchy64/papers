@@ -1,0 +1,22 @@
+# Blame calculus
+
+Sam:  Btw, the blame calculus work is something I did originally in my 2006 paper
+Wadler and Findler s paper is a follow on to that
+ me:  Oh!
+Will correct that.
+ Sam:  I didn't call it blame calculus
+But the idea of using contracts is from my paper
+ Sent at 12:24 AM on Friday
+ me:  I'll admit that I haven't read Wadler and Findler in about a year, I just assumed.
+ Sent at 12:28 AM on Friday
+
+# Punctuation
+
+nDuff 23:21:28
+ambrosebs: One minor nitpick -- it looks like there's some missing punctuation at the beginning of page 10. 
+kushal has joined the room 23:21  
+kaonashi_ has joined the room 23:21 
+
+nDuff 23:22:13
+ambrosebs: personally, I'd add a semicolon and a comma, as such: "...for many uses; where other languages might use objects, Clojure ..."
+ambrosebs: ...but either way, the sentence seems like it's expressing two ideas without as much syntactic separation as should be there.
