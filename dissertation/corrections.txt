@@ -20,3 +20,5 @@ kaonashi_ has joined the room 23:21
 nDuff 23:22:13
 ambrosebs: personally, I'd add a semicolon and a comma, as such: "...for many uses; where other languages might use objects, Clojure ..."
 ambrosebs: ...but either way, the sentence seems like it's expressing two ideas without as much syntactic separation as should be there.
+
+# Clojure reference (2008 talk by R. Hickey)

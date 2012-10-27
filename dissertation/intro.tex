@@ -376,8 +376,10 @@ Singleton types are are discussed further in section \ref{sec:intersectionunion}
 
 \subsection{Heterogeneous Maps}
 
-Clojure emphasises key-value paired, unordered \emph{maps} for many uses where other languages might use objects
-Clojure provides a map literal using curly braces. For example,
+It is idiomatic in Clojure to use plain maps with known keyword keys as lightweight objects.
+Clojure provides a hash-map literal (using curly braces), making this idiom particularly
+convenient.
+For example,
 \lstinline|{:a 1, :b 2}| is a map value with two key-value entries: from keyword key \lstinline|:a|
 to value \lstinline|1|, and keyword key \lstinline|:b| to value \lstinline|2|. Note that commas are always
 whitespace in Clojure and are included occasionally for readability.
