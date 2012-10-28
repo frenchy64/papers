@@ -1,3 +1,7 @@
+Chapter: Introduction
+
+- Improve explanation of Occurrence Typing example
+
 Chapter: Design Choices
 
 - Moved latter paragraphs concerning null in "Safer Host Interoperability"

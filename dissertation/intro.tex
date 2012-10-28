@@ -526,25 +526,34 @@ which is sufficient to infer the result type
 
 It is common in Clojure, like other dynamically-typed languages, to
 encode implicit type invariants in conditional tests.
-In listing \ref{lst:numvec2} conditional tests are used
-to refine the type of the bindings \lstinline|a| and \lstinline|b|.
-Occurrence typing\cite{TF10} is a technique useful for capturing these kinds
-of type invariants (occurrence typing is discussed in further detail in section \ref{sec:OccurrenceTyping}).
+In listing \ref{lst:numvec2}, conditional tests are used
+to refine the types of the bindings \lstinline|a| and \lstinline|b|.
+Occurrence typing~\cite{TF10} is a technique useful for capturing these kinds
+of type invariants (occurrence typing is discussed in further detail in Section \ref{sec:OccurrenceTyping}).
 
 \begin{lstlisting}[caption=Example of occurrence typing in Typed Clojure, label=lst:numvec2]
 (ann num-vec2 
      [(U nil Number) (U nil Number) -> (Vector* Number Number)])
-(defn num-vec2 [a b]
-  [(if a a 0) 
-   (if b b 0)])
+(defn num-vec2 [x y]
+  [(if x x 0) 
+   (if y y 0)])
 \end{lstlisting}
 
-To check this example, occurrence typing infers type information based on the result of each test.
-In Clojure, \lstinline|nil| and \lstinline|false| are false values and all other values are true.
-The test \lstinline|(if a a 0)| follows the \emph{then} branch is \lstinline|a| is not \lstinline|nil|
-or \lstinline|false|. When checking this branch, we can safely refine the type of \lstinline|a| to \lstinline|Number| from
-\lstinline|(U nil Number)|. Similarly, following the \emph{else} branch refines the type of \lstinline|a|
-to \lstinline|nil| from \lstinline|(U nil Number)|.
+To check Listing \ref{lst:numvec2}, occurrence typing infers type information based on the results of conditional tests.
+A conditional in Clojure is written \lstinline|(if test then else)|, where \lstinline|then|
+is executed if \lstinline|test| is a true value, or \lstinline|else| is executed if \lstinline|test|
+is a false value.
+In Clojure, \lstinline|nil| and \lstinline|false| are the only false values: all other values are true values.
+\lstinline|(if x x 0)| in Listing \ref{lst:numvec2} chooses a branch based on the truth value of the test expression \lstinline|x|.
+Before this expression, the binding \lstinline|x| is known to be of type \lstinline|(U nil Number)|.
+There are two cases to consider when checking this conditional: when the test \lstinline|x| is a true value, and when it is a false value.
+If \lstinline|x| is a true value, then the binding \lstinline|x| must be of type \lstinline|Number|.
+If \lstinline|x| is a false value, then the binding \lstinline|x| must be of type \lstinline|nil|.
+Occurrence typing understands these invariants and applies them when checking each branch:
+occurrences of \lstinline|x| in the first branch are considered to be of type \lstinline|Number|, and
+occurrences of \lstinline|x| in the second branch are considered to be of type \lstinline|nil|.
+This infers \lstinline|[(if x x 0) (if y y 0)])| to be of type
+\lstinline|(Vector* Number Number)| (the type for a two-place heterogeneous vector of \lstinline|Number|s).
 
 \subsection{Java Interoperability}
 \label{sec:javainterop}
