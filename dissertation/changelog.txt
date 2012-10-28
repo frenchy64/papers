@@ -1,0 +1,6 @@
+Chapter: Design Choices
+
+- Moved latter paragraphs concerning null in "Safer Host Interoperability"
+	to the subsection "Interaction with null" (which is completely rearranged
+	for clarity.
+- "Safer Host Interoperability" clarified, improved wording.

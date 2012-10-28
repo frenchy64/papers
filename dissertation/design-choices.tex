@@ -19,9 +19,8 @@ This section details some of these differences.
 
 Occurrence typing, described by Tobin-Hochstadt and Felleisen~\cite{TF10},
 plays a major role in capturing many common Clojure idioms.
-One important idiom it helps Typed Clojure to understand 
-is the \emph{sequence abstraction}, which
-is made up of the \lstinline|clojure.core| functions \lstinline|seq|, \lstinline|first|, and \lstinline|rest|.
+One such idiom is the \emph{sequence abstraction}, which
+consists of the \lstinline|clojure.core| functions \lstinline|seq|, \lstinline|first|, and \lstinline|rest|.
 
 \lstinline|seq| takes an argument that is either a sequence or \lstinline|nil|,
 and returns a non-empty sequence if passed a non-empty sequence, or returns
@@ -49,7 +48,7 @@ returns a true value, then \lstinline|coll| is of type
 \lstinline|(CountRange 1)| (a type representing a sequence of length 1 or greater),
 otherwise \lstinline|coll| is \emph{either} of type \lstinline|nil| or of type \lstinline|(ExactCount 0)| (a type
 representing an empty sequence).
-(See section \ref{sec:filterneg} for a more detailed explanation of the filter syntax).
+(See Section \ref{sec:filterneg} for a more detailed explanation of the filter syntax).
 
 Correspondingly, \lstinline|first| which gets the first member of a sequence.
 can be given a more accurate (and surprisingly subtle) type.
@@ -96,60 +95,37 @@ always avoiding a \emph{NullPointerException}.
 Strickland, Tobin-Hochstadt, and Felleisen describe variable-arity poly\-morphism ~\cite{STF09},
 which has been implemented in Typed Racket.
 Typed Clojure directly ports most of Typed Racket implementation of variable-arity polymorphism,
-as described in section \ref{sec:impvariablearity}
+as described in Section \ref{sec:impvariablearity}
 
 Some common idiomatic Clojure functions like \lstinline|assoc|, \lstinline|hash-map|,
 and \lstinline|partial| cannot be typed by Strickland et al.\ .
 Instead, Typed Clojure hard-codes some of these functions as primitives that cannot
 be used in a higher-order context.
-Expressing the types of these functions is set as future work (section \ref{sec:futurearity}).
+Expressing the types of these functions is set as future work (Section \ref{sec:futurearity}).
 
 \section{Safer Host Interoperability}
 % Args non-nil, return nilable
 % Constructors and other special methods handled appropriately (eg. Constructor are non-nil return)
 % TODO refine language Clojure vs. Clojure JVM
 
-% what is this paragraph saying?
-Dialects of Clojure provide fast and unrestricted access to their host platform. 
-This is a intentional source of incompatibility between Clojure implementations.
-For example, Clojure is hosted on the Java Virtual Machine (JVM), ClojureCLR on the Common Language Runtime,
-and ClojureScript on Javascript VMs. These are very different platforms, and it is unlikely
-a Clojure dot call will be portable. There is no attempt at reconciling
-host interoperability differences, and it is up to the programmer to decide
-how to best abstract over different hosts.
+Clojure implementations are designed to target popular platforms, 
+providing fast, unrestricted access to their respective hosts.
+Notable implementations target
+the Java Virtual Machine (via Clojure), the Common Language Runtime (via ClojureCLR),
+and Javascript virtual machines (via ClojureScript). 
+Host interoperability is the main source of incompatibility between Clojure implementations.
+Aside from syntactic matters, Clojure makes no attempt at reconciling
+host interoperability differences:
+it is up to the programmer to decide how to best write portable Clojure code.
 
-Typed Clojure targets the JVM hosted Clojure.
-Clojure embraces the JVM as a host by sharing its runtime type system and encouraging direct
+Typed Clojure is designed for Clojure, which runs on the Java Virtual Machine (JVM).
+Clojure embraces the JVM as a host by sharing its runtime type system and providing direct
 interaction with libraries written in other JVM languages. Most commonly, Clojure programmers
-reach to Java libraries. Java is statically typed language. It follows that any interaction with
-Java will already have an annotated Java type. Typed Clojure can use these annotations
-to statically type check these interactions.
+use libraries written in Java. Java is a statically typed language, and it follows that any interaction with
+Java will already have an annotated Java type. Typed Clojure uses Java's static type annotations
+to help statically type check interactions with Java from Clojure.
 
-Typed Clojure attempts to improve some shortcomings of Java's static type system.
-
-Java's static type system does not provide a type-safe construct for eliminating
-the \lstinline|null| pointer. Instead, Java programmers often rely on either testing
-for \lstinline|null| or prior domain knowledge.
-
-\begin{lstlisting}[caption=null elimination in Java]
-...
-Object a = nextObject();
-if (a != null)
-  parseNextObject(a);
-else
-  throw new Exception("null Pointer Found!);
-...
-\end{lstlisting}
-
-
-In Java, \lstinline|null| is included in all reference
-types, but \lstinline|null| is not expressible as a static type. In other words,
-when a Java type claims a reference type, you should also assume it can also be of 
-type \lstinline|null|.
-
-Scala provides the Option type for safe \lstinline|null| elimination, forcing pattern matching
-where \lstinline|null| might occur. This approach is not appropriate for Typed Clojure
-as pattern matching is not idiomatic in Clojure.
+This section details where Typed Clojure attempts to improve some shortcomings of Java's static type system.
 
 \subsection{Primitive Arrays}
 \label{designarrays}
@@ -175,42 +151,56 @@ This scheme should be considered experimental, and is not completely fleshed out
 Notably, the component type \lstinline|c| seems redundant, and Typed Clojure currently
 does not provide syntax to ``cast'' an unwriteable array to a be writeable.
 
-\subsection{Interaction with null}
+\subsection{Interaction with \emph{null}}
 \label{sec:interactionnull}
 
-It is a goal of Typed Clojure to statically prevent many Java \emph{NullPointerException}
-exceptions.
-\emph{null} is explicitly expressible in Typed Clojure as the singleton type \lstinline|nil|,
-representing the \emph{value} \lstinline|nil|.
-This enables more expressive types that specify where \emph{nil} is and is not allowed.
+As of Java 7, Java does not provide a type-safe construct for eliminating
+occurrences of \emph{null}. Instead, Java programmers rely on ad-hoc approaches,
+like testing for the presence of \emph{null} (like Listing \ref{lst:nullelim}) or prior domain knowledge.
+One solution to this problem is an Option type (also known a Maybe type).
+Scala provides \emph{scala.Option} for this purpose. The programmer provides two branches of code,
+(respectively to execute if an expression is \emph{null}, and if it is not)
+and the appropriate branch is chosen at runtime.
+There is no such construct in idiomatic Clojure, so this solution is inappropriate:
+a satisfactory solution should reuse current Clojure idioms.
+
+\begin{lstlisting}[caption=null elimination in Java, label=lst:nullelim]
+...
+Object a = nextObject();
+if (a != null)
+  parseNextObject(a);
+else
+  throw new Exception("null Pointer Found!);
+...
+\end{lstlisting}
+
+It is a goal of Typed Clojure to statically prevent misuses of Java's \emph{null}.
+At runtime, Clojure represents \emph{null} as the value \lstinline|nil|;
+Typed Clojure assigns this value the static type \lstinline|nil|
+(a singleton type containing just the value \lstinline|nil|).
+This enables more expressive types that explicitly communicate where \lstinline|nil|,
+and therefore \emph{null}), is allowed.
 Section \ref{sec:javainterop} gives an example of how this could be useful 
-when using Java interoperability and gives details on the different ways Typed Clojure.
+when using Java interoperability.
 
-Occurrence typing~\cite{TF10} also plays a crucial role in Typed Clojure's
-treatment of \lstinline|nil|.
-It allows us to track whether particular bindings are possibly \lstinline|nil|
-down conditional branches, and makes it practical to throw type errors 
-where \lstinline|nil| is not allowed (see section \ref{sec:OccurrenceTyping} for examples).
-This is not practical in Java's type system because \emph{null} is not directly
-expressible, which makes it impractical to error when a \emph{NullPointerException}
-exception is possible: according to the type system, almost every operation
-could involve \emph{null}!
-Eliminating \emph{NullPointerException} exceptions is entirely the programmers
-responsibility in Java.
-Typed Clojure helps the programmer by statically proving certain misuses of \lstinline|nil| are impossible.
+The crucial aspect of this approach is that misusing \emph{null} results in a \emph{static type error}.
+This differs significantly from Java: according to Java's static type system,
+it is implicit that almost every operation could involve \emph{null}!
+Occurrence typing~\cite{TF10} plays a crucial role in making this a practical
+design choice, by understanding existing Clojure idioms related to \emph{null} elimination (see Section \ref{sec:OccurrenceTyping}).
+Eliminating occurrences of \emph{null} in Java is the programmer's responsibility.
+Instead, Typed Clojure helps the programmer by statically proving many misuses of \emph{null} are impossible.
 
-The design choice of potentially misusing \lstinline|nil| results in a type error
-needs further work to be completely satisfying.
-Certain cases of type inference should be improved to avoid redundant code
-that ``pleases the type checker''.
+This decision, however, needs further work to be completely satisfying.
+In particular, type inference should be improved in certain common situations.
 For example, we currently do not know how to infer \lstinline|(filter identity coll)|
-as returning a sequence of non-nil elements, for any sequence \lstinline|coll|.
-(see section \ref{sec:filterneg}).
-It is also possible for code interacting with Java to introduce unexpected \emph{null}
-values. Currently, we let the programmer define a set of unenforced \emph{assumptions}
-where \emph{null} is allowed in Java fields and methods (see section \ref{sec:javainterop}).
+as returning a sequence of non-\lstinline|nil| elements, for any sequence \lstinline|coll|
+(see Section \ref{sec:filterneg}).
+Also, Typed Clojure lets the programmer define a set of unenforced \emph{assumptions}
+where \emph{null} is allowed in Java fields and methods (see Section \ref{sec:javainterop}),
+which is potentially brittle: there is nothing stopping the Java code from introducing unexpected \emph{null} values at runtime.
 Adding runtime assertions that enforce these assumptions would allow more
-accurate errors, an approach similar to that taken by Typed Racket~\cite{Tob10} when
+accurate and earlier errors, an approach similar to that taken by Typed Racket~\cite{Tob10} when
 interfacing with untyped Racket code.
 
 \section{Clojure type hierarchy}
@@ -249,7 +239,7 @@ it is extending.
 
 Common usages of datatypes are checkable, like datatype
 constructors, field accesses, and protocol method invocation.
-These are described in section \ref{sec:datatypes}.
+These are described in Section \ref{sec:datatypes}.
 Mutable fields in datatypes are not yet supported, but is
 also a rarely used feature.
 
@@ -275,7 +265,7 @@ This is similar to Java and Scala, which both support F-bounded polymorphism.
 % Some heterogeneous maps have string args, eg. from web frameworks
 
 Heterogeneous maps types in Typed Clojure are simple enough to avoid
-the complications associated with concatenable records (section \ref{sec:recordtypes})
+the complications associated with concatenable records (see Section \ref{sec:recordtypes})
 while still supporting many Clojure idioms.
 They support adding new entries with keyword keys, removing entries,
 and lookup of keyword keys with the type associated with each key in
