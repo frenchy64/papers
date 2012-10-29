@@ -10,7 +10,7 @@ using idioms and style found in current Clojure code.}
 
 In the last decade it has become increasingly common to enhance
 dynamically typed languages with static type systems. 
-This is idea not new (see work by Fagan, Cartwright, Aiken and Murphy~\cite{Fag91,CF91,AM91}), but recent attempts
+This idea is not new (see work by Fagan, Cartwright, Aiken and Murphy~\cite{Fag91,CF91,AM91}), but recent attempts
 are noteworthy for their broad success in matching many of the advantages of statically typed
 languages (see work by Tobin-Hochstadt~\cite{Tob10}), 
 notably due to the use of bidirectional checking (like work by Pierce and Turner~\cite{PT00}).
@@ -34,7 +34,7 @@ access to existing libraries for their platform, such as the vast Java library e
 By coupling pragmatic necessities with elegant features like Lisp-style macros, functional programming,
 and immutability by default, Clojure is a compelling general purpose programming language.
 
-Recently a number of languages have been created to or been modified to support aspects
+Recently a number of languages have been created or modified to support aspects
 of both static and dynamic typing.
 Dart~\cite{Dart2012} (created by Google) is dynamically typed but offers a simple form of optional
 static typing that specifically do not affect runtime semantics.
@@ -524,7 +524,7 @@ which is sufficient to infer the result type
 
 \subsection{Occurrence Typing}
 
-It is common in Clojure, like other dynamically-typed languages, to
+It is common in Clojure, like other dynamically typed languages, to
 encode implicit type invariants in conditional tests.
 In listing \ref{lst:numvec2}, conditional tests are used
 to refine the types of the bindings \lstinline|a| and \lstinline|b|.

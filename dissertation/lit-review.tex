@@ -158,7 +158,7 @@ to include refinement types, which can be classified as extrinsic types.
 Typed Clojure can also be considered an extrinsic type system which supports
 union, intersection, and singleton types, but in less sophisticated forms
 than ATT and ATTT.
-In particular, singleton types in ATTT a much more advanced than Typed Clojure,
+In particular, singleton types in ATTT are much more advanced than in Typed Clojure,
 which offers only singleton types for values like \lstinline|:a| and \lstinline|nil|
 and, unlike ATTT, no way to parameterise over singletons.
 
@@ -198,8 +198,8 @@ Java's \emph{null} pointer.
 Section \ref{designarrays} shows how Typed Clojure deals with shortcomings
 of Java's static type system relating to primitive arrays.
 
-Other statically typed languages support Java interoperability with
-similar goals, most completely, Scala.
+Other statically typed languages have similar goals
+to support Java interoperability, like, most completely, Scala.
 Scala~\cite{OCD+} is tightly integrated with Java. It manages interactions
 with Java's \emph{null} pointer by using an \emph{Option} type, which (if
 used correctly) provides strong elimination for \emph{null}.
@@ -287,7 +287,7 @@ then \emph{synthesises} the resulting type of the expression by \emph{checking} 
 of \lstinline|[1 2]| is a subtype of \lstinline|a|, and each element of \lstinline|[2.1 3.2]| is a subtype of
 \lstinline|b|. The result of the anonymous function argument is \emph{synthesised} from the type of
 \lstinline|(+ a b)| as \lstinline|Float|. We now have sufficient information to 
-synthesise the type of listing \ref{lst:bidir} to be \lstinline|(List Float)|.
+synthesise the type of listing \ref{lst:bidir} to be \lstinline|(LazySeq Float)|.
 
 Pierce and Turner split \emph{local type argument synthesis} into two further
 algorithms: bounded, and unbounded quantification~\cite{PT00}. 
@@ -333,7 +333,8 @@ as required by Local Type Inference.
 \emph{Colored} types contain extra contextual information, including the propagation direction
 and missing parts of the type. They are generally useful
 for describing ``information flow in polymorphic type systems with propagation-based type inference''~\cite{OZZ01}. 
-Colored Local Type Inference is a candidate for 
+Colored Local Type Inference is a candidate for future extensions 
+to Typed Clojure's inference.
 
 \section{Bounded and Unbounded Polymorphism}
 
@@ -350,7 +351,7 @@ as a unbounded variable can be represented as a variable bounded
 by the Top type.
 
 Still, unbounded type variables have an advantage: their implementations are
-are simpler in the presence of a \emph{Bottom} type. 
+simpler in the presence of a \emph{Bottom} type. 
 The constraint resolution algorithm for bounded variables
 is more subtle, due to ``some surprising interactions between bounded quantifiers
 and the \emph{Bot} type''~\cite{PT00}, described fully
@@ -374,7 +375,7 @@ for bounds in bounded or F-bounded polymorphism.
 \section{Typed Racket}
 
 Typed Racket is a statically typed sister language of Racket. It
-attempts to preserve existing Racket idioms and aims type check
+attempts to preserve existing Racket idioms and aims to type check
 existing Racket code by simply adding top level type annotations~\cite{Tob10}.
 
 Typed Racket fully expands all macro calls before type checking~\cite{Tob10},

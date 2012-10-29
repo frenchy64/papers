@@ -134,13 +134,14 @@ Primitive arrays in Java are covariant, which is well-known to be statically uns
 This mean that at compile time we cannot completely trust the type signature of any Java method or field that involves 
 an array.
 
-We handle this by introducing a type \lstinline|(Array c t)|, which is an array has the Java component type \lstinline|c| 
-array that can read and write values of type \lstinline|t|.
+We handle this by introducing a type \lstinline|(Array c t)|, 
+the type of the array that has the Java component type \lstinline|c| 
+and that can read and write values of type \lstinline|t|.
 Internally, \lstinline|Array| types expand to \lstinline|(Array3 c w r)|,
-which is an array has the Java component type \lstinline|c|,
-that can write type \lstinline|w| (which is contravariant in \lstinline|Array|) and read type \lstinline|r| 
-(which is covariant in \lstinline|Array|).
-\lstinline|(Array c t)| expands to \lstinline|(Array3 c t t)|.
+the type of the array that has the Java component type \lstinline|c|,
+that can write values of type \lstinline|w| (which is contravariant in \lstinline|Array3|), 
+and that can read values of type \lstinline|r| (which is covariant in \lstinline|Array3|).
+Concretely, \lstinline|(Array c t)| expands to \lstinline|(Array3 c t t)|.
 
 \lstinline|Array3| is useful when an array is passed to/from Java or some untyped Clojure code.
 As soon as an array leaves the safety of Typed Clojure, it can be considered to have type
@@ -264,7 +265,7 @@ This is similar to Java and Scala, which both support F-bounded polymorphism.
 % keyword keys for now, generally encouraged, fast
 % Some heterogeneous maps have string args, eg. from web frameworks
 
-Heterogeneous maps types in Typed Clojure are simple enough to avoid
+Heterogeneous map types in Typed Clojure are simple enough to avoid
 the complications associated with concatenable records (see Section \ref{sec:recordtypes})
 while still supporting many Clojure idioms.
 They support adding new entries with keyword keys, removing entries,

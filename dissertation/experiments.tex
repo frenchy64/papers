@@ -1,8 +1,8 @@
 \chapter{Experiments}
 
-In this chapter work through several examples of using Typed Clojure and
-how well the current prototype handles them. 
-We intentially chose examples that could be challenging to type check
+In this chapter we work through several examples of using Typed Clojure and
+gauge how well the current prototype handles them. 
+We intentionally chose examples that could be challenging to type check,
 or were particularly useful to the everyday Clojure programmer.
 
 \section{Java Interoperability}
@@ -13,7 +13,7 @@ to port existing code that utilized Java interoperability.
 My porting effort attempted to follow how a real programmer might port code to Typed Clojure
 and I describe my approach for each situation.
 
-I ported a function from clojure.contrib.reflect\footnote{https://github.com/cemerick/pomegranate}, 
+I ported a function from clojure.contrib.reflect\footnote{https://github.com/richhickey/clojure-contrib},
 a Clojure library relying heavily on Java interoperability.
 I chose \lstinline|call-method| for several reasons: it chains several Java calls together,
 it uses primitive arrays, it exposes a wart of Clojure with \emph{Named} things,
@@ -46,7 +46,7 @@ on \lstinline|o| and returns \lstinline|o|.
     (.invoke method obj (into-array Object args))))
 \end{lstlisting}
 
-The original function is modified slightly for readability and is presented in listing \ref{lst:callmethod}.
+The original function is modified slightly for readability and is presented in Listing \ref{lst:callmethod}.
 
 \begin{lstlisting}[caption=call-method Type Annotation, label=lst:callmethodtype]
 (ann call-method 
@@ -54,7 +54,7 @@ The original function is modified slightly for readability and is presented in l
 \end{lstlisting}
 
 Thankfully this function has up-to-date documentation, and from it we can derive an expected type
-(listing \ref{lst:callmethodtype}).
+(Listing \ref{lst:callmethodtype}).
 
 Before running the type checker we must convert our array constructors into ones that Typed Clojure
 can understand. Array types in Typed Clojure are represented by \lstinline|(Array c t)|, where
@@ -110,7 +110,7 @@ of \lstinline|invoke| may be nil, for the arity of two parameters.
 (nilable-param java.lang.reflect.Method/invoke {2 #{0}})
 \end{lstlisting}
 
-The final successfully type checked code is presented in listing \ref{lst:callmethodfinal}.
+The final successfully type checked code is presented in Listing \ref{lst:callmethodfinal}.
 
 \begin{lstlisting}[caption=Type Annotated code for call-method, label=lst:callmethodfinal]
 (non-nil-return java.lang.Class/getDeclaredMethod :all)
@@ -209,7 +209,7 @@ with the aforementioned keys.
        :m-plus Undefined})
 \end{lstlisting}
 
-A direct typing of the identity monad would look like listing \ref{lst:identitymtype}.
+A direct typing of the identity monad would look like Listing \ref{lst:identitymtype}.
 This signature assigns the expected type for the var \lstinline|identity-m| 
 to be a heterogeneous map type with the minimum entries for monads: \lstinline|:m-bind|
 and \lstinline|:m-result|. The syntax for heterogeneous map types requires a \lstinline|'| prefix,
@@ -247,7 +247,7 @@ of one covariant argument returning a type.
 (ann identity-m (Monad (TFn [[x :variance :covariant]] x)))
 \end{lstlisting}
 
-We can now express the type of the identity monad more abstractly (listing \ref{lst:identityctors}).
+We can now express the type of the identity monad more abstractly (Listing \ref{lst:identityctors}).
 The purpose of the monad seems more apparent just from reading its type.
 In this case, the fact that identity monad has no effect is reflected
 by its type constructor returning exactly its argument.
@@ -266,7 +266,7 @@ by its type constructor returning exactly its argument.
   ])
 \end{lstlisting}
 
-The final type checked definition for the identity monad is given in listing \ref{lst:identitydeftyped}.
+The final type checked definition for the identity monad is given in Listing \ref{lst:identitydeftyped}.
 In this case, just the monadic bind required annotation.
 
 \begin{lstlisting}[caption=Several monad types, label=lst:severalmonads]
@@ -293,13 +293,13 @@ In this case, just the monadic bind required annotation.
 Listing \ref{lst:severalmonads} shows several monad types. The alias \lstinline|MonadPlusZero|
 is identical to \lstinline|Monad|, except both \lstinline|:m-zero| and \lstinline|:m-plus| are defined.
 The definitions were type checked by adding type annotations in appropriate places, in a similar fashion
-to the identity monad. A significant obstacle was discovered in while type checking monad definitions,
-relating to filtering sequences with negative type information, discussed in section \ref{sec:filterneg}.
+to the identity monad. A significant obstacle was discovered while type checking monad definitions,
+related to filtering sequences with negative type information (discussed in Section \ref{sec:filterneg}).
 
 \subsection{Monad Transformer Definitions}
 
 The initial motivation for adding user defined type constructors to Typed Clojure
-(as discussed in section \ref{sec:monaddef}) was to type check
+(as discussed in Section \ref{sec:monaddef}) was to type check
 monad transformer definitions.
 Monad transformers are always parameterised by a monad type constructor, and should work for all
 monad type constructors. Keeping the monad type constructor abstract allows us to determine
@@ -377,7 +377,7 @@ that supports programming with conduits.
 The library had to be modified and simplified considerably to be able to type check.
 Many existing conduits had troublesome variable-parameters, reminiscent of the
 issues of assigning types to \lstinline|assoc| and \lstinline|partial|
-(which is future work, see section \ref{sec:futurearity}).
+(which is future work, see Section \ref{sec:futurearity}).
 In these cases, simplified versions of the conduits were created that 
 took fixed arguments.
 
@@ -393,7 +393,7 @@ to itself in a position where variance must be known in advance.
 \lstinline|declare-alias-kind| is used to declare the kind of an alias.
 Once an alias with an already declared kind is defined with \lstinline|def-alias|,
 the defined kind must match the declared kind, otherwise a type error is thrown.
-(The specifics of the types in listing \ref{lst:conduittypes} are not relevant to the rest of this discussion,
+(The specifics of the types in Listing \ref{lst:conduittypes} are not relevant to the rest of this discussion,
 so they are not explained).
 
 \begin{lstlisting}[caption=Types for Conduits, label=lst:conduittypes]

@@ -1,3 +1,18 @@
+# TODO
+
+- RHickey reference
+- Wadler builds on work by TH
+- MrSpidey reference
+- racket contracts reference (SamTH, 30/10/12)
+
+Sam: first, the citation for typed racket's contract generation is Tobin-Hochstadt and Felleisen, DLS 2006
+  
+second, MrSpidey is described in several papers by Cormac Flanagan
+9:53 PM 
+the best citation is Componential Set-Based Analysis, Flanagan and Felleisen, TOPLAS 99
+
+# Changes
+
 Chapter: Introduction
 
 - Improve explanation of Occurrence Typing example
@@ -8,3 +23,40 @@ Chapter: Design Choices
 	to the subsection "Interaction with null" (which is completely rearranged
 	for clarity.
 - "Safer Host Interoperability" clarified, improved wording.
+
+# Dave Ray Corrections (Applied)
+
+1.2 Motivation, second sentence: "This is idea not new"
+
+page 18: "singleton types in ATTT a much more advanced"
+
+page 21: "We now have sufficient information to synthesise the type of listing 2.2 to be (List Float)".
+  Should that be "... to be (LazySeq Float)"?
+
+page 22: "Colored Local Type Inference is a candidate for"
+  Should there be more here, or is that leading into 2.9?
+
+page 23: "their implementations are are"
+         "... preserve existing Racket idioms and aims type check existing ..."
+
+page 29: "Java is statically typed language."
+
+page 30: "... which is an array has the Java component type c array ..." x 2
+
+page 31: "... and gives details on the difference ways Typed Clojure." ??
+         
+"entirely the programmer's responsibility" possessive
+
+page 33: "Heterogeneous maps types ..."
+
+page 39: "It would desirable to port ..."
+
+page 42: "In this chapter work through several examples ..."
+         footnot point to pomegranate, not clojure.contrib.reflect
+
+page 48: "... obstacle was discovered in while type checking ..."
+
+page 54: "... for Clojure to support The major ..."
+         "... core of Typed Clojure would preserved ..."
+
+page 56: "... to the dynamically type language Clojure ..."
