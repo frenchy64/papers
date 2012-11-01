@@ -24,6 +24,10 @@ Chapter: Design Choices
 	for clarity.
 - "Safer Host Interoperability" clarified, improved wording.
 
+Chapter: Experiments
+
+- Java example, better explained dot syntax with overrightarrow
+
 # Dave Ray Corrections (Applied)
 
 1.2 Motivation, second sentence: "This is idea not new"

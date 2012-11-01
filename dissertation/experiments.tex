@@ -8,24 +8,35 @@ or were particularly useful to the everyday Clojure programmer.
 \section{Java Interoperability}
 \label{sec:experimentinterop}
 
-As Typed Clojure is intended to be useful for practical purposes, it was important
-to port existing code that utilized Java interoperability.
-My porting effort attempted to follow how a real programmer might port code to Typed Clojure
-and I describe my approach for each situation.
+It is idiomatic and common in Clojure to interface with existing Java code
+via Java interoperability.
+Typed Clojure is intended to be useful for practical purposes, so it is important
+to understand this common feature.
+To test Typed Clojure's approach, 
+existing code utilising Java interoperability was ported.
+My porting effort attempted to follow how a real programmer might port code to Typed Clojure;
+I describe this process step-by-step.
 
-I ported a function from clojure.contrib.reflect\footnote{https://github.com/richhickey/clojure-contrib},
-a Clojure library relying heavily on Java interoperability.
-I chose \lstinline|call-method| for several reasons: it chains several Java calls together,
-it uses primitive arrays, it exposes a wart of Clojure with \emph{Named} things,
-and \lstinline|null| is a valid value in one place.
+This section describes porting a function from \emph{clojure.contrib.reflect}
+\footnote{\emph{clojure.contrib} Github project: https://github.com/richhickey/clojure-contrib},
+a Clojure library that relies heavily on Java interoperability.
+I chose to port \lstinline|call-method| for several reasons: it chains several Java calls together,
+it uses primitive arrays, and \lstinline|null| is a valid value in one place.
 
 Before showing the implementation, there is a brief explanation of the relevant syntax.
-Java methods are called using the \emph{dot} operator. If \lstinline|o| is an object \lstinline|(. o m a*)|
-calls its method named \lstinline|m| passing \lstinline|a*| arguments. The method can be named first
-using the equivalent sugar \lstinline|(.m o a*)|. Also, \lstinline|doto| is convenient 
-notation for muliple method calls on the same object, presumably for side effects, and returns the original
-object. For example, \lstinline|(doto o (.m1 a*) (m2 a*))| calls methods \lstinline|m1| and \lstinline|m2|
-on \lstinline|o| and returns \lstinline|o|.
+Java methods are called using the \emph{dot} operator. If \lstinline|o| is an object,
+then \lstinline[mathescape]|(. o m $\overrightarrow{a}$)|
+calls its method named \lstinline|m|, passing \lstinline[mathescape]|$\overrightarrow{a}$| as arguments. 
+Syntactic sugar allows the method to be named first:
+\lstinline[mathescape]|(.m o $\overrightarrow{a}$)|
+is equivalent to
+\lstinline[mathescape]|(. o m $\overrightarrow{a}$)|.
+Also, \lstinline|doto| is convenient 
+notation for chaining multiple method calls to the same object, presumably for side effects, and returns the original
+object. For example, \lstinline[mathescape]|(doto o (.m1 $\overrightarrow{a}$) (.m2 $\overrightarrow{b}$))| 
+calls methods \lstinline|m1| (passing \lstinline[mathescape]|$\overrightarrow{a}$| as arguments)
+and \lstinline|m2| (passing \lstinline[mathescape]|$\overrightarrow{b}$| as arguments)
+on \lstinline|o| in order, and returns \lstinline|o| with any side effects applied to it.
 
 \begin{lstlisting}[caption=call-method, label=lst:callmethod]
 ;; call-method pulled from clojure.contrib.reflect, (c) 2010 Stuart Halloway & Contributors
@@ -63,10 +74,16 @@ and the Typed Clojure type \lstinline|t| is the Typed Clojure component type.
 We can pass this array to Java methods accepting
 type \lstinline|c[]|, and we can read and write type \lstinline|t| to the array from Typed Clojure.
 
+In particular we change two invocations of \lstinline|into-array|.
+
 \begin{itemize}
-\item \lstinline|(into-array Class params)| becomes \lstinline|(into-array> Class Class params)|
+\item \lstinline|(into-array Class params)|, which creates an array of type \lstinline|Class[]| and populates it
+with the elements of \lstinline|params|,
+ becomes \lstinline|(into-array> Class Class params)|,
       which is of type \lstinline|(Array Class Class)|.
-\item \lstinline|(into-array Object args)| becomes \lstinline|(into-array> Object (U nil Object) args)|
+\item \lstinline|(into-array Object args)|, which creates an array of type \lstinline|Object[]|
+and populates it with the elements of \lstinline|args|,
+becomes \lstinline|(into-array> Object (U nil Object) args)|
       which is of type \lstinline|(Array Object (U nil Object))|.
 \end{itemize}
 
