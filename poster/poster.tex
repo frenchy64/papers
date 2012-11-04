@@ -145,7 +145,7 @@ The main contributions are:
 
 \begin{posterbox}[name=nulltreatment,column=0,above=bottom]{Treatment of \emph{null}}
 
-Clojure represents Java's \emph{null} as the value \lstinline{nil},
+Clojure represents Java's \emph{null} as the value \colorbox{codebg}{\lstinline{nil}},
 which has the singleton type \colorbox{yellow}{\lstinline|nil|} in Typed Clojure.
 This means, unlike Java's static type system, \emph{null} and reference types are separated as static types.
 The programmer can then annotate Java methods and fields, specifying where \emph{null} is allowed.
@@ -160,21 +160,20 @@ The programmer can then annotate Java methods and fields, specifying where \emph
 \begin{posterbox}[name=sequenceabs,column=1]{Sequence Abstraction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Some common idioms that Typed Clojure types can express
-are usages of Clojure's sequence abstraction, a set of functions providing a common
-interface to collections.
+Typed Clojure types can express the most common usages of Clojure's sequence abstraction, 
+which is a set of functions providing a common interface to collections.
 These functions include:
 
 \begin{itemize}
-\item \lstinline|seq|, which takes a collection (or \lstinline|nil|) and returns
+\item \colorbox{codebg}{\lstinline|seq|}, which takes a collection (or \colorbox{codebg}{\lstinline|nil|}) and returns
    \begin{itemize}
       \item a true value if the argument is non-empty
-      \item a false value if the argument is empty (or \lstinline|nil|)
+      \item a false value if the argument is empty (or \colorbox{codebg}{\lstinline|nil|})
    \end{itemize}
-\item \lstinline|first|, which takes a collection (or \lstinline|nil|) and returns
+\item \colorbox{codebg}{\lstinline|first|}, which takes a collection (or \colorbox{codebg}{\lstinline|nil|}) and returns
    \begin{itemize}
       \item the first item of the argument if the argument is non-empty
-      \item \lstinline|nil| if the argument is empty (or \lstinline|nil|)
+      \item \colorbox{codebg}{\lstinline|nil|} if the argument is empty (or \colorbox{codebg}{\lstinline|nil|})
     \end{itemize}
 \end{itemize}
 
@@ -193,17 +192,19 @@ we can type check common combinations of these functions.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Heterogeneous map types that record the \emph{presence} of keyword keys
-are sufficient to type check the most common Clojure idiom of using plain maps with known keyword keys.
+are sufficient to type check the most common usages of the Clojure idiom of using plain maps with known keyword keys.
 
 \begin{description}
   \item[Map Literals] \colorbox{codebg}{\lstinline|\{:a 1 :b 2\}|} creates a map value with two entries, and
         is of the heterogeneous map type \colorbox{yellow}{\lstinline{'\{:a Number :b Number\}}}
   \item[Associating keyword keys] \colorbox{codebg}{\lstinline|(assoc \{:a 1 :b 2\} :c 3)|} 
-    associates entry with key \lstinline|:c|, and
+      extends the first argument with a new entry with key \lstinline|:c|, and
         is of type \colorbox{yellow}{\lstinline{'\{:a Number :b Number :c Number\}}}
-  \item[Dissociating keyword keys] \lstinline|(dissoc {:a 1 :b 2} :a)| dissociates entry with key \lstinline|:a|, and
+  \item[Dissociating keyword keys] \colorbox{codebg}{\lstinline|(dissoc \{:a 1 :b 2\} :a)|} dissociates 
+      from the first argument the entry with key \lstinline|:a|, and
         is of type \colorbox{yellow}{\lstinline|'\{:b Number\}|}
-  \item[Keyword lookup] \lstinline|(get {:a 1 :b 2} :a)| returns the value corresponding to the key \lstinline|:a|, and
+  \item[Keyword lookup] \colorbox{codebg}{\lstinline|(get \{:a 1 :b 2\} :a)|} 
+      returns the value corresponding to the key \lstinline|:a| in the first argument, and
         is of type \colorbox{yellow}{\lstinline|Number|}
 \end{description}
 
@@ -229,14 +230,14 @@ This experiment warranted an extension for type functions (functions at the type
 
 A function relying heavily on Java interoperability was ported successfully.
 This function chained several Java calls together, and
-Typed Clojure was able to express and check invariants, mostly related to occurrences of \emph{null}
+Typed Clojure was able to express and check invariants related to occurrences of \emph{null}
 and primitive arrays.
 
 \end{posterbox}
 
 \begin{posterbox}[name=futurework,column=2,below=experiments]{Future Work}
 
-There is significant future work, including:
+There is significant future work.
 
 \begin{itemize}
 \item Implement a blame calculus to improve error messages when using untyped code
@@ -261,9 +262,9 @@ current Clojure style.
     \setlength{\baselineskip}{0.4em}
     \bibitem{tob10:bnb}
     Tobin-Hochstadt, S.
-    \newblock {T}yped {S}cheme: {F}rom {S}cripts to {P}rograms (2010)
+    \newblock {T}yped {S}cheme: {F}rom {S}cripts to {P}rograms
     \newblock PhD Dissertation,
-    \newblock Northeastern University
+    \newblock Northeastern University, 2010
   \end{thebibliography}
   \vspace{0.3em}
 
