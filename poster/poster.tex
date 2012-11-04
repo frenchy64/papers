@@ -1,9 +1,15 @@
-\documentclass[landscape,final,a0paper,fontscale=0.25]{baposter}
+\documentclass[landscape,final,a0paper,fontscale=0.277]{baposter}
 
 \usepackage{url}
+\usepackage{relsize}
+
+\usepackage{color} % for colorbox
+%\usepackage[svgnames]{xcolor}
 
 \usepackage{graphicx}
-\graphicspath{{images/}{../images/}}
+\graphicspath{{images/}}
+
+\definecolor{codebg}{HTML}{EEEEEE}
 
 \usepackage{listings}
 \lstset{ %
@@ -14,7 +20,7 @@
   %numberstyle=\small\ttfamily,      % the size of the fonts that are used for the line-numbers
   %stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
   %numbersep=5pt,                  % how far the line-numbers are from the code
-  %backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  backgroundcolor=\color{codebg},  % choose the background color. You must add \usepackage{color}
   %showspaces=false,               % show spaces adding particular underscores
   showstringspaces=false,         % underline spaces within strings
   %showtabs=false,                 % show tabs within strings adding particular underscores
@@ -31,6 +37,8 @@
 \definecolor{lightorange}{rgb}{0.9,0.4,0}
 \definecolor{lightestorange}{rgb}{1,0.8,0.5}
 \definecolor{darkorange}{rgb}{0.2,0.1,0}
+\definecolor{ForestGreen}{rgb}{0.13, 0.54, 0.13}
+\definecolor{navyblue}{rgb}{0,0,0.5}
 %%
 \begin{poster}%
   % Poster Options
@@ -43,11 +51,11 @@
   bgColorOne=lightestorange,
   bgColorTwo=white,
   borderColor=darkorange,
-  headerColorOne=darkorange,
-  headerColorTwo=lightorange,
+  headerColorOne=ForestGreen,
+  headerColorTwo=navyblue,
   headerFontColor=white,
-  boxColorOne=lightestorange,
-  boxColorTwo=lightorange,
+  boxColorOne=green,
+  boxColorTwo=blue,
   columns=3,
   % Format of textbox
   textborder=faded,
@@ -66,15 +74,27 @@
   linewidth=2pt
   }
   % Eye Catcher
-  {\includegraphics{images/1000px-UWA_crest}}
-   
+  {\includegraphics[height=7em]{images/clojure-logo10.png}} 
   % Title
-  { A Practical Optional Type System for Clojure }
+  {\bf\textsc{A Practical Optional Type System for Clojure}}
   % Authors
-  { Ambrose Bonnaire-Sergeant <abonnairesergeant@gmail.com>\\
-    \emph{Supervised by Rowan Davies <rowan@csse.uwa.edu.au>}}
+  %{\textsc{\{ Brian.Amberg and Thomas.Vetter \}@unibas.ch}}
+  { \textsc{Ambrose Bonnaire-Sergeant <abonnairesergeant@gmail.com>}
+    \\
+    \textsc{{Supervised by Rowan Davies <rowan@csse.uwa.edu.au>}}}
   % University logo
-  { University of Western Australia }
+  {% The makebox allows the title to flow into the logo, this is a hack because of the L shaped logo.
+    \includegraphics[height=6.0em]{images/1000px-UWA_crest.png}
+  }
+%
+%  % Eye Catcher
+%  {\includegraphics{images/1000px-UWA_crest}}
+%   
+%  % Title
+%  { \textsc}
+%  % Authors
+%  % University logo
+%  { University of Western Australia }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Now define the boxes that make up the poster
 %%%---------------------------------------------------------------------------
@@ -90,17 +110,17 @@
   \begin{posterbox}[name=problem,column=0,row=0]{Background}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section*{Static and Dynamic Types}
+\section*{\textsc{Static and Dynamic Types}}
 
 Traditionally there has been a clear distinction between 
 programming languages that perform type checking at compile-time, and those that do not.
 A recent trend is to aim to combine the advantages of both kinds of languages by adding optional static 
 type systems to languages without static type checking.
 
-\section*{Clojure}
+\section*{\textsc{Clojure}}
 
-Clojure is a recent and increasingly popular programming language that a is dynamically typed dialect of Lisp.
-Designed to be a pragmatic language, it supports functional programming and immutability by default,
+Clojure is a recent and increasingly popular dynamically typed programming language.
+Designed to be pragmatic, it is a dialect of Lisp supporting functional programming and immutability by default,
 while being hosted on, and providing direct interoperability with popular platforms.
 \end{posterbox}
 
@@ -109,18 +129,31 @@ while being hosted on, and providing direct interoperability with popular platfo
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We take the lessons learnt from several projects to design \emph{Typed Clojure},
-an optional type system for Clojure running on the JVM. 
+an optional type system for Clojure running on the Java Virtual Machine. 
 The main contributions are:
 \begin{itemize}
   \item We develop a prototype type checker based on Typed Racket, which is able to type check many Clojure idioms
   \item We describe a novel use of \emph{occurrence typing} for eliminating occurrences of Java's \emph{null}
-  \item We show how a combination of occurrence typing and intersection types allows accurrate typing checking of
-        the most common usages of Clojure's sequence abstraction 
-  \item We capture the Clojure idiom of using maps with known keyword fields by using heterogeneous map types
-  \item We identify the main future issues in typing Clojure code.
+  \item We show how a combination of occurrence typing and intersection types allows accurate typing checking of
+        the most common usages of Clojure's \emph{sequence abstraction} 
+  \item We capture the Clojure idiom of using maps with known keyword fields by using \emph{heterogeneous map types}
+  \item We identify the main \emph{future issues} in typing Clojure code.
 
 \end{itemize}
 
+\end{posterbox}
+
+\begin{posterbox}[name=nulltreatment,column=0,above=bottom]{Treatment of \emph{null}}
+
+Clojure represents Java's \emph{null} as the value \lstinline{nil},
+which has the singleton type \colorbox{yellow}{\lstinline|nil|} in Typed Clojure.
+This means, unlike Java's static type system, \emph{null} and reference types are separated as static types.
+The programmer can then annotate Java methods and fields, specifying where \emph{null} is allowed.
+
+\begin{lstlisting}[caption={Annotating Java methods that never return \emph{null}}]
+(non-nil-return java.lang.Object/getClass :all)
+(non-nil-return java.io.File/getName :all)
+\end{lstlisting}
 \end{posterbox}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,53 +181,51 @@ These functions include:
 By encoding these invariants in the respective types, 
 we can type check common combinations of these functions.
 
-\begin{lstlisting}[caption={Assuming \lstinline|coll| is a collection of numbers, we can infer that this expression always returns a number}]
+\begin{lstlisting}[caption={Assuming \lstinline|coll| is a collection of numbers currently in local scope, we can infer that this expression always returns a number}]
 (if (seq coll)
   (first coll)
   0)
 \end{lstlisting}
-
 \end{posterbox}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{posterbox}[name=hmaps,column=1,below=sequenceabs]{Heterogeneous Maps}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Using plain maps with known keyword keys is common style in Clojure.
 Heterogeneous map types that record the \emph{presence} of keyword keys
-are sufficient to type check many usages of this idiom.
-Accurate types for lookup, associating, and dissociating of known keyword keys are supported.
+are sufficient to type check the most common Clojure idiom of using plain maps with known keyword keys.
+
+\begin{description}
+  \item[Map Literals] \colorbox{codebg}{\lstinline|\{:a 1 :b 2\}|} creates a map value with two entries, and
+        is of the heterogeneous map type \colorbox{yellow}{\lstinline{'\{:a Number :b Number\}}}
+  \item[Associating keyword keys] \colorbox{codebg}{\lstinline|(assoc \{:a 1 :b 2\} :c 3)|} 
+    associates entry with key \lstinline|:c|, and
+        is of type \colorbox{yellow}{\lstinline{'\{:a Number :b Number :c Number\}}}
+  \item[Dissociating keyword keys] \lstinline|(dissoc {:a 1 :b 2} :a)| dissociates entry with key \lstinline|:a|, and
+        is of type \colorbox{yellow}{\lstinline|'\{:b Number\}|}
+  \item[Keyword lookup] \lstinline|(get {:a 1 :b 2} :a)| returns the value corresponding to the key \lstinline|:a|, and
+        is of type \colorbox{yellow}{\lstinline|Number|}
+\end{description}
 
 \end{posterbox}
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{posterbox}[name=nulltreatment,column=1,below=hmaps]{Treatment of \emph{null}}
 
-Clojure represents Java's \emph{null} as the value \lstinline|nil|,
-which has the singleton type \lstinline|nil| in Typed Clojure.
-This means, unlike Java's static type system, \emph{null} and reference types are separated as static types.
-The programmer can then annotate Java methods and fields, specifying where \emph{null} is allowed.
-
+\begin{posterbox}[name=source,column=2]{Source}
+Typed Clojure is available at:\\\url{https://github.com/frenchy64/typed-clojure}
 \end{posterbox}
 
 
-\begin{posterbox}[name=experiments,column=2]{Experiments}
+\begin{posterbox}[name=experiments,column=2,below=source]{Experiments}
 
-\section*{Monads}
+\section*{\textsc{Monads}}
 
 Almost all of a Clojure library for monadic programming (\emph{algo.monads}) was successfully ported
-to Typed Clojure. This included most:
-\begin{itemize}
-  \item Monad definitions
-  \item Monad function definitions
-  \item Monad transformer defintions
-\end{itemize}
+to Typed Clojure, including most monad, monad function, and monad transformer definitions.
+This experiment warranted an extension for type functions (functions at the type level) with variance.
 
-This experiment warranted an extension for type functions (functions at the type level), with variance.
-
-\section*{Java Interoperability}
+\section*{\textsc{Java Interoperability}}
 
 A function relying heavily on Java interoperability was ported successfully.
 This function chained several Java calls together, and
@@ -205,11 +236,13 @@ and primitive arrays.
 
 \begin{posterbox}[name=futurework,column=2,below=experiments]{Future Work}
 
-There is significant future work to type check all Clojure idioms:
+There is significant future work, including:
 
 \begin{itemize}
-\item Multimethod definitions should infer types from their dispatch function
 \item Implement a blame calculus to improve error messages when using untyped code
+\item Support type checking multimethod definitions
+\item Support Clojure records, which are datatypes with known keyword keys
+\item Port Typed Clojure to other Clojure implementations
 \end{itemize}
 
 \end{posterbox}
@@ -220,9 +253,20 @@ design and implement an optional type system for Clojure that preserves
 current Clojure style.
 \end{posterbox}
 
-\begin{posterbox}[name=source,column=2,above=bottom]{Source}
-Typed Clojure is available at: \\
-\url{https://github.com/frenchy64/typed-clojure}
+\begin{posterbox}[name=references,column=2,below=conclusion]{References}
+  \smaller
+  \bibliographystyle{ieee}
+  \renewcommand{\section}[2]{\vskip 0.05em}
+  \begin{thebibliography}{1}\itemsep=-0.01em
+    \setlength{\baselineskip}{0.4em}
+    \bibitem{tob10:bnb}
+    Tobin-Hochstadt, S.
+    \newblock {T}yped {S}cheme: {F}rom {S}cripts to {P}rograms (2010)
+    \newblock PhD Dissertation,
+    \newblock Northeastern University
+  \end{thebibliography}
+  \vspace{0.3em}
+
 \end{posterbox}
 
 \end{poster}
