@@ -1,0 +1,231 @@
+\documentclass[landscape,final,a0paper,fontscale=0.25]{baposter}
+
+\usepackage{url}
+
+\usepackage{graphicx}
+\graphicspath{{images/}{../images/}}
+
+\usepackage{listings}
+\lstset{ %
+  language=Lisp,                % choose the language of the code
+  columns=fixed,basewidth=.5em,
+  basicstyle=\small\ttfamily,       % the size of the fonts that are used for the code
+  %numbers=left,                   % where to put the line-numbers
+  %numberstyle=\small\ttfamily,      % the size of the fonts that are used for the line-numbers
+  %stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+  %numbersep=5pt,                  % how far the line-numbers are from the code
+  %backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  %showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  %showtabs=false,                 % show tabs within strings adding particular underscores
+  frame=single,           % adds a frame around the code
+  %tabsize=2,          % sets default tabsize to 2 spaces
+  captionpos=t,           % sets the caption-position to bottom
+  breaklines=true,        % sets automatic line breaking
+  breakatwhitespace=true,    % sets if automatic breaks should only happen at whitespace
+  %escapeinside={\%*}{*)},          % if you want to add a comment within your code
+}
+
+\begin{document}
+
+\definecolor{lightorange}{rgb}{0.9,0.4,0}
+\definecolor{lightestorange}{rgb}{1,0.8,0.5}
+\definecolor{darkorange}{rgb}{0.2,0.1,0}
+%%
+\begin{poster}%
+  % Poster Options
+  {
+  % Show grid to help with alignment
+  grid=false,
+  % Column spacing
+  colspacing=1em,
+  % Color style
+  bgColorOne=lightestorange,
+  bgColorTwo=white,
+  borderColor=darkorange,
+  headerColorOne=darkorange,
+  headerColorTwo=lightorange,
+  headerFontColor=white,
+  boxColorOne=lightestorange,
+  boxColorTwo=lightorange,
+  columns=3,
+  % Format of textbox
+  textborder=faded,
+  % Format of text header
+  eyecatcher=true,
+  headerborder=closed,
+  headerheight=0.1\textheight,
+%  textfont=\sc, An example of changing the text font
+  headershape=roundedright,
+  headershade=shadelr,
+  headerfont=\Large\bf\textsc, %Sans Serif
+  textfont={\setlength{\parindent}{1.5em}},
+  boxshade=plain,
+%  background=shade-tb,
+  background=none,
+  linewidth=2pt
+  }
+  % Eye Catcher
+  {\includegraphics{images/1000px-UWA_crest}}
+   
+  % Title
+  { A Practical Optional Type System for Clojure }
+  % Authors
+  { Ambrose Bonnaire-Sergeant <abonnairesergeant@gmail.com>\\
+    \emph{Supervised by Rowan Davies <rowan@csse.uwa.edu.au>}}
+  % University logo
+  { University of Western Australia }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Now define the boxes that make up the poster
+%%%---------------------------------------------------------------------------
+%%% Each box has a name and can be placed absolutely or relatively.
+%%% The only inconvenience is that you can only specify a relative position 
+%%% towards an already declared box. So if you have a box attached to the 
+%%% bottom, one to the top and a third one which should be in between, you 
+%%% have to specify the top and bottom boxes before you specify the middle 
+%%% box.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{posterbox}[name=problem,column=0,row=0]{Background}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{Static and Dynamic Types}
+
+Traditionally there has been a clear distinction between 
+programming languages that perform type checking at compile-time, and those that do not.
+A recent trend is to aim to combine the advantages of both kinds of languages by adding optional static 
+type systems to languages without static type checking.
+
+\section*{Clojure}
+
+Clojure is a recent and increasingly popular programming language that a is dynamically typed dialect of Lisp.
+Designed to be a pragmatic language, it supports functional programming and immutability by default,
+while being hosted on, and providing direct interoperability with popular platforms.
+\end{posterbox}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{posterbox}[name=contribution,column=0,below=problem]{Contributions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We take the lessons learnt from several projects to design \emph{Typed Clojure},
+an optional type system for Clojure running on the JVM. 
+The main contributions are:
+\begin{itemize}
+  \item We develop a prototype type checker based on Typed Racket, which is able to type check many Clojure idioms
+  \item We describe a novel use of \emph{occurrence typing} for eliminating occurrences of Java's \emph{null}
+  \item We show how a combination of occurrence typing and intersection types allows accurrate typing checking of
+        the most common usages of Clojure's sequence abstraction 
+  \item We capture the Clojure idiom of using maps with known keyword fields by using heterogeneous map types
+  \item We identify the main future issues in typing Clojure code.
+
+\end{itemize}
+
+\end{posterbox}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{posterbox}[name=sequenceabs,column=1]{Sequence Abstraction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Some common idioms that Typed Clojure types can express
+are usages of Clojure's sequence abstraction, a set of functions providing a common
+interface to collections.
+These functions include:
+
+\begin{itemize}
+\item \lstinline|seq|, which takes a collection (or \lstinline|nil|) and returns
+   \begin{itemize}
+      \item a true value if the argument is non-empty
+      \item a false value if the argument is empty (or \lstinline|nil|)
+   \end{itemize}
+\item \lstinline|first|, which takes a collection (or \lstinline|nil|) and returns
+   \begin{itemize}
+      \item the first item of the argument if the argument is non-empty
+      \item \lstinline|nil| if the argument is empty (or \lstinline|nil|)
+    \end{itemize}
+\end{itemize}
+
+By encoding these invariants in the respective types, 
+we can type check common combinations of these functions.
+
+\begin{lstlisting}[caption={Assuming \lstinline|coll| is a collection of numbers, we can infer that this expression always returns a number}]
+(if (seq coll)
+  (first coll)
+  0)
+\end{lstlisting}
+
+\end{posterbox}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{posterbox}[name=hmaps,column=1,below=sequenceabs]{Heterogeneous Maps}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Using plain maps with known keyword keys is common style in Clojure.
+Heterogeneous map types that record the \emph{presence} of keyword keys
+are sufficient to type check many usages of this idiom.
+Accurate types for lookup, associating, and dissociating of known keyword keys are supported.
+
+\end{posterbox}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{posterbox}[name=nulltreatment,column=1,below=hmaps]{Treatment of \emph{null}}
+
+Clojure represents Java's \emph{null} as the value \lstinline|nil|,
+which has the singleton type \lstinline|nil| in Typed Clojure.
+This means, unlike Java's static type system, \emph{null} and reference types are separated as static types.
+The programmer can then annotate Java methods and fields, specifying where \emph{null} is allowed.
+
+\end{posterbox}
+
+
+\begin{posterbox}[name=experiments,column=2]{Experiments}
+
+\section*{Monads}
+
+Almost all of a Clojure library for monadic programming (\emph{algo.monads}) was successfully ported
+to Typed Clojure. This included most:
+\begin{itemize}
+  \item Monad definitions
+  \item Monad function definitions
+  \item Monad transformer defintions
+\end{itemize}
+
+This experiment warranted an extension for type functions (functions at the type level), with variance.
+
+\section*{Java Interoperability}
+
+A function relying heavily on Java interoperability was ported successfully.
+This function chained several Java calls together, and
+Typed Clojure was able to express and check invariants, mostly related to occurrences of \emph{null}
+and primitive arrays.
+
+\end{posterbox}
+
+\begin{posterbox}[name=futurework,column=2,below=experiments]{Future Work}
+
+There is significant future work to type check all Clojure idioms:
+
+\begin{itemize}
+\item Multimethod definitions should infer types from their dispatch function
+\item Implement a blame calculus to improve error messages when using untyped code
+\end{itemize}
+
+\end{posterbox}
+
+\begin{posterbox}[name=conclusion,column=2,below=futurework]{Conclusion}
+This work has demonstrated that it is both practical and useful to
+design and implement an optional type system for Clojure that preserves
+current Clojure style.
+\end{posterbox}
+
+\begin{posterbox}[name=source,column=2,above=bottom]{Source}
+Typed Clojure is available at: \\
+\url{https://github.com/frenchy64/typed-clojure}
+\end{posterbox}
+
+\end{poster}
+
+\end{document}
+
