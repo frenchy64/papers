@@ -64,3 +64,9 @@ page 54: "... for Clojure to support The major ..."
          "... core of Typed Clojure would preserved ..."
 
 page 56: "... to the dynamically type language Clojure ..."
+
+# Stathis Sideris
+
+page 9: "Singleton types are are discussed.." double word
+
+page 31: "This mean that at compile time we cannot trust ..." means
