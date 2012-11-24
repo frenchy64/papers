@@ -239,8 +239,9 @@ More complex code may require extra annotations to type check:
       (collatz (inc (* 3 n)))))
 \end{lstlisting}
 
-(\lstinline|(defn [...] body)| expands to \lstinline|(def (fn [...] body))|
-where \lstinline|def| defines a new var and \lstinline|fn| creates a function value).
+(\lstinline|(defn name [...] body)| expands to \lstinline|(def name (fn [...] body))|,
+where \lstinline|(def name init)| defines a new var in the current namespace 
+called \lstinline|name|, and \lstinline|fn| creates a function value).
 
 In this example, we define a new var \lstinline|collatz|
 (when unambiguous, I omit the qualifying namespace/package for the remainder of the chapter).
