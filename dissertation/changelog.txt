@@ -70,3 +70,9 @@ page 56: "... to the dynamically type language Clojure ..."
 page 9: "Singleton types are are discussed.." double word
 
 page 31: "This mean that at compile time we cannot trust ..." means
+
+# IRC Changes
+
+Intro chapter
+- change (def init) to (def name init) in defn -> def macroexpansion
+explanation
