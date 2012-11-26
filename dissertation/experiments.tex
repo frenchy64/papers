@@ -256,7 +256,7 @@ a type constructor taking a single argument \lstinline|x| (a type) and returning
 is approximately \lstinline|* -> *|. A more streamlined syntax is planned for future work.}.
 The body of the type constructor uses \lstinline|m| abstractly. Typed Clojure
 ensures the correct number of arguments are passed and recognises the declared variances
-for each parameter, In this case the first argument of \lstinline|m| is declared
+for each parameter. In this case the first argument of \lstinline|m| is declared
 a covariant position. When instantiated, \lstinline|m| must also be a type operator
 of one covariant argument returning a type.
 

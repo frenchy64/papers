@@ -3,7 +3,7 @@
 This chapter describes the design choices made for Typed Clojure.
 Typed Clojure is designed to be of practical use to Clojure programmers.
 To this end, many of the design choices are borrowed from other existing projects.
-Some of the main design choices that specifically concern Typed Clojure are given more
+Some of the main design choices that specifically concern Typed Clojure are given
 more detailed descriptions.
 
 \section{Typed Racket}
@@ -32,7 +32,7 @@ is non-empty, otherwise it should be considered empty.
 Occurrence typing allows us to capture this idiom as shown in
 listing \ref{lst:seqtype}.
 
-\begin{lstlisting}[caption=Type assiciated with clojure.core/seq, label=lst:seqtype]
+\begin{lstlisting}[caption=Type associated with clojure.core/seq, label=lst:seqtype]
 (All [x]
   [(U nil (Seqable x)) -> (U nil (Seqable x))
    :filters {:then (is (CountRange 1) 0)
@@ -50,7 +50,7 @@ otherwise \lstinline|coll| is \emph{either} of type \lstinline|nil| or of type \
 representing an empty sequence).
 (See Section \ref{sec:filterneg} for a more detailed explanation of the filter syntax).
 
-Correspondingly, \lstinline|first| which gets the first member of a sequence.
+Correspondingly, \lstinline|first| which returns the first member of a sequence,
 can be given a more accurate (and surprisingly subtle) type.
 \lstinline|first| is overloaded in a similar fashion to \lstinline|seq|.
 \lstinline|first| takes an argument that is either a sequence or \lstinline|nil|.
@@ -58,7 +58,7 @@ If it is passed \lstinline|nil| or an empty sequence, it returns \lstinline|nil|
 non-empty sequence, it returns the first member of the sequence.
 Listing \ref{lst:firsttype} shows the type of \lstinline|first|.
 
-\begin{lstlisting}[caption=Type assiciated with clojure.core/first, label=lst:firsttype]
+\begin{lstlisting}[caption=Type associated with clojure.core/first, label=lst:firsttype]
 (All [x]
   (Fn [(U nil (I (Seqable x) (ExactCount 0))) -> nil]
       [(I (Seqable x) (CountRange 1)) -> x]
@@ -232,10 +232,9 @@ They are only for use by Typed Clojure.
 \section{Protocols and Datatypes}
 
 Protocols and datatypes are two of Clojure's main means of abstraction.
-Protocols, have a set of unimplemented methods, are typed by
-giving the type for each method.
+Protocols define a set of unimplemented methods, and each must be assigned types.
 Datatype definitions are type checked by ensuring the methods it
-implements match the types defined by the Java interface or protocol
+implements match the types defined by the Java interface or assigned to the protocol method
 it is extending.
 
 Common usages of datatypes are checkable, like datatype

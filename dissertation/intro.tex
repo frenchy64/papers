@@ -201,7 +201,7 @@ We begin with the obligatory \emph{Hello world} example.
 
 \begin{lstlisting}[caption=Typed Hello world, label=lst:helloworld]
 (ns typed.test.hello-world
-  (:require [typed.core :refer [check-ns]]]))
+  (:require [typed.core :refer [check-ns]]))
 
 (println "Hello world")
 \end{lstlisting}
@@ -514,7 +514,7 @@ The invocation
      [true false] ["mystr" "astr"] [1 4])
 \end{lstlisting}
 
-uses \lstinline|typed.core/ann-form| to assign an expected to
+uses \lstinline|typed.core/ann-form| to assign an expected type to
 the first argument,
 which is sufficient to infer the result type
 
@@ -614,8 +614,11 @@ returns, accepting either a set of parameter counts of the relevant arities, or 
 to override all arities of that method).
 
 Such annotations are in a sense assumptions; should they turn out to be wrong, Typed Clojure
-will infer incorrect types. Typed Racket generates runtime contracts based on static types to ensure
-that type errors are caught at runtime, and the original source of the error is blamed~\cite{WF09}.
+will infer incorrect types. 
+This is somewhat troubling, but type safety can be restored by using other techniques.
+For example, Typed Racket generates runtime contracts based on static types to ensure
+that type errors are caught at runtime, while giving good error messages 
+which indicate (or ``blame''~\cite{WF09}) the original source of the error.
 A similar system for verifying that method annotations like \lstinline|non-nil-return|
-actually describe correct types is planned as future work
+are correct is planned as future work
 (see section \ref{sec:contractsblame}).

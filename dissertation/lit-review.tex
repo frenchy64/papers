@@ -34,7 +34,7 @@ allows aspects of dynamic style to be represented in statically
 typed languages without compromising the type system.
 However, he claims type \emph{Dynamic} is rarely used in practical languages
 because it is too inconvenient in real programs.
-He claims to have fixed these issues, but a practical language has yet to integrated 
+He claims to have fixed these issues, but a practical language has yet to integrate
 his changes.
 
 % cite: Dynamic Typing in Polymorphic languages (1994)
@@ -86,8 +86,8 @@ types; errors remain difficult to explain and fix''~\cite{Fell09}.
 
 \subsection{Gradual Typing}
 
-Gradual typing combines static and runtime type checking so programmers
-can the most appropriate one for the situation.
+Gradual typing combines static and runtime type checking, so programmers
+can utilise whichever is most appropriate for a given situation.
 A key feature of gradual type systems is its use of \emph{bidirectional checking}
 like~\cite{PT00}, which requires type annotations in natural places like functions.
 Type errors in gradual type systems are often more manageable than in Soft Typing and SBA,
@@ -494,8 +494,8 @@ Scala features F-bounded polymorphism, a class hierarchy
 that is compatible with Java, and colored local type inference.
 Typed Clojure takes inspiration from these, and similar, projects.
 
-SML CIDRE \cite{Dav05} was also a secondary influence - particularly it's use of bidirectional 
-checking of extrinsic types including subtyping, intersection types, and it's aim to capture program invariants.  
+SML CIDRE \cite{Dav05} was also a secondary influence - particularly its use of bidirectional 
+checking of extrinsic types including subtyping, intersection types, and its aim to capture program invariants.  
 However, SML CIDRE starts from the intrinsically typed language SML which already has a rich static 
 type system, which leads to many different considerations compared to starting from a dynamically typed language.  
 Much of this influence was via a student-supervisor relationship, making it particularly hard to pin down the specifics.
