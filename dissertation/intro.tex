@@ -115,10 +115,21 @@ By adding static type checking to Clojure, we can achieve errors messages that a
 Haskell's.
 Listing \ref{lst:tcctime} gives an idea of what kind of error messages Typed Clojure actually
 provides in these situations. 
+However, it deserves some explanation:
+
+\begin{itemize}
+  \item The given source of the error may be surprising, but it is explained
+        by noting that Clojure ``inlines'' \lstinline|(+ "string" a)| to a Java method call
+        \lstinline|(. clojure.lang.Numbers add "string" a)|.
+  \item \lstinline|add|'s type has been overridden by Typed Clojure to be more specific (see Section \ref{sec:javainterop}).
+  \item \lstinline|cf| type checks a form.
+  \item \lstinline|(fn> [[a :- Number]] ...)| defines a function with its first argument of static type \lstinline|Number|.
+\end{itemize}
 
 \begin{lstlisting}[caption=Compile-time errors in Typed Clojure, label=lst:tcctime]
 user=> (cf (fn> [[a :- Number]] (+ "string" a)))
-#<Exception java.lang.Exception: 5: Static method clojure.lang.Numbers/add could not be applied to arguments:
+#<Exception java.lang.Exception: 5: 
+Static method clojure.lang.Numbers/add could not be applied to arguments:
 Domains: 
   typed.core/AnyInteger typed.core/AnyInteger
   java.lang.Number java.lang.Number
@@ -134,17 +145,7 @@ Typed Clojure lists each of the expected domain types, of which the static metho
 and also lists the types of the given arguments.
 A line number and the source of the error is also provided.
 
-Listing \ref{lst:tcctime} deserves some explanation:
-
-\begin{itemize}
-  \item The given source of the error may be surprising, but it is explained
-        by noting that Clojure ``inlines'' \lstinline|(+ "string" a)| to a Java method call
-        \lstinline|(. clojure.lang.Numbers add "string" a)|.
-        \lstinline|cf| type checks a form.
-  \item \lstinline|add|'s type has been overridden by Typed Clojure to be more specific (see Section \ref{sec:javainterop}).
-  \item \lstinline|cf| type checks a form.
-  \item \lstinline|(fn> [[a :- Number]] ...)| defines a function with its first argument of static type \lstinline|Number|.
-\end{itemize}
+Most importantly: the error was caught at \emph{compile-time}.
 
 \subsubsection{Higher order programming}
 
@@ -163,24 +164,23 @@ to verify such an implementation as correct due to heavy use
 of higher-order functions.
 Secondly, to aid him while writing the library.
 
-The proliferation of other abstract programming styles, like monads, in statically typed languages
-also suggested that such a static type system could
-help the programmer write and debug such code, while improving confidence that their code is correct.
+Programmers in statically typed languages take advantage of the static type system
+to help verify code written in abstract programming styles, like monads.
+Adding a static type system to Clojure should bring similar benefits to Clojure programmers.
 
-\subsection{Why does not Clojure feature static type checking?}
+\subsection{Why does Clojure not already feature static type checking?}
 
 Given the advantages of static type checking outlined in the previous section, it is natural to ask:
 why does Clojure not already support static type checking?
 The simplest answer is that Clojure was not designed to support a static type system.
 Instead, features and idioms that are not necessarily compatible with traditional type systems
-were favoured, like variable-arity functions, untyped hash-maps used like objects, and extension of program behaviour
-at runtime.
+were favoured, like variable-arity functions, untyped hash-maps used like objects, and dynamic extension of program behaviour.
 
 Without specifically speaking for the designers of Clojure, at the time Clojure was designed
 it was not clear how to reconcile Clojure's feature-set with static type checking in a satisfying way.
 Since then, Typed Racket, which add static type checking to the Racket programming language,
-have matured and gained acceptance.
-Once this occurred, it seemed like only a matter of time until the ideas developed for the Typed Racket project 
+has matured and gained acceptance.
+Once this occurred, it seemed only a matter of time until the ideas developed for the Typed Racket project 
 were tested for their applicability to Clojure. 
 As far as we know, this project is the first serious attempt to build an optional static type system for Clojure.
 
@@ -250,8 +250,8 @@ The contributions of the work described in this dissertation are as follows:
         We enable type checking of very abstract code (like code using monads)
         by adding \emph{type functions} (functions at the type level).
 
-  \item We support safer interoperability with Java. We show how techniques developed for
-        Typed Racket, such as occurrence typing~\cite{TF10},  of Java's \emph{null}
+  \item We support safer interoperability with Java from Clojure. We show how techniques developed for
+        Typed Racket, such as occurrence typing~\cite{TF10}, help detect misuses of Java's \emph{null}
         while still conforming to existing Clojure idioms.
 
   \item We can type check several particularly useful Clojure idioms, like common usages of the \emph{sequence abstraction}
@@ -368,23 +368,22 @@ Clojure programmers typically include datatype and protocol
 definitions. 
 Protocols are similar to Java interfaces~\cite{InterfaceTutorial} and datatypes are similar to classes implementing interfaces.
 We can annotate datatype and protocol definitions similarly.
-
+%bump over the page
+\\\\\\\\\\
 \begin{lstlisting}[caption=Annotating protocols and datatypes in Typed Clojure]
 (ns typed.test.deftype
-  (:require [typed.core 
-             :refer [check-ns ann-datatype
-                     tc-ignore ann-protocol AnyInteger]]))
+  (:require 
+    [typed.core :refer [check-ns ann-datatype defprotocol>
+                        ann-protocol AnyInteger]]))
 
 (ann-protocol Age 
-  :methods
-  {age [Age -> AnyInteger]})
-(tc-ignore
-  (defprotocol Age
-    (age [this])))
+  age [Age -> AnyInteger])
+(defprotocol> Age
+  (age [this]))
 
 (ann-datatype Person 
-  [[name :- String]
-   [age :- AnyInteger]])
+  [name :- String]
+   age :- AnyInteger])
 (deftype Person [name age]
   Age
   (age [this] age))
@@ -392,17 +391,16 @@ We can annotate datatype and protocol definitions similarly.
 (age (Person. "Lucy" 34))
 \end{lstlisting}
 
-\lstinline|defprotocol| defines a new Clojure protocol\footnote{See http://clojure.org/protocols for a full description of protocols.}
-with a set of methods. \lstinline|ann-protocol| is a Typed Clojure macro for annotating 
+\lstinline|defprotocol>| defines a new Clojure protocol\footnote{See http://clojure.org/protocols for a full description of protocols.}
+with a set of methods. It is identical to the usual \lstinline|defprotocol|, but is required when using Typed Clojure
+due to its complicated macroexpansion.
+\lstinline|ann-protocol| is a Typed Clojure macro for annotating 
 a protocol with the types of its methods.
 In this example, we define a protocol \lstinline|Age| with an \lstinline|age| method,
 which is really a first-class function taking the target object as the first parameter. The
 type signature provided with \lstinline|ann-protocol|, here \lstinline|[Age -> AnyInteger]|
 which is the type of the function taking an \lstinline|Age| and returning an \lstinline|AnyInteger|,
 is for this function.
-
-Invocations of \lstinline|defprotocol| are currently not able to be type checked
-and are ignored by Typed Clojure by passing them to \lstinline|typed.core/tc-ignore|.
 
 \lstinline|deftype|
 defines a new Clojure datatype\footnote{See http://clojure.org/datatypes for a full description of datatypes.}
@@ -500,14 +498,13 @@ whether a particular key is present, but not whether it is absent.
 The implications of this is discussed in section \ref{ref:designhmap}.
 Heterogeneous maps only support keys that are singleton Keyword types. This restriction is reflected
 in the syntax for defining heterogeneous map types.
-
+%bump
+\\\\
 \begin{lstlisting}[caption=Heterogeneous map types in Typed Clojure]
-...
 (ann config '{:file String, :ns Symbol}))
 (def config
   {:file "clojure/core.clj",
    :ns 'clojure.core})
-...
 \end{lstlisting}
 
 This example checks \lstinline|config| to be a heterogeneous map
@@ -532,7 +529,7 @@ that is sufficient to handle uniform and non-uniform variable-arity functions.
 Typed Clojure includes an implementation of the most immediately useful parts of variable-arity
 polymorphism using algorithms, nomenclature, and implementation based on this work.
 
-\subsubsection{Uniform Variable-Arity}
+\subsubsection{Uniform Variable-Arity Functions}
 
 A function with uniform variable parameters can treat its variable parameter
 as a homogeneous list. 
@@ -540,8 +537,9 @@ Strickland et al.\ attaches a \emph{starred pre-type} \lstinline|T *| to the rig
 in a function type, where \emph{T} is some type, and we take an identical approach.
 For example, \lstinline|+| in Clojure accepts any number of arguments
 of type \lstinline|Number|, represented by the type \lstinline|[Number * -> Number]|.
+\\\\\\\\
 
-
+%bump over page
 \begin{lstlisting}[caption=Typing multi-arity functions, label=lst:noteq]
 (ann not= (Fn [Any -> boolean]
               [Any Any -> boolean]
@@ -575,7 +573,7 @@ Typed Clojure supports usages of \emph{non-uniform} variable-arity functions,
 where the variable parameter is a heterogeneous list, represented by a \emph{dotted type variable}.
 
 For example, the variable argument function \lstinline|clojure.core/map| takes a function and one or more sequences,
-and returns the result of applying the function argument to each element of the sequences in a pair-wise fashion.
+and returns a sequence of the results of applying the function to each element of the sequences simultaneously.
 Its type is given in listing \ref{lst:maptype}.
 
 \begin{lstlisting}[caption=Type signature for \lstinline|clojure.core/map|, label=lst:maptype]
@@ -610,7 +608,8 @@ The instantiation
 returns an expression of type
 
 \begin{lstlisting}
-[[boolean String Integer -> Number] (U (Seqable boolean) nil) (U (Seqable String) nil) (U (Seqable Integer) nil) -> (LazySeq Number)]
+[[boolean String -> Number] (U (Seqable boolean) nil) 
+  (U (Seqable String) nil) -> (LazySeq Number)]
 \end{lstlisting}
 
 However, if sufficient types are given, the instantiation for \lstinline|map| can be inferred.
@@ -673,6 +672,9 @@ as using Java's type system from Java, for example it is a type
 error to pass arguments of the wrong type to methods.
 Typed Clojure also makes different decisions to Java's type system,
 particularly in the treatment of Java's \emph{null}.
+Note that these decisions do not change Java's type system, but only
+how Typed Clojure handles Java interoperability compared to how someone
+familiar with Java might expect.
 
 From the perspective of static types in Java, \emph{null} is included in all reference types.
 \emph{null} is represented in Clojure by the value \lstinline|nil|. Unlike Java's type system
@@ -681,8 +683,9 @@ more accurate types: we can directly express \emph{nullable} and \emph{not nulla
 (A type is \emph{nullable} if it may also be \emph{null},
 which is expressed in Typed Clojure by creating a union of the type and \lstinline|nil|.
 A type is \emph{not nullable} if it doesn't include \emph{null}).
-
-\begin{lstlisting}[caption=Java interoperability with Typed Clojure]
+%bump over the page
+\\\\
+\begin{lstlisting}[caption=Java interoperability with Typed Clojure, label=lst:interopfile]
 (ns typed.test.interop
   (:import (java.io File))
   (:require [typed.core :refer [ann non-nil-return check-ns]]))
@@ -699,7 +702,7 @@ A type is \emph{not nullable} if it doesn't include \emph{null}).
 
 \end{lstlisting}
 
-This example shows how Typed Clojure handles \emph{null} while creating and
+Listing \ref{lst:interopfile} shows how Typed Clojure handles \emph{null} while creating and
 using an instance of \emph{java.io.File}.
 
 Typed Clojure checks calls to Java constructors by requiring the provided
