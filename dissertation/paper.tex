@@ -31,7 +31,7 @@
 \title{A Practical Optional Type System for Clojure}
 \author{Ambrose Bonnaire-Sergeant}
 
-\keywords{Type systems, Clojure}
+\keywords{Programming languages, optional type systems, Clojure}
 % TODO What are categories? cshonours requires them - but commented out now
 %\categories{}
 
@@ -41,34 +41,37 @@
 
 \begin{abstract}
 
-Traditionally there has been a clear distinction between 
-programming languages that perform type checking at compile-time, and those that do not.
-In particular, the early wide-spread programming languages ALGOL and Lisp
-could be divided this way: ALGOL performs compile-time (or static) type checking,
-and Lisp does not, and most recent languages can be similarly classified.
-Static type checking eliminates many common user errors that are otherwise unnoticed or are caught 
-when the program is run.
-On the other hand, a language without static type checking can often be designed 
-to be more flexible and forgiving, making it easy, for example, to have a \emph{map} function that can map functions
-with any number of arguments (as in most Lisp dialects).
+%Traditionally there has been a clear distinction between 
+%programming languages that perform type checking at compile-time, and those that do not.
+%In particular, the early wide-spread programming languages ALGOL and Lisp
+%could be divided this way: ALGOL performs compile-time (or static) type checking,
+%and Lisp does not, and most recent languages can be similarly classified.
+%Static type checking eliminates many common user errors that are otherwise unnoticed or are caught 
+%when the program is run.
+%On the other hand, a language without static type checking can often be designed 
+%to be more flexible and forgiving, making it easy, for example, to have a \emph{map} function that can map functions
+%with any number of arguments (as in most Lisp dialects).
+%
+%A recent trend is to aim to combine the advantages of both kinds of languages by adding optional static 
+%type systems to languages without static type checking. 
+%A major challenge in these combinations is continuing to support the idiomatic style of the original 
+%language while performing accurate enough checking to catch similar errors to standard statically
+%typed languages. Some recent attempts appear to have finally produced type systems that have overcome this obstacle.
+%Notably Typed Racket, a typed sister language of the Lisp dialect Racket, is able to statically type 
+%check most idiomatic Racket code.
+%These optional type systems have some important differences from standard static
+%type systems, for example they often include \emph{union} types.
+%
 
-A recent trend is to aim to combine the advantages of both kinds of languages by adding optional static 
-type systems to languages without static type checking. 
-A major challenge in these combinations is continuing to support the idiomatic style of the original 
-language while performing accurate enough checking to catch similar errors to standard statically
-typed languages. Some recent attempts appear to have finally produced type systems that have overcome this obstacle.
-Notably Typed Racket, a typed sister language of the Lisp dialect Racket, is able to statically type 
-check most idiomatic Racket code.
-These optional type systems have some important differences from standard static
-type systems, for example they often include \emph{union} types.
+Dynamic programming languages often abandon the advantages of static type checking 
+in favour of their characteristic convenience and flexibility.
+Static type checking eliminates many common user errors at compile-time that
+are otherwise unnoticed, or are caught later in languages without static type checking.
+A recent trend is to aim to combine the advantages of both kinds of languages by adding \emph{optional} static 
+type systems to languages without static type checking, while preserving the languages idioms and style.
 
-Clojure is a recent and increasingly popular programming language that is designed to support 
-functional programming and immutability by default. Implementations of Clojure are hosted 
-on popular platforms and provide direct interoperability with the host platform.
-There are several implementations of Clojure, each targeting different runtimes including
-the Java Virtual Machine, the Common Language Runtime, and Javascript virtual machines.
-
-This dissertation describes my work on designing an optional static type system for Clojure based on
+This dissertation describes my work on designing an optional static type system for the Clojure programming language,
+a dynamically typed dialect of Lisp, based on
 the lessons learnt from several projects, primarily Typed Racket.
 This work includes designing and building a type checker for Clojure running on the Java Virtual Machine.
 Several experiments are conducted using this prototype, particularly involving
@@ -81,10 +84,11 @@ usually by adding type annotations in natural places like function definitions.
 
 There is significant future work to fully type check all Clojure features and idioms.
 For example, multimethod definitions and functions with particular constraints on the number of 
-variable arguments they accept (particularly, functions taking only an even number of variable arguments) are troublesome. 
+variable arguments they accept (particularly functions taking only an even number of variable arguments) are troublesome. 
 Also, there are desirable features from the Typed Racket project that are missing, such
 as automatic runtime contract generation and a sophisticated blame system, 
 both which are designed to improve error messages when mixing typed and untyped code in similar systems.
+
 Overall, the work described in this dissertation leads to the conclusion that it appears to 
 be both practical and useful to design and implement an optional static type system for the
 Clojure programming language.
@@ -95,7 +99,7 @@ Clojure programming language.
 
 The past year has included by far my most enjoyable and motivating programming-related experiences.
 
-Last November I attended my first conference, Clojure Conj 2011 (Raleigh, NC),
+Last November I attended my first programming conference, Clojure Conj 2011 (Raleigh, NC),
 where I delivered a talk on logic programming with Clojure and met some of my programming heroes.
 A week later my supervisor Rowan Davies invited me to visit Carnegie Mellon University
 where he worked on his PhD project. Most memorably, I was invited to a meeting between
@@ -106,21 +110,22 @@ this work was directly inspired from conversations during this period.
 
 Many thanks go to my supervisor Rowan. His influence as a lecturer inspired my exploration of
 functional programming languages. He has exceeded my expectations as an honours supervisor,
-often dedicating time to assist me on public holidays and weekends.
+and we plan to continue to collaborate in this area.
 Rowan's experience with refinement types brought a unique perspective to this project
 which was very welcome.
 
-I'd also like to thank: Sam Tobin-Hochstadt for his consistent assistance and patience;
-David Nolen for mentoring this project as part of Google Summer of Code 2012;
-and Chas Emerick, without whom I would have never considered attending Clojure Conj 2011
+I am grateful to Sam Tobin-Hochstadt for his pioneering work in this area of research.
+He has always been happy to offer assistance and advise throughout this project, which always proved invaluable.
+
+I would also like to thank David Nolen for mentoring this project as part of Google Summer of Code 2012,
+and Chas Emerick, without whom I would have never even considered attending Clojure Conj 2011
 (and this work probably would not have happened).
 Also, Daniel Spiewak, Dan Friedman and William Byrd, Jim Duey, Baishampayan Ghose, Sam Aaron, and
 Steve Strickland, thank you for your help and inspiration.
 Thank you Rich Hickey for creating Clojure, it is a thrill to build tools that make
 this great language even better.
 
-Fittingly, I have been invited to talk on Typed Clojure at Clojure Conj
-2012 in November, which I am highly anticipating.
+Fittingly, I gave a talk on Typed Clojure at Clojure Conj 2012, which was extremely satisfying.
 
 Finally, thanks to my family, friends and to my girlfriend Tamara, each for your love and support.
 

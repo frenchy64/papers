@@ -149,8 +149,8 @@ Listing \ref{lst:tcctime} deserves some explanation:
 \subsubsection{Higher order programming}
 
 The initial motivation for implementing an optional type system
-for Clojure was an anecdotal account of the struggles
-of a Clojure programmer, Jim Duey. In an apparently heroic effort, Duey managed to 
+for Clojure was outlined in a discussion with Jim Duey, a Clojure programmer, at Clojure Conj 2011.
+In an apparently heroic effort, Duey managed to
 implement a Clojure library for conduits~\footnote{\url{http://www.yesodweb.com/book/conduits}}, 
 an advanced form of ``pipes'', using arrows, a generalisation of monads.
 Conduits also significantly surpass monads in complexity and are usually reserved
@@ -163,12 +163,26 @@ to verify such an implementation as correct due to heavy use
 of higher-order functions.
 Secondly, to aid him while writing the library.
 
-Since then, the Clojure community has shown significant interest in this work.
-I also developed this project as a Google Summer of Code 2012 project,
-after it was selected by the Clojure community as a Clojure Google Summer of Code
-project for 2012~\cite{GSOC2012}.
-I have also been invited to speak on this project at the Clojure Conj
-2012 conference in November, the main international conference related to Clojure.
+The proliferation of other abstract programming styles, like monads, in statically typed languages
+also suggested that such a static type system could
+help the programmer write and debug such code, while improving confidence that their code is correct.
+
+\subsection{Why does not Clojure feature static type checking?}
+
+Given the advantages of static type checking outlined in the previous section, it is natural to ask:
+why does Clojure not already support static type checking?
+The simplest answer is that Clojure was not designed to support a static type system.
+Instead, features and idioms that are not necessarily compatible with traditional type systems
+were favoured, like variable-arity functions, untyped hash-maps used like objects, and extension of program behaviour
+at runtime.
+
+Without specifically speaking for the designers of Clojure, at the time Clojure was designed
+it was not clear how to reconcile Clojure's feature-set with static type checking in a satisfying way.
+Since then, Typed Racket, which add static type checking to the Racket programming language,
+have matured and gained acceptance.
+Once this occurred, it seemed like only a matter of time until the ideas developed for the Typed Racket project 
+were tested for their applicability to Clojure. 
+As far as we know, this project is the first serious attempt to build an optional static type system for Clojure.
 
 \subsection{What kind of type system does Typed Clojure provide?}
 
@@ -201,6 +215,19 @@ is not essential to running programs. A dynamically typed language can be viewed
 as having a trivial static type system that supports exactly one type,
 a view advocated by Harper~\cite{Har12}
 and common in the literature on static types (for example, Pierce~\cite{Pie02}).
+
+\subsection{What is the community reaction to Typed Clojure?}
+
+Since I began developing Typed Clojure, the Clojure community has shown significant interest in this work:
+
+
+\begin{itemize}
+  \item I developed this project as a Google Summer of Code 2012 project,
+        after it was selected by the Clojure community as a Clojure Google Summer of Code
+        project for 2012~\cite{GSOC2012}.
+  \item I gave a talk on this project at the Clojure Conj
+        2012 conference, the main international programming conference related to Clojure, in November.
+\end{itemize}
 
 \section{Contributions}
 

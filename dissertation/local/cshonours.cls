@@ -112,7 +112,7 @@ class report.cls by Cara MacNish August 1999/September 2000]
 \ExecuteOptions{a4paper,12pt,oneside,onecolumn,final,openany}  %ckm
 \ProcessOptions
 
-\def\@submityear{\number\the\year}              %ckm
+\def\@submityear{2012}              %ckm
 \def\keywords#1{\gdef\@keywords{#1}}		%ckm
 \def\categories#1{\gdef\@categories{#1}}	%ckm
 
@@ -203,8 +203,10 @@ class report.cls by Cara MacNish August 1999/September 2000]
       \vskip 1.5em%
 %ckm    {\large Draft \@date \par}%       % Set date in \large size.
 %ckm  \vfil\null
+    \vskip 0.5em%
+		  {Supervised by Rowan Davies}
 \vfill
-		{\it This report is submitted as partial fulfilment\\
+      {\it This report is submitted as partial fulfilment\\
 		of the requirements for the Honours Programme of the\\
 		School of Computer Science and Software Engineering,\\
 		The University of Western Australia,\\
