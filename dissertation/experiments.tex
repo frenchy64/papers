@@ -18,7 +18,9 @@ My porting effort attempted to follow how a real programmer might port code to T
 I describe this process step-by-step.
 
 This section describes porting a function from \emph{clojure.contrib.reflect}
-\footnote{\emph{clojure.contrib} Github project: https://github.com/richhickey/clojure-contrib},
+\footnote{\emph{clojure.contrib} Github project: https://github.com/richhickey/clojure-contrib}
+\footnote{Note that while the \emph{clojure.contrib} library as a whole should be considered deprecated, useful
+code still exists within it which apparently has not been migrated elsewhere.},
 a Clojure library that relies heavily on Java interoperability.
 I chose to port \lstinline|call-method| for several reasons: it chains several Java calls together,
 it uses primitive arrays, and \lstinline|null| is a valid value in one place.
@@ -128,7 +130,8 @@ of \lstinline|invoke| may be nil, for the arity of two parameters.
 \end{lstlisting}
 
 The final successfully type checked code is presented in Listing \ref{lst:callmethodfinal}.
-
+\\\\
+% bump to next page
 \begin{lstlisting}[caption=Type Annotated code for call-method, label=lst:callmethodfinal]
 (non-nil-return java.lang.Class/getDeclaredMethod :all)
 (nilable-param java.lang.reflect.Method/invoke {2 #{0}})
@@ -162,19 +165,15 @@ types.
 The red-black tree implementation was ported to work with SML CIDRE
 to statically check red-black tree invariants.
 It is a particularly good experiment for SML CIDRE because it generates an unusually large
-amount of intersection types.
+number of intersection types.
 
 Intersection types in SML CIDRE are heavily optimised via memoisation.
 Because of this, SML CIDRE is able to check this experiment with little trouble.
 The current Typed Clojure prototype is not as successful, and appears to hang
-during type checking.
-The reasons are not entirely clear, but it is likely the number of intersection types
-are too large for the current prototype to handle, which has no optimisations
-around intersection types.
+during type checking. As this experiment was particularly ambitious,
+diagnosing and fixing this issue is delegated to future work.
 
-This experiment was intended to stress test Typed Clojure to an extreme, and
-it is unsurprising that Typed Clojure was not up to the task.
-One interesting point was noticed when porting it.
+One interesting point was noticed when porting the experiment.
 The SML CIDRE version of the red-black tree experiment
 uses SML CIDRE datasorts to represent the red-black tree invariants.
 The Typed Clojure version entirely uses plain hash-maps, a common Clojure idiom.
@@ -291,12 +290,10 @@ In this case, just the monadic bind required annotation.
 (ann maybe-m (MonadPlusZero
                (TFn [[x :variance :covariant]] 
                  (U nil x))))
-
 ; Sequence monad (called "list monad" in Haskell)
 (ann sequence-m (MonadPlusZero 
                   (TFn [[x :variance :covariant]]
                     (Seqable x))))
-
 ; State monad
 (def-alias State
   (TFn [[r :variance :covariant]
@@ -322,14 +319,11 @@ Monad transformers are always parameterised by a monad type constructor, and sho
 monad type constructors. Keeping the monad type constructor abstract allows us to determine
 whether a monad transformer works \emph{for all} monads.
 
-Listing \ref{lst:maybet} shows the full code for type checking the definition
-of the maybe monad transformer.
-Typing this example was a matter of assigning types to anonymous functions
-(similar to standard monad definitions) and manually instantiating 
-polymorphic types with \lstinline|inst|
-that parameterise over higher kinds, which cannot be inferred by Typed Clojure.
+Finally, Listing \ref{lst:maybet} shows the type assigned to the maybe monad transformer definition.
+The most interesting aspect to notice here is that the monad \lstinline|m| is kept abstract throughout
+the type.
 
-\begin{lstlisting}[caption={Maybe monad transformer in Typed Clojure}, label=lst:maybet]
+\begin{lstlisting}[caption={Maybe monad transformer type}, label=lst:maybet]
 (ann maybe-t
      (All [[m :kind (TFn [[x :variance :covariant]] Any)]]
        (Fn 
@@ -340,48 +334,6 @@ that parameterise over higher kinds, which cannot be inferred by Typed Clojure.
          [(AnyMonad m) nil (U ':m-plus-default ':m-plus-from-base)
           -> (MonadPlusZero (TFn [[y :variance :covariant]]
                               (m (U nil y))))])))
-(defn maybe-t
-  "Monad transformer that transforms a monad m into a monad in which
-   the base values can be invalid (represented by nothing, which defaults
-   to nil). The third argument chooses if m-zero and m-plus are inherited
-   from the base monad (use :m-plus-from-base) or adopt maybe-like
-   behaviour (use :m-plus-from-transformer). The default is :m-plus-from-base
-   if the base monad m has a definition for m-plus, and
-   :m-plus-from-transformer otherwise."
-  ([m] ((inst maybe-t m) m nil :m-plus-default))
-  ([m nothing] ((inst maybe-t m) m nothing :m-plus-default))
-  ([m nothing which-m-plus]
-   (monad-transformer m which-m-plus
-     [m-result (with-monad m m-result)
-      m-bind   (with-monad m
-                 (ann-form
-                   (fn m-bind-maybe-t [mv f]
-                     (m-bind
-                       mv
-                       (ann-form
-                         (fn [x]
-                           (if (nil? x)
-                             (m-result nothing) 
-                             (f x)))
-                         [(U nil a) -> (m (U nil b))])))
-                   (All [a b]
-                     [(m (U nil a)) [a -> (m (U nil b))] -> (m (U nil b))])))
-      m-zero   (with-monad m (m-result nothing))
-      m-plus   (with-monad m
-                 (ann-form
-                   (fn m-plus-maybe-t [& mvs]
-                     (if (empty? mvs)
-                       (m-result nothing)
-                       (m-bind (first mvs)
-                               (ann-form
-                                 (fn [v]
-                                   (if (= v nothing)
-                                     (apply m-plus-maybe-t (rest mvs))
-                                     (m-result v)))
-                                 [(U x nil) -> (m (U x nil))]))))
-                   (All [x] [(m (U x nil)) * -> (m (U x nil))])))
-      ])))
-
 \end{lstlisting}
 
 \section{Conduit}
@@ -404,7 +356,7 @@ recursive types. This is not in itself interesting, but Typed Clojure
 implements conduit types as \emph{type functions} with variance,
 which required the variance of the conduit types to be known in advance.
 
-Listing \ref{lst:conduittypes} shows the type constructor for conduit,
+Listing \ref{lst:conduittypes} shows the type constructor for a conduit type,
 \lstinline|==>|. Notice the body of \lstinline|==>| includes a reference
 to itself in a position where variance must be known in advance.
 \lstinline|declare-alias-kind| is used to declare the kind of an alias.
@@ -414,8 +366,6 @@ the defined kind must match the declared kind, otherwise a type error is thrown.
 so they are not explained).
 
 \begin{lstlisting}[caption=Types for Conduits, label=lst:conduittypes]
-...
-
 (def-alias Result
   (TFn [[x :variance :covariant]]
     (U nil ;stream is closed
@@ -436,8 +386,6 @@ so they are not explained).
   (TFn [[in :variance :contravariant] 
         [out :variance :invariant]]
     [in -> '[(U nil (==> in out)) (Cont out out)]]))
-
-...
 \end{lstlisting}
 
 

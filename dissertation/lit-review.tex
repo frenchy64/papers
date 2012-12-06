@@ -77,7 +77,7 @@ error reporting that required PhD-level expertise to decipher.
 
 \subsection{Program Analysis}
 
-Scheme then moved to program analysis techniques like Set Based Analysis (SBA).
+Scheme then moved to program analysis techniques like Set-Based Analysis~\cite{FF97} (SBA).
 They, however, suffered from modularity issues due to the lack of declared intended types.
 MrSpidey\footnote{\url{http://www.plt-scheme.org/software/mrspidey/}}
 is a static type checker for Racket that uses uses SBA.
@@ -87,7 +87,7 @@ types; errors remain difficult to explain and fix''~\cite{Fell09}.
 \subsection{Gradual Typing}
 
 Gradual typing combines static and runtime type checking, so programmers
-can utilise whichever is most appropriate for a given situation.
+can choose the most appropriate one for the situation.
 A key feature of gradual type systems is its use of \emph{bidirectional checking}
 like~\cite{PT00}, which requires type annotations in natural places like functions.
 Type errors in gradual type systems are often more manageable than in Soft Typing and SBA,
@@ -101,7 +101,7 @@ by inserting runtime checks.
 Typescript~\cite{TypeS2012}, a gradual type system for Javascript, 
 does not add runtime checks to untyped interactions.
 Runtime checks affect performance, but give better errors and ensure
-type errors result in the program failing quicker.
+type errors result in the program failing more quickly.
 
 \section{Interlanguage Interoperability}
 
@@ -109,7 +109,7 @@ This section compares several existing languages that feature interlanguage inte
 
 Clojure is a dynamic functional language hosted on the Java Virtual Machine. It provides 
 interoperability with Java libraries. As Clojure is a dynamically typed language, it does
-not give strong type type guarantees at compile time whether interactions with Java
+not give strong type guarantees at compile time that interactions with Java
 are type safe.
 
 Scala is a statically typed language on the Java Virtual Machine offering integrated interoperability with Java, a typed language.
@@ -122,13 +122,13 @@ Typed Racket includes safe interoperability between any combination of typed and
 Racket modules~\cite{Tob10,TF08}. 
 Interactions with untyped modules are protected by adding runtime checks based on expected types.
 Typed Racket implements a sophisticated blame calculus, based on Wadler~\cite{WF09}. It ensures 
-error messages correctly \emph{blame} the source of type errors,
+error messages always correctly \emph{blame} the source of type errors,
 which can be difficult to determine in the presence of higher-order functions. 
 
 \section{Record Types}
 \label{sec:recordtypes}
 
-O'Caml-style extensible record types has been the subject of extensive research 
+O'Caml-style extensible record types have been the subject of extensive research 
 (eg. Wand~\cite{Wan89}, Cardelli and Mitchell~\cite{CM91}, Harper and Pierce~\cite{HP91}).
 Typed Clojure's heterogeneous map types show some resemblance to extensible
 record types, but a survey of the literature did not reveal research flexible
@@ -206,7 +206,7 @@ used correctly) provides strong elimination for \emph{null}.
 \emph{null} is still not expressible as a type in Scala, however.
 Arrays are parameterised by a non-variant (or invariant) parameter,
 which are checked using \emph{conservative approximation}~\cite{OSV08}. For example,
-this checks that covariant parameters are only used in covariant positions.
+this checks that covariant parameters are used only in covariant positions.
 
 \section{Function Types}
 
@@ -220,11 +220,13 @@ that takes the remaining arguments.
 Using tuples instead requires that the same number of arguments be supplied,
 while using lists allows any number, but requires that all arguments have the same type.
 
-In untyped languages like Scheme, functions can take any number of arguments. It is an
-error to supply less than the minimum number of arguments to a function.
+In untyped languages like Scheme, functions can have more complicated arity.
+In this context, functions have a fixed number of required parameters, and an optional \emph{rest}
+parameter, which represents the sequence of the arguments provided after the required parameters.
+It is an error to apply a function to fewer arguments than the functions number of required parameters.
 This style features sophisticated support for functions with variable-arity. For example,
-functions can dispatch on the number of arguments provided, and supports a \emph{rest} parameter
-as its last parameter which can accept any number of arguments.
+Scheme functions can dispatch on the number of arguments provided, and support an optional \emph{rest} parameter
+which can accept any number of arguments.
 
 In this regard, Clojure takes an approach identical to Scheme, and supports all the features
 mentioned in the previous paragraph, and none characterised by Haskell-style functions.
@@ -234,14 +236,14 @@ and move directly to literature applicable to typing Scheme-style functions.
 \subsection{Variable-Arity Polymorphism}
 \label{sec:variablearity}
 
-Strickland et al.\ invented a type system supporting variable-arity polymorphism ~\cite{STF09}
+Strickland \emph{et al.} invented a type system supporting variable-arity polymorphism ~\cite{STF09} % doesn't fit on a line
 a version of which is included in the current implementation of Typed Racket.
 Their main innovation centres around \emph{dotted type variables}, which represent a heterogeneous sequence
 of types. Dotted type variables allow \emph{non-uniform} variable-arity function types,
 which are used to check definitions and usages of functions with non-trivial rest parameters
 
-For example in Clojure, the function \lstinline|map| takes a function and one or more sequences,
-and returns the result of applying the function argument to each element of the sequences pair-wise.
+For example in Clojure, the function \lstinline|map| takes a function and at least one sequence,
+and returns a sequence of the results of applying the function to each subsequent element of the sequences simultaneously.
 
 \begin{lstlisting}[caption=An application of the non-uniform variable-arity function \lstinline|map|, label=lst:map]
 (map + [1 2] [2.1 3.2]) 
@@ -280,14 +282,14 @@ known as \emph{checking} and \emph{synthesis} mode respectively.
 ;=> (3.1 5.2)
 \end{lstlisting}
 
-The pseudocode in listing \ref{lst:bidir} show both algorithms in action. Local type argument synthesis is able
+The pseudocode in Listing \ref{lst:bidir} show both algorithms in action. Local type argument synthesis is able
 to infer the type arguments to \lstinline|map| by observing the argument types of the first
 argument to \lstinline|map| and the types of subsequent sequence arguments. Bidirectional checking
 then \emph{synthesises} the resulting type of the expression by \emph{checking} each element
 of \lstinline|[1 2]| is a subtype of \lstinline|a|, and each element of \lstinline|[2.1 3.2]| is a subtype of
 \lstinline|b|. The result of the anonymous function argument is \emph{synthesised} from the type of
 \lstinline|(+ a b)| as \lstinline|Float|. We now have sufficient information to 
-synthesise the type of listing \ref{lst:bidir} to be \lstinline|(LazySeq Float)|.
+synthesise the type of Listing \ref{lst:bidir} to be \lstinline|(LazySeq Float)|.
 
 Pierce and Turner split \emph{local type argument synthesis} into two further
 algorithms: bounded, and unbounded quantification~\cite{PT00}. 
@@ -402,7 +404,7 @@ Both these features would fit well in a future implementation of this project.
 Dynamically typed languages use an ad-hoc combination of type predicates,
 selectors, and conditionals to steer execution flow and reason about runtime types of variables.
 Typed Racket uses occurrence typing to capture these ad-hoc type refinements.
-For example, listing \ref{lst:occ1} shows occurrence typing following the implications 
+For example, Listing \ref{lst:occ1} shows occurrence typing following the implications 
 of the type predicate \emph{number?} and the selector \emph{first}, and utilises those implications to refine
 the type of \lstinline|x|. If the test at line 3 succeeds, occurrence typing refines the
 type of \lstinline|(first x)| to be \lstinline|Number|, which allows \lstinline|(+ 1 (first x))|
@@ -424,7 +426,7 @@ with bindings in the \emph{type environment} down branches
 so binding occurrences are given different types 
 depending on the branches they appear in, and the conditionals
 that lead to that branch.
-(See section \ref{sec:occurenceimpl} for details on how Typed Clojure uses occurrence typing).
+(See Section \ref{sec:occurenceimpl} for details on how Typed Clojure uses occurrence typing).
 
 For occurrence typing to infer propositions from type predicate usages, it requires 
 two extra annotations: a ``then'' proposition
@@ -435,6 +437,8 @@ is of type \lstinline|Number|, and an ``else'' proposition that says its argumen
 An exciting application of occurrence typing as yet unexplored is facilitating null-safe interoperability with Java.
 By declaring \lstinline|nil| (Clojure's value of Java's \lstinline|null|) to \emph{not} be a subtype of reference types,
 we can begin to statically disallow potentially inconsistent usages of \lstinline|nil| as part of the type system.
+\\\\
+% fit next listing onto one page
 
 \begin{lstlisting}[caption=Observing nil-checks using occurrence typing, label=lst:nil]
 (let [a (ObjectFactory/getObject)]
@@ -442,13 +446,13 @@ we can begin to statically disallow potentially inconsistent usages of \lstinlin
     (expects-non-nil a)))
 \end{lstlisting}
 
-Listing \ref{lst:nil} infers from the Java signature \lstinline|Object getObject()| that
+Listing \ref{lst:nil} infers from the Java signature \lstinline|Object getObject()|
 that \lstinline|a| is of type \lstinline|(U nil Object)|. This is equivalent to Java's
 \lstinline|Object| static type, as \lstinline|null| is a member of all reference types. By surrounding
 the call \lstinline|(expects-non-nil a)| with \lstinline|(when a ...)|, we guarantee that
 \lstinline|a| is non-nil when passed to \lstinline|expects-non-nil|. Occurrence typing infers
 this by observing \lstinline|nil| is a false value in Clojure, therefore \lstinline|a| cannot
-be \lstinline|nil| the body of the \lstinline|when|, refining \lstinline|a|'s type to \lstinline|Object|
+be \lstinline|nil| in the body of the \lstinline|when|, refining \lstinline|a|'s type to \lstinline|Object|
 from \lstinline|(U nil Object)|.
 
 Occurrence typing is a relatively simple technique used successfully 
@@ -468,21 +472,21 @@ multimethods: ``it is possible for two modules containing arbitrary multimethods
 successfully in isolation but generate type errors when linked together.''~\cite{MS02}
 
 After some investigation, typing multimethods with Typed Clojure is assigned as future work
-(see section \ref{sec:mmfuture}).
+(see Section \ref{sec:mmfuture}).
 
 \section{Higher Kinded Programming}
 
 Many advanced type systems provide support for \emph{higher kinds},
 which are ``another level up'' from types.
 For example, a type \lstinline|Number| is distinguished from a
-\emph{type constructor} \lstinline|Monad| (see section \ref{sec:monads}), which is a type level function
+\emph{type constructor} \lstinline|Monad| (see Section \ref{sec:monads}), which is a type level function
 (similar to the difference between values and functions on the value level, but on the type level).
 
 F$_\omega$ is a typed $\lambda$-calculus with support for higher kinds,
 specifically type constructors (see Pierce~\cite{Pie02}).
 Haskell~\cite{Mar10} distinguishes between types and type constructors,
 the latter of which is an essential part of its monad library 
-(see section \ref{sec:monads} for a monad library ported to Typed Clojure
+(see Section \ref{sec:monads} for a monad library ported to Typed Clojure
 that uses type constructors similarly).
 
 \section{Conclusion}

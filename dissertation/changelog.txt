@@ -1,6 +1,5 @@
 # TODO
 
-- RHickey reference
 - Wadler builds on work by TH
 - MrSpidey reference
 - racket contracts reference (SamTH, 30/10/12)

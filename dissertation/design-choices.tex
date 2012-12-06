@@ -19,18 +19,27 @@ This section details some of these differences.
 
 Occurrence typing, described by Tobin-Hochstadt and Felleisen~\cite{TF10},
 plays a major role in capturing many common Clojure idioms.
-One such idiom is the \emph{sequence abstraction}, which
-consists of the \lstinline|clojure.core| functions \lstinline|seq|, \lstinline|first|, and \lstinline|rest|.
+One such idiom is Clojure's \emph{sequence abstraction}, which
+provides a common interface to all collections.
+For example, \lstinline|seq| tests whether a collection is empty,
+\lstinline|first| returns the first element of a collection,
+and \lstinline|rest| returns the tail of its collection argument as a new sequence.
+While these summaries describe their most common usages, they do not tell the whole story.
 
-\lstinline|seq| takes an argument that is either a sequence or \lstinline|nil|,
-and returns a non-empty sequence if passed a non-empty sequence, or returns
-\lstinline|nil| if passed an empty sequence or \lstinline|nil|.
-It is a common idiom to test \lstinline|(seq coll)| in a conditional
-to determine whether the sequence \lstinline|coll| is empty:
-if \lstinline|(seq coll)| is a true value, then \lstinline|coll|
-is non-empty, otherwise it should be considered empty.
-Occurrence typing allows us to capture this idiom as shown in
-listing \ref{lst:seqtype}.
+\lstinline|seq|'s description might suggest it is better named \lstinline|not-empty?|,
+but \lstinline|seq| is perhaps surprising in two main ways: 
+it accepts \lstinline|nil| as an argument (returning \lstinline|nil|),
+and, rather than returning \lstinline|true| or \lstinline|false|, returns
+a non-empty sequence or \lstinline|nil| respectively.
+
+From a typing perspective, the subtlety of \lstinline|seq| is expressing that \lstinline|(seq coll)|
+
+\begin{itemize}
+  \item is a true value when \lstinline|coll| is a non-empty collection, and
+  \item is a false value when \lstinline|coll| is either \lstinline|nil| or an empty collection.
+\end{itemize}
+
+Occurrence typing allows us to capture this idiom (Listing \ref{lst:seqtype}).
 
 \begin{lstlisting}[caption=Type associated with clojure.core/seq, label=lst:seqtype]
 (All [x]
@@ -40,7 +49,8 @@ listing \ref{lst:seqtype}.
                       (is (ExactCount 0) 0))}])
 \end{lstlisting}
 
-This function type takes an argument of type \lstinline|(U nil (Seqable x))| (the syntax \lstinline[mathescape]{(U $\overrightarrow{t}$)}
+This function type (Listing \ref{lst:seqtype}) 
+takes an argument of type \lstinline|(U nil (Seqable x))| (the syntax \lstinline[mathescape]{(U $\overrightarrow{t}$)}
 constructs a union of types \lstinline|t|), and returns a type \lstinline|(U nil (Seqable x))|.
 Occurrence typing allows us to attach propositions to the return
 type of a function. Roughly, these say if \lstinline|(seq coll)|
@@ -50,13 +60,18 @@ otherwise \lstinline|coll| is \emph{either} of type \lstinline|nil| or of type \
 representing an empty sequence).
 (See Section \ref{sec:filterneg} for a more detailed explanation of the filter syntax).
 
-Correspondingly, \lstinline|first| which returns the first member of a sequence,
-can be given a more accurate (and surprisingly subtle) type.
-\lstinline|first| is overloaded in a similar fashion to \lstinline|seq|.
-\lstinline|first| takes an argument that is either a sequence or \lstinline|nil|.
-If it is passed \lstinline|nil| or an empty sequence, it returns \lstinline|nil|. Otherwise, if it is passed
-non-empty sequence, it returns the first member of the sequence.
+\lstinline|first| is overloaded in a similar fashion to \lstinline|seq|:
+\lstinline|(first coll)| returns
+
+\begin{itemize}
+  \item \lstinline|nil| if \lstinline|coll| is \lstinline|nil| or an empty collection, and
+  \item returns the first item of the collection if \lstinline|coll| is a non-empty collection.
+\end{itemize}
+
 Listing \ref{lst:firsttype} shows the type of \lstinline|first|.
+The main thing to grasp from this definition is that three function types are given:
+the first type handling the first case above, the second type handling the second case above,
+and the third arity acting as a base case, general enough to catch both cases.
 
 \begin{lstlisting}[caption=Type associated with clojure.core/first, label=lst:firsttype]
 (All [x]
@@ -65,15 +80,8 @@ Listing \ref{lst:firsttype} shows the type of \lstinline|first|.
       [(U nil (Seqable x)) -> (U nil x)])))
 \end{lstlisting}
 
-The function type has three arities, the last of which can be considered a ``default'' arity.
-The first two arities correspond exactly to the two cases described for when 
-\lstinline|first| is passed an empty sequence or \lstinline|nil|, and
-when \lstinline|first| is passed a non-empty sequence
-(the syntax \lstinline[mathescape]{(I $\overrightarrow{t}$)}
-constructs an intersection of types \lstinline|t|).
-
-These two functions interact via occurrence typing.
-For example, listing \ref{lst:seqocc} tests
+\lstinline|seq| and \lstinline|first| interact via occurrence typing.
+For example, Listing \ref{lst:seqocc} tests
 \lstinline|(seq coll)| which means occurrences of \lstinline|coll|
 in the ``then'' branch are non-empty and those in the
 ``else'' branch are empty.
@@ -94,11 +102,11 @@ always avoiding a \emph{NullPointerException}.
 
 Strickland, Tobin-Hochstadt, and Felleisen describe variable-arity poly\-morphism ~\cite{STF09},
 which has been implemented in Typed Racket.
-Typed Clojure directly ports most of Typed Racket implementation of variable-arity polymorphism,
-as described in Section \ref{sec:impvariablearity}
+Typed Clojure directly ports most of Typed Racket's implementation of variable-arity polymorphism,
+as described in Section \ref{sec:impvariablearity}.
 
 Some common idiomatic Clojure functions like \lstinline|assoc|, \lstinline|hash-map|,
-and \lstinline|partial| cannot be typed by Strickland et al.\ .
+and \lstinline|partial| cannot be typed by Strickland \emph{et al.}.
 Instead, Typed Clojure hard-codes some of these functions as primitives that cannot
 be used in a higher-order context.
 Expressing the types of these functions is set as future work (Section \ref{sec:futurearity}).
@@ -150,7 +158,7 @@ without first checking its component type, but reads remain legal.
 
 This scheme should be considered experimental, and is not completely fleshed out or implemented.
 Notably, the component type \lstinline|c| seems redundant, and Typed Clojure currently
-does not provide syntax to ``cast'' an unwriteable array to a be writeable.
+does not provide syntax to ``cast'' an unwriteable array to be writeable.
 
 \subsection{Interaction with \emph{null}}
 \label{sec:interactionnull}
@@ -195,7 +203,8 @@ Instead, Typed Clojure helps the programmer by statically proving many misuses o
 This decision, however, needs further work to be completely satisfying.
 In particular, type inference should be improved in certain common situations.
 For example, we currently do not know how to infer \lstinline|(filter identity coll)|
-as returning a sequence of non-\lstinline|nil| elements, for any sequence \lstinline|coll|
+as returning a sequence with the elements of \lstinline|coll| that are not \lstinline|nil| or \lstinline|false|,
+for any sequence \lstinline|coll|
 (see Section \ref{sec:filterneg}).
 Also, Typed Clojure lets the programmer define a set of unenforced \emph{assumptions}
 where \emph{null} is allowed in Java fields and methods (see Section \ref{sec:javainterop}),
@@ -233,9 +242,9 @@ They are only for use by Typed Clojure.
 
 Protocols and datatypes are two of Clojure's main means of abstraction.
 Protocols define a set of unimplemented methods, and each must be assigned types.
-Datatype definitions are type checked by ensuring the methods it
-implements match the types defined by the Java interface or assigned to the protocol method
-it is extending.
+Datatype definitions are type checked by ensuring the methods they
+implement match the types defined by the Java interface or assigned to the protocol method
+they are extending.
 
 Common usages of datatypes are checkable, like datatype
 constructors, field accesses, and protocol method invocation.

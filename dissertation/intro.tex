@@ -18,7 +18,7 @@ Instead of always attempting to infer types, this algorithm relies on programmer
 appearing in some natural places such as giving the type of each top-level function.
 
 The Clojure programming language is a dynamically typed dialect of Lisp invented
-by Hickey \footnote{\url{http://clojure.org/}}, designed to run on popular platforms.
+by Hickey~\cite{Hic08}, designed to run on popular platforms.
 It emphasises functional programming with immutable data structures
 and provides direct interoperability with its host platform.
 Notable implementations of Clojure exist for the Java Virtual Machine (JVM),
@@ -62,15 +62,101 @@ especially in more complicated situations like combining monads via monad transf
 
 \subsection{Why implement an optional type system for Clojure?}
 
+\subsubsection{Better error messages}
+
+Dynamically typed languages like Clojure often sacrifice some of the advantages of
+static typing. In particular, statically typed languages generally offer 
+compile-time type errors where dynamically typed languages either give runtime
+type errors, or none at all.
+
+This is distinction is easily demonstrated by comparing Clojure and Haskell's behaviour at their interactive prompts.
+Listing \ref{lst:cljrtime} shows how Clojure happily compiles a nonsensical function that performs addition
+on a string. It is only until we invoke it that we get a type error. 
+
+\begin{lstlisting}[caption=Runtime type errors in Clojure, label=lst:cljrtime]
+user=> (fn [x] (+ "string" x))
+#<user$eval128376$fn__128377 user$eval128376$fn__128377@183ab4e>
+
+user=> ((fn [x] (+ "string" x)) 1)
+#<ClassCastException java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Number>
+\end{lstlisting}
+
+The error provided by Clojure is unsatisfying:
+
+\begin{itemize}
+  \item The error message does little to help the programmer identify the source of the error.
+  \item It requires at least some knowledge of Clojure's internals to debug.
+  \item We would rather receive the error at the earliest time possible: compile-time.
+\end{itemize}
+
+Listing \ref{lst:hskctime} shows how Haskell, a statically typed language, handles this interaction.
+Haskell detects our programming error at compile-time, disallowing our function to compile.
+
+\begin{lstlisting}[caption=Compile-time type errors in Haskell, label=lst:hskctime]
+Prelude> (\x -> "string" + x)
+
+<interactive>:1:17:
+   No instance for (Num [Char])
+   arising from a use of `+'
+   Possible fix: add an instance declaration for (Num [Char])
+   In the expression: "string" + x
+   In the expression: (\ x -> "string" + x)
+   In an equation for `it': it = (\ x -> "string" + x)
+\end{lstlisting}
+
+Haskell's error here is much preferred over Clojure's:
+
+\begin{itemize}
+  \item The exact source of the error is given in \emph{user code}.
+  \item The error is given as early as possible: compile-time.
+\end{itemize}
+
+By adding static type checking to Clojure, we can achieve errors messages that are closer to
+Haskell's.
+Listing \ref{lst:tcctime} gives an idea of what kind of error messages Typed Clojure actually
+provides in these situations. 
+
+\begin{lstlisting}[caption=Compile-time errors in Typed Clojure, label=lst:tcctime]
+user=> (cf (fn> [[a :- Number]] (+ "string" a)))
+#<Exception java.lang.Exception: 5: Static method clojure.lang.Numbers/add could not be applied to arguments:
+Domains: 
+  typed.core/AnyInteger typed.core/AnyInteger
+  java.lang.Number java.lang.Number
+
+Arguments:
+  (Value "string") java.lang.Number
+
+in: (. clojure.lang.Numbers add "string" a)>
+\end{lstlisting}
+
+Typed Clojure lists each of the expected domain types, of which the static method \lstinline|add| of the Java class
+\lstinline|clojure.lang.Numbers| has been assigned two,
+and also lists the types of the given arguments.
+A line number and the source of the error is also provided.
+
+Listing \ref{lst:tcctime} deserves some explanation:
+
+\begin{itemize}
+  \item The given source of the error may be surprising, but it is explained
+        by noting that Clojure ``inlines'' \lstinline|(+ "string" a)| to a Java method call
+        \lstinline|(. clojure.lang.Numbers add "string" a)|.
+        \lstinline|cf| type checks a form.
+  \item \lstinline|add|'s type has been overridden by Typed Clojure to be more specific (see Section \ref{sec:javainterop}).
+  \item \lstinline|cf| type checks a form.
+  \item \lstinline|(fn> [[a :- Number]] ...)| defines a function with its first argument of static type \lstinline|Number|.
+\end{itemize}
+
+\subsubsection{Higher order programming}
+
 The initial motivation for implementing an optional type system
 for Clojure was an anecdotal account of the struggles
-of a Clojure programmer. In an apparently heroic effort, he managed to 
+of a Clojure programmer, Jim Duey. In an apparently heroic effort, Duey managed to 
 implement a Clojure library for conduits~\footnote{\url{http://www.yesodweb.com/book/conduits}}, 
 an advanced form of ``pipes'', using arrows, a generalisation of monads.
 Conduits also significantly surpass monads in complexity and are usually reserved
 for languages with advanced type systems like Haskell.
 
-He highlighted a strong desire for a type system for several reasons.
+Duey highlighted a strong desire for a type system for several reasons.
 Firstly, to verify the correctness of the library.
 Without a static type system, it is a significant task
 to verify such an implementation as correct due to heavy use
@@ -80,7 +166,7 @@ Secondly, to aid him while writing the library.
 Since then, the Clojure community has shown significant interest in this work.
 I also developed this project as a Google Summer of Code 2012 project,
 after it was selected by the Clojure community as a Clojure Google Summer of Code
-project for 2012~\footnote{\url{http://www.google-melange.com/gsoc/project/google/gsoc2012/ambrosebs/10001}}.
+project for 2012~\cite{GSOC2012}.
 I have also been invited to speak on this project at the Clojure Conj
 2012 conference in November, the main international conference related to Clojure.
 
@@ -121,7 +207,7 @@ and common in the literature on static types (for example, Pierce~\cite{Pie02}).
 In this dissertation we develop an optional type system for Clojure.
 We focus on the features needed to make a practical type system that
 existing Clojure programmers can use.
-We also developed a prototype based on Typed Racket~\cite{Tob10}.
+We also develop a prototype based on Typed Racket~\cite{Tob10}.
 
 The contributions of the work described in this dissertation are as follows:
 
@@ -131,30 +217,24 @@ The contributions of the work described in this dissertation are as follows:
         We show how this type checker can be used to aid Clojure programmers use sophisticated
         programming styles by porting most of an existing library for monadic programming.
 
-  \item This prototype is extended to support several features that are not present in Typed Racket.
+  \item This prototype is extended to support several features that are not yet present in Typed Racket.
         We support filtering sequences on anonymous functions that convey only negative type information
         (eg. non-nil), capturing a common Clojure idiom.
+        We enable type checking of very abstract code (like code using monads)
+        by adding \emph{type functions} (functions at the type level).
 
-  \item We describe a novel use of occurrence typing~\cite{TF10} for eliminating
-        occurrences of Java's \emph{null}. We make \emph{null} directly expressible
-        in Typed Clojure's type system as \lstinline|nil|. This makes it reasonable for it to be a
-        static type error if \emph{null} is potentially misused, an improvement over Java's static type system
-        where \emph{null} cannot be expressed.
+  \item We support safer interoperability with Java. We show how techniques developed for
+        Typed Racket, such as occurrence typing~\cite{TF10},  of Java's \emph{null}
+        while still conforming to existing Clojure idioms.
 
-  \item We show how a combination of intersection types and occurrence typing enables us to accurately type check
-        the most common usages of Clojure's sequence abstraction. This was particularly subtle, as 
-        many base operations in the sequence abstraction take and/or return \lstinline|nil|, and
-        each case could imply different information about a sequence.
-
-  \item We capture the Clojure idiom of using maps with known keyword fields by using heterogeneous map types.
-        These types are sufficient for accurately associating and dissociating known keyword keys,
-        and accurately looking up values associated with keyword keys in heterogeneous map types that have
-        that keyword key present.
-        This is sufficient for type checking many common idioms involving maps.
+  \item We can type check several particularly useful Clojure idioms, like common usages of the \emph{sequence abstraction}
+        (Clojure's common interface to all collections) and 
+        common usages of ``untyped'' hash-maps, which have a similar role to records in ML or Haskell,
+        and objects in object-oriented languages.
 
   \item We identify the main future issues in typing Clojure code. Multimethod definitions are problematic
         to type check accurately because of the interaction of its dispatch mechanism and occurrence typing.
-        Records have subtle semantics for dissociating keys, like dissociating a base key of a record returns
+        Records have subtle semantics for dissociating keys, specifically: dissociating all base keys of a record returns
         a plain map.
 \end{itemize}
 
@@ -239,14 +319,15 @@ More complex code may require extra annotations to type check:
       (collatz (inc (* 3 n)))))
 \end{lstlisting}
 
-(\lstinline|(defn name [...] body)| expands to \lstinline|(def name (fn [...] body))|,
+(\lstinline|(defn collatz [n] ...)| expands to \lstinline|(def collatz (fn [n] ...))|,
 where \lstinline|(def name init)| defines a new var in the current namespace 
 called \lstinline|name|, and \lstinline|fn| creates a function value).
 
 In this example, we define a new var \lstinline|collatz|
 (when unambiguous, I omit the qualifying namespace/package for the remainder of the chapter).
-Typed Clojure requires all 
-used vars to be annotated. Here \lstinline|typed.core/ann|, a Typed Clojure macro for annotating vars, 
+Typed Clojure type checks at the namespace granularity. All vars that occur
+in a ``typed'' namespace must have a type annotation. 
+Here \lstinline|typed.core/ann|, a Typed Clojure macro for annotating vars, 
 annotates \lstinline|collatz| to be a function from \lstinline|Number| to 
 \lstinline|Number| (\lstinline|Number| refers to \lstinline|java.lang.Number|,
 due to every Clojure namespace implicitly importing all Classes in the \lstinline|java.lang| package,

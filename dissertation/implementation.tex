@@ -134,7 +134,7 @@ is \lstinline|typed.core/infer|.
 and returns a \emph{substitution} that satisfies the following conditions:
 
 \begin{itemize}
-  \item Pairwise, each \lstinline|S| is a below \lstinline|T|,
+  \item Pairwise, each \lstinline|S| is a subtype of \lstinline|T|,
   \item \lstinline|R| is below \lstinline|expected|, if \lstinline|expected| is provided.
 \end{itemize}
 
@@ -175,8 +175,8 @@ where the internal Typed Clojure bindings
 
 This returns a substitution that replaces occurrences of \lstinline|x| with \lstinline|true|
 and \lstinline|y| with \lstinline|Any|.
-This helps infer a result type of \lstinline|(constantly true)|
-as \lstinline|[Any * -> true]|.
+This helps infer the type of the expression \lstinline|(constantly true)|
+as \lstinline|[Any * -> true]| (where \lstinline|true| is the singleton type containing just the value \lstinline|true|).
 
 \section{F-Bounded Polymorphism}
 
@@ -216,7 +216,7 @@ required for the Typed Racket implementation~\cite{STF09}.
 
 Porting Typed Racket's variable-arity polymorphism implementation was
 tedious because some of the relevant internal functions interact
-in strange ways with the rest of Typed Racket. My reaction was that Typed Racket
+in strange ways with the rest of Typed Racket. My impression was that Typed Racket
 was initially designed without variable-arity polymorphism and was added
 without major changes to other components. Typed Clojure was
 developed with the same design so full variable-arity polymorphism
@@ -260,11 +260,11 @@ that are \emph{not} \lstinline|nil|.
     [[x -> Any :filters {:then (is y 0)}] (U nil (Seqable x)) -> (Seqable y)]))
 \end{lstlisting}
 
-To better understand the problem, listing \ref{lst:filterann} presents the type of \lstinline|filter|,
+To better understand the problem, Listing \ref{lst:filterann} presents the type of \lstinline|filter|,
 which takes a function \lstinline|f| and a sequence \lstinline|s| as arguments, and returns a sequence that 
 contains each element in \lstinline|s| such that applying \lstinline|f| to the element returns a true value.
 The \lstinline|:filters| syntax requires some explanation. 
-Function types support an optional \emph{filter set} attached to its return type, written as a map
+Function types support an optional \emph{filter set} attached to the return type, written as a map
 with \lstinline|:then| and/or \lstinline|:else| keys (if omitted, they default to the trivially true proposition which has no effect). 
 The ``then-proposition'' and ``else-proposition'' are added
 to the type environment when the return value is a true and false value respectively.
@@ -275,10 +275,10 @@ The type given for \lstinline|filter| works because the type variable
 \lstinline|(Seqable y)|.
 
 \begin{lstlisting}[caption=Troublesome filter, label=lst:filtertrouble]
-(filter (fn [a] (not (nil? a))) coll)|
+(filter (fn [a] (not (nil? a))) coll)
 \end{lstlisting}
 
-The difficulty starts with something like listing \ref{lst:filtertrouble},
+The difficulty starts with something like Listing \ref{lst:filtertrouble},
 where the inferred filter set for the first argument to \lstinline|filter|
 is \lstinline|{:then (! nil 0) :else (is nil 0)}|\footnote{(! nil 0) is the proposition that the first argument is \emph{not}
 of type \lstinline|nil|.}. The ``then-proposition'' \lstinline|(! nil 0)| does not fit with
@@ -287,7 +287,7 @@ of type \lstinline|nil|.}. The ``then-proposition'' \lstinline|(! nil 0)| does n
 We can sometimes get around this if we already have a predicate with a positive
 ``then-proposition''. For example, if we are filtering out \lstinline|nil| values
 from a sequence of type \lstinline|(Seqable (U Number nil))|, we can replace
-listing \ref{lst:filtertrouble} with \lstinline|(filter number? coll)|,
+Listing \ref{lst:filtertrouble} with \lstinline|(filter number? coll)|,
 where \lstinline|number?| has the filter set \lstinline|{:then (is Number 0) :else (! Number 0)}|.
 This does not work, however, when filtering a sequence of type like \lstinline|(Seqable (U x nil))|
 for some unspecified \lstinline|x| because there is no built-in predicate with ``then-proposition''
@@ -310,7 +310,7 @@ local bindings to types). Any types associated with bindings that are changed af
 are represented as new propositions, which are added to the ``then-proposition'' for this filter set.
 The same procedure is followed for the ``else-proposition''.
 
-Using this technique, the anonymous function in listing 
+Using this technique, the anonymous function in Listing 
 \ref{lst:filtergood}\footnote{The Clojure syntax \lstinline|#(not (nil? \%))| 
 is equivalent to \lstinline|(fn [a] (not (nil? a)))|}
 has the filter set \lstinline|{:then (& (! nil 0) (is x 0)) :else (is nil 0)}|
