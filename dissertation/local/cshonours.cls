@@ -419,7 +419,7 @@ class report.cls by Cara MacNish August 1999/September 2000]
                                      {-3.25ex\@plus -1ex \@minus -.2ex}%
                                      {1.5ex \@plus .2ex}%
 %ckm                                     {\normalfont\normalsize\bfseries}}
-                                     {\normalfont\normalsize}}
+                                     {\normalfont\normalsize\bfseries}}
 \newcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
                                     {3.25ex \@plus1ex \@minus.2ex}%
                                     {-1em}%
