@@ -1,0 +1,238 @@
+%-----------------------------------------------------------------------------
+%
+%               Template for sigplanconf LaTeX Class
+%
+% Name:         sigplanconf-template.tex
+%
+% Purpose:      A template for sigplanconf.cls, which is a LaTeX 2e class
+%               file for SIGPLAN conference proceedings.
+%
+% Guide:        Refer to "Author's Guide to the ACM SIGPLAN Class,"
+%               sigplanconf-guide.pdf
+%
+% Author:       Paul C. Anagnostopoulos
+%               Windfall Software
+%               978 371-2316
+%               paul@windfall.com
+%
+% Created:      15 February 2005
+%
+%-----------------------------------------------------------------------------
+
+
+\documentclass[preprint]{sigplanconf}
+
+% The following \documentclass options may be useful:
+%
+% 10pt          To set in 10-point type instead of 9-point.
+% 11pt          To set in 11-point type instead of 9-point.
+% authoryear    To obtain author/year citation style instead of numeric.
+
+\usepackage{amsmath}
+\usepackage{listings}
+
+\begin{document}
+
+\conferenceinfo{WXYZ '05}{date, City.} 
+\copyrightyear{2013} 
+\copyrightdata{[to be supplied]} 
+
+\titlebanner{banner above paper title}        % These are ignored unless
+\preprintfooter{short description of paper}   % 'preprint' option specified.
+
+\title{Interoperability with a Statically Typed Language with Null values in a Gradually Typed Language}
+%\subtitle{Subtitle Text, if any}
+
+\authorinfo{Ambrose Bonnaire-Sergeant}
+           {University of Western Australia}
+           {abonnairesergeant@gmail.com}
+\authorinfo{Rowan Davies}
+           {University of Western Australia}
+           {rowan@csse.uwa.edu.au}
+
+% me:  I'm playing around with some approaches to a paper:
+% Title: "Interoperability with a Statically Typed Language with Null types in a Gradually Typed Language"
+% Abstract: Interactions with statically-typed languages from dynamically-typed languages
+% can be better verified at compile time by utilising a gradual type system.
+% This paper describes how a dynamically-typed language like Clojure, Ruby, or Python
+% can better verify interactions with a statically-typed language with Null types
+% like Java or C#.
+%  Sent at 10:13 PM on Thursday
+%  Rowan:  It's  a start.
+% Java and C# don't have null types, right?
+%  me:  no, I guess I mean nullable
+%  Rowan:  I'd just say that they have null values.
+%  me:  Ok, I like that.
+%  Rowan:  Nullable doesn't have wide enough usage.
+%  Sent at 11:39 PM on Thursday
+%  Rowan:  Or, "only have types that implicitly include null values".
+% You could say Java and C# have dynamic types for null, but that's just going to confuse everyone.
+%  me:  Except for the special cases of arrays and primitives for Java.
+%  Rowan:  Array variables can be null in Java, I thought?
+%  me:  I thought not.
+% Will check...
+% whoops
+% You're correct.
+% Do CLR languages have similar edge cases?
+%  Sent at 11:44 PM on Thursday
+%  Rowan:  They are similar, yes, but the CLR is fully typed, so e.g., generic types aren't erased, the CLR has generic types and type constructors.
+% I think the CLR even has variance for type constructors.
+%  me:  Ah that's interesting.
+%  Sent at 11:46 PM on Thursday
+%  Rowan:  I generally think of Java variables as either being a primitive type, or a reference.
+% A reference is either null, or refers to a value that has a runtime type consistent with the compile time type.
+%  Sent at 11:49 PM on Thursday
+%  me:  Got it.
+%  Rowan:  So, it's not that an array can be null - it's the variable that's null.
+%  me:  Ah.
+% Yes that makes sense.
+%  Rowan:  Oops, I meant, it's the reference that's null.
+% Since, e.g., the reference could be an element of an array rather than a variable.
+%  me:  Is there a difference between variable and reference?
+% In Java?
+% I don't understand that.
+%  Rowan:  a[3] = null;
+% Does that set a variable to null?
+% A: No, it sets a reference.
+% This assumes we've declared   int[] a;
+% Or        int a[10];
+% Oops, not int, I mean:
+% java.lang.Object a[10];
+%  Sent at 11:55 PM on Thursday
+%  me:  
+% Ok, makes sense.
+%  Sent at 11:57 PM on Thursday
+%  Rowan:  Then   a  consists of 10 references, each can be null, but there's only one variable.
+%  Sent at 11:58 PM on Thursday
+%  Rowan:  Anyway, back to the abstract:   " Interactions with statically-typed languages from dynamically-typed languages
+% can be better verified at compile time by utilising a gradual type system."
+%  Sent at 11:59 PM on Thursday
+%  Rowan:  It's not wise to state this without convincing evidence, I'd expect most referees to be skeptical, and I don't think we can be convincing within the space of the abstract.  Plus it's not clear what "better" is relative too.
+% And it's not clear why you'd want to verify them.
+% I'd start with sentence or two that frame the issue that's being addressed.
+%  Sent at 12:03 AM on Friday
+%  Rowan:  Actually, the set of questions Chris McDonald recommends probably applies:
+% - what is the problem?
+% - why is it interesting, challenging, important?
+% - what have others done before?
+% - what did you do?
+% - how did you evaluate it?
+% - what contribution have you made?
+% - how would you continue this in the future?
+% Start with "what is the problem?"
+%  Sent at 12:05 AM on Friday
+%  me:  The problem is dynamic languages ignore existing type information which can help avoid common programming errors at compile time, if utilised.
+%  Sent at 12:07 AM on Friday
+%  Rowan:  "Modern libraries such as the Java API are sufficiently large and complicated that correctly interfacing with them from other languages can be a difficult and error aspect of software development."
+% Mine is maybe not quite saying the right thing, but I think it starts at about the level of generality.
+%  me:  Ok, I've got the idea.
+%  Rowan:  error -> error prone
+%  Sent at 12:10 AM on Friday
+%  Rowan:  I like the phrase "error prone" in the context of static types - it's not that you can't get it right, or that you won't eventually fix it, it's that there's good potential to get it wrong - without static checking you have to be much more careful.
+%  Sent at 12:13 AM on Friday
+%  me:  Ok, sounds convincing.
+%  Sent at 12:16 AM on Friday
+%  me:  2. The interesting part is it can be made less error prone in dynamically-typed languages.
+% 
+%  Sent at 12:18 AM on Friday
+%  Rowan:  Yeah, hmmm.   "One specific area for potential errors is that many popular languages like Java allow all object references to be null, while generally libraries like those in the Java API have detailed specifications of their behaviour with null values."
+% It'd be good to include "dynamic languages" here, but maybe in sentence 3 is okay.
+%  Sent at 12:30 AM on Friday
+%  Rowan:  There's some tension here - we're proposing more static checking than Java, but in the context of a dynamic langage.
+%  Sent at 12:31 AM on Friday
+%  Rowan:  The question is whether to make it clear we consider that Java should have non-nullable reference types, or we leave that alone.
+%  Sent at 12:32 AM on Friday
+%  me:  Ah. Good question.
+%  Sent at 12:35 AM on Friday
+%  me:  Our solution would be irrelevant for languages without null values.
+%  Sent at 12:38 AM on Friday
+%  Rowan:  It sometimes works to be frank about such things - somewhere in the intro we could say "Arguably Java itself should include non-nullable reference types, but we put that to one side since our main concern here is the practical issue of interoperability which arises with current languages/systems such as Clojure for the JVM.
+% "
+% Right, without null values there's no issue.
+% But, that's different to having null values, but having separate types for when null values are allowed and when they aren't.
+%  me:  Yes.
+%  Rowan:  When I said "... Java should have non-nullable reference types", I was thinking that there would be still be nullable types also.
+%  Sent at 12:42 AM on Friday
+%  me:  Oh.
+% Fair enough.
+% Scala does this I think.
+%  Rowan:  Right, yes.
+%  Sent at 12:44 AM on Friday
+
+\maketitle
+
+\begin{abstract}
+Modern libraries such as the Java API are sufficiently large and complicated that 
+correctly interfacing with them from other languages can be a difficult and 
+error prone aspect of software development.
+
+In particular, 
+
+%Dynamically-typed languages 
+%
+%Interactions with statically-typed languages from dynamically-typed languages
+%can be better verified at compile time by utilising a gradual type system.
+%This paper describes how a dynamically-typed language, like Clojure, Ruby, or Python,
+%extended with a gradual type system
+%can better verify interactions with a statically-typed language with Null types
+%like Java or C#.
+\end{abstract}
+
+\category{CR-number}{subcategory}{third-level}
+
+\terms
+%term1, term2
+
+\keywords
+%keyword1, keyword2
+
+\section{Introduction}
+
+\section{Static null-safety}
+
+\section{Array covariance}
+
+Array covariance refers to the subtyping relationship between different array types.
+In Java, arrays are parameterised by one covariant parameter, such that
+t1[] <: t2[] for all t1 <: t2. This is well known to be statically unsound,
+mainly because arrays are \emph{mutable}. 
+
+The main advantages of covariant array types are code reuse
+and understandability of types.
+The disadvantage is loss of static type soundness.
+Our approach avoids the pitfalls of array covariance
+while facilitating code reuse, at the cost of more complex array types.
+
+
+\begin{lstlisting}[language=java]
+public static void unsoundModify(Number[] ar) {
+  Object[] bad_ar = (Object[])ar;
+  bad_ar[0] = new java.util.Observable();
+}
+\end{lstlisting}
+
+
+\appendix
+\section{Appendix Title}
+
+This is the text of the appendix, if you need one.
+
+\acks
+
+Acknowledgments, if needed.
+
+% We recommend abbrvnat bibliography style.
+
+\bibliographystyle{abbrvnat}
+
+% The bibliography should be embedded for final submission.
+
+\begin{thebibliography}{}
+\softraggedright
+
+\bibitem[Smith et~al.(2009)Smith, Jones]{smith02}
+P. Q. Smith, and X. Y. Jones. ...reference text...
+
+\end{thebibliography}
+
+\end{document}
